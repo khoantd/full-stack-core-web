@@ -9,6 +9,7 @@ import config from './config/config';
 import { FriendModule } from './auth/socket/friend.module';
 import { MinioModule } from './minio/minio.module';
 import { UserModule } from './user/user.module';
+import { BlogModule } from './blog/blog.module';
 
 @Module({
   imports: [
@@ -30,8 +31,9 @@ import { UserModule } from './user/user.module';
       // secret: '123',
     }),
     AuthModule,
-    MinioModule,    
-    UserModule,   
+    MinioModule,
+    UserModule,
+    BlogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
