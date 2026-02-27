@@ -7,14 +7,17 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from 'src/guards/auth.guard';
 import { BlogService, PaginationResult } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { QueryBlogDto } from './dto/query-blog.dto';
 
+@UseGuards(AuthGuard)
 @Controller('/blogs')
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
