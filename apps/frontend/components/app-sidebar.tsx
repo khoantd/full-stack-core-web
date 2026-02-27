@@ -10,6 +10,7 @@ import {
   IconFileDescription,
   IconFolder,
   IconListDetails,
+  IconNews,
   IconUsers
 } from "@tabler/icons-react";
 
@@ -42,6 +43,11 @@ const data = {
       title: "Users",
       url: "/dashboard/users",
       icon: IconListDetails,
+    },
+    {
+      title: "Blogs",
+      url: "/dashboard/blogs",
+      icon: IconNews,
     },
     {
       title: "Settings",
