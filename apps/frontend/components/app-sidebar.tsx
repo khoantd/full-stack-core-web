@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   IconBox,
+  IconCalendar,
   IconCamera,
   IconCategory,
   IconChartBar,
@@ -60,6 +61,11 @@ const data = {
       title: "Products",
       url: "/dashboard/products",
       icon: IconBox,
+    },
+    {
+      title: "Events",
+      url: "/dashboard/events",
+      icon: IconCalendar,
     },
     {
       title: "Settings",

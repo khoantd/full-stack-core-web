@@ -12,6 +12,7 @@ import { UserModule } from './user/user.module';
 import { BlogModule } from './blog/blog.module';
 import { CategoryProductModule } from './category-product/category-product.module';
 import { ProductModule } from './product/product.module';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { ProductModule } from './product/product.module';
     BlogModule,
     CategoryProductModule,
     ProductModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],
