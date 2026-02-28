@@ -10,6 +10,8 @@ import { FriendModule } from './auth/socket/friend.module';
 import { MinioModule } from './minio/minio.module';
 import { UserModule } from './user/user.module';
 import { BlogModule } from './blog/blog.module';
+import { CategoryProductModule } from './category-product/category-product.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { BlogModule } from './blog/blog.module';
     MinioModule,
     UserModule,
     BlogModule,
+    CategoryProductModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
