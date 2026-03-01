@@ -158,7 +158,8 @@ export class PaymentService {
     const updateData: any = { ...updatePaymentDto };
     if (updatePaymentDto.status === PaymentStatus.SUCCESS) {
       updateData.paidAt = new Date();
-    } else if (updatePaymentDto.status && updatePaymentDto.status !== PaymentStatus.SUCCESS) {
+    } else if (updatePaymentDto.status) {
+      // status is PENDING or FAILED → clear paidAt
       updateData.paidAt = null;
     }
 
