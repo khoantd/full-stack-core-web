@@ -13,6 +13,7 @@ import { BlogModule } from './blog/blog.module';
 import { CategoryProductModule } from './category-product/category-product.module';
 import { ProductModule } from './product/product.module';
 import { EventModule } from './event/event.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { EventModule } from './event/event.module';
     CategoryProductModule,
     ProductModule,
     EventModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

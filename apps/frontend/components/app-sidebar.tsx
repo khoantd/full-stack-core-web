@@ -8,6 +8,7 @@ import {
   IconCategory,
   IconChartBar,
   IconCircle,
+  IconCreditCard,
   IconDashboard,
   IconFileAi,
   IconFileDescription,
@@ -66,6 +67,11 @@ const data = {
       title: "Events",
       url: "/dashboard/events",
       icon: IconCalendar,
+    },
+    {
+      title: "Payments",
+      url: "/dashboard/payments",
+      icon: IconCreditCard,
     },
     {
       title: "Settings",
