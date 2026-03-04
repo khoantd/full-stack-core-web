@@ -59,3 +59,13 @@ usageStats:
 - **Situation:** Attempted to run Playwright test to verify header change but browser failed to initialize due to missing system dependencies
 - **Root cause:** Playwright chromium needs glib and other system libraries for rendering; some container/CI images strip non-essential packages
 - **How to avoid:** Real browser testing is more accurate but fragile in limited environments; pure unit testing would be faster but wouldn't catch rendering issues
+
+#### [Gotcha] Playwright E2E testing was attempted but failed due to missing system libraries (libglib-2.0.so.0) in the environment, requiring fallback to source code verification and build validation (2026-03-04)
+- **Situation:** After making a UI text change, the team attempted to create and run a Playwright test to verify the change, but the test environment lacked necessary system dependencies
+- **Root cause:** E2E tests provide comprehensive verification including rendering and actual DOM state, but require a fully configured browser environment. In constrained CI/deployment environments, this dependency chain can break
+- **How to avoid:** E2E tests are more thorough but fragile; build-time source code verification is faster and more reliable but less comprehensive. The fallback to grep + build verification traded test coverage for reliability
+
+#### [Pattern] Fallback verification strategy: grep source code + npm build instead of E2E tests when environment is unavailable (2026-03-04)
+- **Problem solved:** When Playwright couldn't run, verification shifted to checking that the literal string change existed in source and that the build succeeded
+- **Why this works:** Source code verification is environment-agnostic and catches syntax/import errors immediately. Build step validates compilation without requiring browser automation. Together they provide reasonable confidence for simple text changes
+- **Trade-offs:** Build verification catches compile errors and import issues but cannot detect rendering problems, CSS issues, or user interaction flow problems. Good for text changes, insufficient for layout or logic changes

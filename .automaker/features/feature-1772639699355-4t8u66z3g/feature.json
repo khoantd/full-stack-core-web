@@ -1,0 +1,37 @@
+{
+  "category": "Uncategorized",
+  "description": "Sửa text button 'Explore Products' thành 'Products' ở banner",
+  "title": "Sửa text button 'Explore Products' thành 'Products' ở banner",
+  "images": [],
+  "imagePaths": [
+    {
+      "id": "img-1772639658760-a040ayjsh",
+      "path": "/projects/full-stack-core-web/.automaker/features/feature-1772639699355-4t8u66z3g/images/pasted-image-2026-03-04T15-54-18-348Z-1772639658802.png",
+      "filename": "pasted-image-2026-03-04T15-54-18-348Z.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "textFilePaths": [],
+  "skipTests": false,
+  "model": "opus",
+  "thinkingLevel": "none",
+  "reasoningEffort": "none",
+  "branchName": "hotfix/change-text-banner",
+  "priority": 2,
+  "planningMode": "skip",
+  "requirePlanApproval": false,
+  "dependencies": [],
+  "workMode": "custom",
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1772639699355-4t8u66z3g",
+  "descriptionHistory": [
+    {
+      "description": "Sửa text button 'Explore Products' thành 'Products' ở banner",
+      "timestamp": "2026-03-04T15:54:59.477Z",
+      "source": "initial"
+    }
+  ],
+  "startedAt": "2026-03-04T15:54:59.418Z",
+  "updatedAt": "2026-03-04T15:57:58.437Z"
+}

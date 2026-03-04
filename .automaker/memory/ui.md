@@ -72,3 +72,10 @@ usageStats:
 - **Problem solved:** Found 'Quality Parts' text hardcoded directly in HeroSection.tsx component
 - **Why this works:** For static, single-language UI text in marketing sections, inline strings reduce indirection and are simpler than i18n or config systems
 - **Trade-offs:** Simpler code structure but creates tight coupling between UI component and text content. Future changes require code modification
+
+### Changed only the visible text 'Explore Products' to 'Products' while preserving the href='/#products' link target (2026-03-04)
+- **Context:** Button text was being shortened on the hero banner landing page
+- **Why:** Decoupling display text from navigation semantics. The link target anchor remains consistent, so existing deep links and navigation logic continue working. Only the UX messaging changed
+- **Rejected:** Changing href to match shorter text (like '/#prod'), which would break existing bookmarks and shared links
+- **Trade-offs:** Shorter text is less descriptive but takes less space. Preserving href maintains backward compatibility at the cost of slight semantic mismatch between text and target
+- **Breaking if changed:** If any analytics, tracking, or link validation relies on text matching href, this creates a discrepancy. Any screenshots or documentation using old text will be outdated
