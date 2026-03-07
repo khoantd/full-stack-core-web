@@ -84,3 +84,8 @@ usageStats:
 - **Situation:** Attempted to create and run Playwright end-to-end tests to verify status column displays badge instead of select, but hit environment limitations
 - **Root cause:** Full headless browser testing requires complete system library stack. Static analysis (linting, type checking) provided sufficient verification for this change
 - **How to avoid:** No runtime verification of DOM structure/element visibility (would catch unmounted components, selector changes), but code structure changes were fully verified via static checks
+
+#### [Gotcha] CSS class name changes in JSX components are not automatically tested without explicit visual regression or snapshot testing. The curl verification only checks if the class string appears in HTML, not if styles actually render. (2026-03-07)
+- **Situation:** Implementation verified via grep'ing HTML output for the string 'from-gray-500 via-gray-600 to-gray-700', but this doesn't guarantee the browser interprets Tailwind correctly.
+- **Root cause:** String presence in HTML doesn't equal working styles - Tailwind compilation, CSS ordering, specificity conflicts, or PurgeCSS could all prevent styles from rendering.
+- **How to avoid:** Quick grep verification is fast and requires no infrastructure, but provides false confidence. Proper visual testing catches real issues but adds complexity.

@@ -90,3 +90,8 @@ usageStats:
 - **Rejected:** Alternative of exporting color tokens (e.g., BANNER_GRADIENT = 'from-gray-500 via-gray-600 to-gray-700') would centralize color changes but adds extra indirection for single-use components
 - **Trade-offs:** Easier: Quick visual changes, no file-switching needed. Harder: Harder to implement global color scheme changes - requires updating multiple files if the same color is used elsewhere; no single source of truth for brand colors
 - **Breaking if changed:** If brand colors need to change site-wide, this pattern requires find-and-replace across multiple component files rather than one centralized config update
+
+#### [Pattern] Inline styling changes in component className attributes vs. extracting to separate Tailwind configuration. HeroSection uses inline gradient classes rather than custom CSS or theme extensions. (2026-03-07)
+- **Problem solved:** Banner color change required modifying className string directly in the component file rather than centralizing color definitions.
+- **Why this works:** Keeping styles inline with components allows for component-specific customization without adding configuration complexity. Good for one-off overrides.
+- **Trade-offs:** Inline approach: easier to understand component purpose, but harder to maintain brand consistency across the app. Centralized approach: better consistency but adds abstraction.

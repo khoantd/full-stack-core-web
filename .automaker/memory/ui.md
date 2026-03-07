@@ -202,3 +202,8 @@ usageStats:
 - **Problem solved:** Changing banner background from yellow/orange gradient to gray required updating not just the background but all dependent text colors to maintain contrast and visual hierarchy
 - **Why this works:** Tailwind gradient classes (from-yellow-400 via-yellow-500 to-amber-500) define multiple color stops. When changed to gray, text colors using yellow-100 became invisible. The pattern shows semantic color dependency: background gradient → text color tokens must be updated together as a unit
 - **Trade-offs:** Easier: Tailwind's utility classes make color changes explicit and traceable. Harder: No automatic color relationship enforcement - requires developer discipline to update dependent layers
+
+#### [Gotcha] Tailwind gradient classes require specific order (from-X via-Y to-Z) where 'via' must be the middle stop. Using incorrect gradient syntax silently fails without visual indication. (2026-03-07)
+- **Situation:** Changed banner from 'from-amber-500 via-yellow-500 to-amber-600' to 'from-gray-500 via-gray-600 to-gray-700'. The gradient naming convention is not self-documenting.
+- **Root cause:** Tailwind's gradient implementation expects this specific ordering. Arbitrary ordering or missing 'via' stops will render but not as intended.
+- **How to avoid:** Three-stop gradients provide better visual hierarchy but require more specific color palette planning. Single colors are simpler but less sophisticated.
