@@ -59,3 +59,10 @@ usageStats:
 - **Situation:** Hero section uses 3-color gradient. Updating only some color values would create visual inconsistency or mismatched color transitions
 - **Root cause:** Gradients rely on color relationships for visual balance. Red-600→Red-500→Red-600 has specific contrast and saturation curve that must map consistently to Gray-600→Gray-500→Gray-600
 - **How to avoid:** Maintaining multi-stop gradients preserves visual sophistication but increases coordination cost when changing themes. Single-color backgrounds would be easier to theme but less visually interesting
+
+### Component-based styling approach using Tailwind CSS classes rather than CSS-in-JS or separate stylesheet (2026-03-07)
+- **Context:** HeroSection.tsx uses inline Tailwind classes for all styling, making color changes straightforward string replacements
+- **Why:** Tight coupling of styles to component structure reduces indirection. Single source of truth per element. Easy visual traceability - see className and immediately understand styling.
+- **Rejected:** Separate CSS files would require mapping class names to selectors; CSS variables would add abstraction layer; styled-components would require additional dependencies
+- **Trade-offs:** Easier for simple changes, harder to maintain consistent design tokens across many components. No single place to update brand colors globally without grep-and-replace.
+- **Breaking if changed:** If design system later requires centralized color management, would need refactoring to extract magic color strings into config or CSS variables

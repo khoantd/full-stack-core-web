@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 29
-  referenced: 16
-  successfulFeatures: 16
+  loaded: 30
+  referenced: 17
+  successfulFeatures: 17
 ---
 # Gotchas
 
@@ -46,3 +46,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Task appeared simple (rename 'Car Parts' to 'Car Partss') but required checking multiple locations. LandingNav.tsx already had the target state while other files didn't.
 - **Root cause:** Brand name strings are duplicated across header, footer, and metadata. Without comprehensive search, some instances could be missed, leading to inconsistent brand display.
 - **How to avoid:** Taking time to verify all instances before editing ensured consistency but added extra steps. Automated find-and-replace could miss context-specific variations.
+
+#### [Gotcha] Gradient uses three color stops (from-cyan-600 via-blue-500 to-cyan-600) creating directional color flow that requires understanding Tailwind gradient syntax (2026-03-07)
+- **Situation:** Original gray gradient: 'from-gray-600 via-gray-500 to-gray-600'. Replacement used same pattern with cyan/blue but subtle differences in undertone meaning
+- **Root cause:** Gray gradient created visual depth with mid-tone. Direct swap to cyan-600/blue-500/cyan-600 changes gradient intensity and direction. The 'via' color (blue-500) is lighter than terminal colors, creating different visual effect than original.
+- **How to avoid:** Maintained visual complexity but shifted color psychology from neutral-cool to active-cool. May appear more 'energetic' than intended.

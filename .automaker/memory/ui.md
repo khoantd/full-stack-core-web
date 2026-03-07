@@ -168,3 +168,8 @@ usageStats:
 - **Rejected:** Keeping red-100 text (would clash with gray background); using pure white everywhere (would lose semantic hierarchy); using completely different gray values for text
 - **Trade-offs:** Consistent mechanical color replacement simplified the change but may have subtly altered the visual hierarchy/emphasis of secondary text elements. Gray-100 on gray background feels more subtle than red-100 on red background
 - **Breaking if changed:** If contrast ratios drop below WCAG standards (unlikely with gray-100 on gray-600) or if designers intended different visual emphasis for secondary text, this mapping fails the visual design intent
+
+#### [Pattern] Coordinated color palette updates across multiple text elements when changing banner gradient (2026-03-07)
+- **Problem solved:** Banner color changed from gray to ocean blue gradient, requiring supporting text color adjustments
+- **Why this works:** Maintaining visual hierarchy and contrast ratios. Gray text (gray-100) on gray gradient is high contrast, but gray text on blue gradient reduces readability. Cyan-100 on cyan/blue gradient maintains intended contrast levels.
+- **Trade-offs:** More granular edits required (4 separate changes vs 1) but ensures cohesive design. Risk of missing text elements if not done systematically.
