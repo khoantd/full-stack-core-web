@@ -129,3 +129,10 @@ usageStats:
 - **Problem solved:** Need to rebrand hero section colors while maintaining component functionality
 - **Why this works:** Hero section is cohesive visual unit with single responsibility - keeping all related styles together improves maintainability and reduces cognitive load. Component is self-contained and doesn't cascade styles to children
 - **Trade-offs:** Gained: simplicity, quick visual feedback, direct cause-effect relationship. Lost: potential color reusability if multiple components need sea blue gradient
+
+### Incremental color updates via multiple edit operations instead of component refactor (2026-03-07)
+- **Context:** Changed hero section colors by making 4 separate Edit calls targeting specific className strings rather than extracting color to configuration
+- **Why:** Direct string replacement is fastest for one-off changes; avoids unnecessary abstraction when color may not vary at runtime. Component structure remains simple
+- **Rejected:** Could have extracted colors to Tailwind config or component props, but adds complexity for static styling that isn't reused elsewhere
+- **Trade-offs:** Easy to implement quickly but makes future color changes harder; hardcoded classes are difficult to change globally without multiple edits
+- **Breaking if changed:** If hero section needs dynamic theming or multiple color variants later, hardcoded classes would need refactoring to extract color values

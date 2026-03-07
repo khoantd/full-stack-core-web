@@ -265,3 +265,13 @@ usageStats:
 - **Situation:** Changing background colors impacts contrast ratios with existing text colors
 - **Root cause:** Gray-200 provides insufficient contrast against blue/cyan backgrounds (likely WCAG AA failure). Cyan-100 maintains proper luminance contrast while keeping visual harmony with new color scheme
 - **How to avoid:** Gained: proper color theory application, better visual elegance. Lost: maximum contrast ratio - but still meets WCAG AA standards with cyan-100
+
+#### [Gotcha] Color contrast requirements when changing background colors in hero sections (2026-03-07)
+- **Situation:** Changed hero section background from gradient (cyan-blue) to black, requiring secondary text color updates from cyan-100 to gray-300
+- **Root cause:** Black background requires different text colors to maintain WCAG contrast ratios. Cyan-100 becomes unreadable on black, necessitating gray-300 for sufficient contrast
+- **How to avoid:** Gray-300 is less vibrant than cyan-100 but maintains usability; changing to black simplifies design but removes color branding from hero section
+
+#### [Pattern] Preserving SVG pattern overlays when changing background colors (2026-03-07)
+- **Problem solved:** White SVG pattern overlay (opacity 0.05) was retained despite changing from gradient to solid black background
+- **Why this works:** SVG pattern serves as subtle texture/depth layer independent of background color. With low opacity (0.05), it works across different backgrounds by adding visual complexity without being dominant
+- **Trade-offs:** Single overlay pattern works universally but may need opacity adjustments for different backgrounds; lower opacity required for black vs gradient
