@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Home Page Banner Verification', () => {
-  test('banner section should have red background color', async ({ page }) => {
+  test('banner section should have yellow background color', async ({ page }) => {
     // Navigate to the home page
     await page.goto('/');
 
@@ -17,15 +17,13 @@ test.describe('Home Page Banner Verification', () => {
     // Get the computed background color or check if it has gray classes
     const className = await heroSection.getAttribute('class');
 
-    // Verify the class contains red gradient colors
-    expect(className).toContain('from-red-500');
-    expect(className).toContain('via-red-600');
-    expect(className).toContain('to-red-700');
+    // Verify the class contains yellow background color
+    expect(className).toContain('bg-yellow-500');
 
     // Additional check: verify the section text is visible with correct content
     await expect(heroSection.getByText('Quality Parts for Every Ride')).toBeVisible();
     await expect(heroSection.getByText('From engine components to braking systems')).toBeVisible();
 
-    console.log('✅ Banner color verification passed: Red gradient classes are present');
+    console.log('✅ Banner color verification passed: Yellow background class is present');
   });
 });
