@@ -214,3 +214,8 @@ usageStats:
 - **Rejected:** Changing text color to match new palette without accessibility verification
 - **Trade-offs:** Easier: simpler changeset with fewer edits. Harder: requires accessibility knowledge to verify contrast was maintained during color migration
 - **Breaking if changed:** If text color is later changed without contrast verification, section becomes inaccessible to users with low vision or color blindness
+
+#### [Pattern] Component-based color system using Tailwind CSS gradients for hero sections (2026-03-07)
+- **Problem solved:** Hero section styling isolated in dedicated HeroSection component with gradient background
+- **Why this works:** Centralizing UI styling in dedicated components allows for consistent theme application and easier maintenance of visual hierarchy across the application
+- **Trade-offs:** Easier to update brand colors globally (single file change), but requires developers to know component structure. Tailwind CSS constraint means gradients limited to predefined color stops rather than arbitrary values

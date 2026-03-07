@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 41
-  referenced: 24
-  successfulFeatures: 24
+  loaded: 45
+  referenced: 25
+  successfulFeatures: 25
 ---
 # Gotchas
 
@@ -66,3 +66,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Initial search for 'yellow|orange' across tsx/ts/css files returned many unrelated results. Required multiple grep/find iterations to isolate the actual banner component among other components using similar colors
 - **Root cause:** Monorepo structure (apps/frontend) + multiple component files + CSS-in-JS (Tailwind classes embedded in tsx) means color references are scattered. A naive grep for 'yellow' could match UI elements, Tailwind config, custom CSS, documentation, etc.
 - **How to avoid:** Using file-type filtering and path scoping (components/landing directory) reduced noise. But still required reading the actual component file to verify it was the banner vs another yellow element
+
+#### [Gotcha] Gradient color stops may not be semantically aligned with actual visual appearance (2026-03-07)
+- **Situation:** Using `from-cyan-500 via-blue-600 to-blue-700` creates ocean blue effect, but individual color names don't obviously convey 'ocean blue'
+- **Root cause:** Tailwind color names are semantically generic (cyan, blue) rather than semantic (primary, secondary, ocean-blue). Developers new to codebase must experiment or have design context to understand the intent
+- **How to avoid:** Speed of implementation vs. code clarity and maintainability. New developers need design system documentation to understand color choices

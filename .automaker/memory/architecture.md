@@ -100,3 +100,10 @@ usageStats:
 - **Problem solved:** Hero section uses 3-stop gradient that needed color change from gray to yellow scale
 - **Why this works:** Tailwind's utility-first approach with named color scales (500, 600, 700) ensures color consistency and makes bulk color changes straightforward. Single className change replaces what would require multiple CSS rule updates
 - **Trade-offs:** Easier: className-based color changes require no CSS file management. Harder: difficult to see actual RGB values without Tailwind documentation lookup; className verbosity increases with multi-stop gradients
+
+### Using Tailwind utility classes for gradients instead of CSS variables or design tokens (2026-03-07)
+- **Context:** Hero section gradient defined as `from-cyan-500 via-blue-600 to-blue-700` directly in className
+- **Why:** Tailwind's utility-first approach provides immediate visual feedback and keeps styling co-located with component logic
+- **Rejected:** CSS variables or design tokens would require additional abstraction layer but would provide centralized color management across entire design system
+- **Trade-offs:** Faster development and easier to read in context, but harder to enforce design system consistency. Changing color requires code modification rather than configuration
+- **Breaking if changed:** If moving to design tokens system later, all Tailwind color classes would need extraction and centralization. Multiple hero sections with different colors would be difficult to manage
