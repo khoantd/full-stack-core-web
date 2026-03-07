@@ -6,7 +6,6 @@ import {
   usePayments,
   useCreatePayment,
   useUpdatePayment,
-  useUpdatePaymentStatus,
   useDeletePayment,
 } from "@/hooks/usePayment";
 import { useEvents } from "@/hooks/useEvent";
@@ -71,7 +70,6 @@ export default function PaymentsPage() {
 
   const createMutation = useCreatePayment();
   const updateMutation = useUpdatePayment();
-  const updateStatusMutation = useUpdatePaymentStatus();
   const deleteMutation = useDeletePayment();
 
   const events = eventsData?.data || [];
@@ -103,28 +101,6 @@ export default function PaymentsPage() {
       });
     },
     [deleteMutation]
-  );
-
-  const handleStatusChange = useCallback(
-    (payment: Payment, newStatus: PaymentStatus) => {
-      updateStatusMutation.mutate(
-        {
-          id: payment._id,
-          data: { status: newStatus },
-        },
-        {
-          onSuccess: () => {
-            toast.success(`Payment status updated to ${newStatus}`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.response?.data?.message || "Failed to update payment status"
-            );
-          },
-        }
-      );
-    },
-    [updateStatusMutation]
   );
 
   const handleCreateSubmit = useCallback(
@@ -284,12 +260,6 @@ export default function PaymentsPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onView={handleView}
-            onStatusChange={handleStatusChange}
-            isLoading={
-              updateMutation.isPending ||
-              updateStatusMutation.isPending ||
-              deleteMutation.isPending
-            }
           />
 
           {/* Pagination */}

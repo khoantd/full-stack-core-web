@@ -103,3 +103,27 @@ usageStats:
 - **Rejected:** Keeping white fill would make the texture pattern disappear entirely, losing the subtle visual detail that provides visual interest
 - **Trade-offs:** Black overlay on yellow is more visible than white on dark - required opacity reduction to maintain subtlety and prevent overwhelming the content
 - **Breaking if changed:** Without this adjustment, the banner would lose its texture depth and appear flat, eliminating the visual layering that separated background from content
+
+### Removed interactive Select dropdown from Status column, keeping status as read-only badge display (2026-03-07)
+- **Context:** Payment table previously allowed inline status editing via dropdown select component, now status is display-only
+- **Why:** Centralizes status editing through dedicated Edit workflow (Action menu → Edit) rather than scattered inline controls. Simplifies table interaction model and reduces cognitive load for users - one edit path instead of two
+- **Rejected:** Keeping dual edit paths (inline select + edit modal). Would create inconsistent UX and maintenance burden
+- **Trade-offs:** Faster status changes removed (requires full edit modal now), but cleaner UI and consistent state management. More clicks for status-only updates vs inline changes
+- **Breaking if changed:** Any code or external integrations expecting onStatusChange callback on PaymentTable will break. Must route through Edit workflow instead
+
+#### [Pattern] Coordinated color system change across multiple text elements and interactive components when updating banner background (2026-03-07)
+- **Problem solved:** Changing banner from yellow to red required updates to: main background gradient, text colors, pattern overlay SVG, subtitle text, body text, and button styling
+- **Why this works:** Yellow background with slate-900 text has high contrast. Red background requires white/light text for accessibility. SVG pattern fill needed color inversion to remain visible. Button border/hover states must coordinate with new palette to maintain visual hierarchy
+- **Trade-offs:** More edit points mean higher maintenance burden if colors change again, but ensures consistent contrast and visual coherence across the component. Required coordinating 5+ style updates instead of 1
+
+### Changed text-slate-900 to text-white instead of using red-900 or other red variants for primary text contrast (2026-03-07)
+- **Context:** When switching background from yellow to red, needed to ensure text remains readable
+- **Why:** White provides maximum contrast ratio (21:1) against red-600/red-500 gradients, guaranteeing WCAG AAA compliance. Red-900 text on red background would fail contrast requirements entirely. White is safer and more universal
+- **Rejected:** Using text-red-100 or text-red-50 for primary heading would reduce contrast and require additional visual testing. Using complementary colors (cyan/blue) would introduce brand inconsistency
+- **Trade-offs:** White text is less visually interesting than a coordinated red palette, but prioritizes accessibility and clarity. Simpler to maintain across future iterations
+- **Breaking if changed:** If contrast falls below WCAG AA (4.5:1 for normal text), site becomes inaccessible to visually impaired users and may fail compliance audits
+
+#### [Gotcha] SVG pattern fill color must be inverted when background color changes significantly (2026-03-07)
+- **Situation:** Yellow background used fill='%23000000' (black) at opacity-50. Red background requires fill='%23ffffff' (white) to remain visible
+- **Root cause:** Pattern overlay visibility depends on contrast with background. Black pattern on yellow is visible. Black pattern on red becomes nearly invisible. Inverting fill color maintains consistent texture perception
+- **How to avoid:** Requires understanding SVG data URLs and color encoding. Easy to miss during quick refactors. Worth documenting as a 'pattern inversion rule'

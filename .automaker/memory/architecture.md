@@ -44,3 +44,8 @@ usageStats:
 - **Problem solved:** The 'Car Parts'/'Car Partss' string exists as: JSX content in components, plain text in link labels, and metadata string in Next.js config.
 - **Why this works:** Different file types and contexts (React components, HTML content, Next.js metadata) don't share a single source of truth for the brand name.
 - **Trade-offs:** Current approach: each instance edited manually - simple but error-prone for future updates. Alternative (shared constants): more maintainable long-term but adds abstraction layer.
+
+#### [Pattern] Removed unused hook imports and callback functions from parent component (useUpdatePaymentStatus, handleStatusChange) (2026-03-07)
+- **Problem solved:** Parent page component had mutation hooks and handlers that were no longer needed after removing inline edit capability
+- **Why this works:** Prevents zombie code that creates unused mutations and API call infrastructure. Eliminates API endpoints being configured but never called, reducing mental overhead for future developers
+- **Trade-offs:** If inline editing needs to be re-added later, mutation hook setup and handlers must be recreated. But this is discoverable from git history and cleaner than maintaining dead code

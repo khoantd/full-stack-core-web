@@ -79,3 +79,8 @@ usageStats:
 - **Situation:** Attempted to create automated test to verify changes, but environment lacked required dependencies for Playwright browser automation.
 - **Root cause:** E2E tests provide reliable verification that changes are actually rendered correctly in the browser, not just present in source code.
 - **How to avoid:** Manual source code verification (grep search) is faster and doesn't require environment setup, but doesn't verify actual rendering. E2E tests catch CSS hiding, conditional rendering issues.
+
+#### [Gotcha] Playwright browser installation and test execution failed in CI environment due to missing system libraries (libglib-2.0.so.0), requiring fallback to static code analysis for verification (2026-03-07)
+- **Situation:** Attempted to create and run Playwright end-to-end tests to verify status column displays badge instead of select, but hit environment limitations
+- **Root cause:** Full headless browser testing requires complete system library stack. Static analysis (linting, type checking) provided sufficient verification for this change
+- **How to avoid:** No runtime verification of DOM structure/element visibility (would catch unmounted components, selector changes), but code structure changes were fully verified via static checks

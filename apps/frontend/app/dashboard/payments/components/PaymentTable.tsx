@@ -28,13 +28,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { IconDotsVertical, IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
@@ -45,8 +38,6 @@ interface PaymentTableProps {
   onEdit: (payment: Payment) => void;
   onDelete: (payment: Payment) => void;
   onView: (payment: Payment) => void;
-  onStatusChange: (payment: Payment, status: PaymentStatus) => void;
-  isLoading?: boolean;
 }
 
 export function PaymentTable({
@@ -54,8 +45,6 @@ export function PaymentTable({
   onEdit,
   onDelete,
   onView,
-  onStatusChange,
-  isLoading,
 }: PaymentTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [paymentToDelete, setPaymentToDelete] = useState<Payment | null>(null);
@@ -160,28 +149,7 @@ export function PaymentTable({
                 </TableCell>
                 <TableCell>{getPaymentMethodBadge(payment.paymentMethod)}</TableCell>
                 <TableCell>
-                  <Select
-                    value={payment.status}
-                    onValueChange={(value) => onStatusChange(payment, value as PaymentStatus)}
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue>
-                        {getStatusBadge(payment.status)}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={PaymentStatus.PENDING}>
-                        <Badge className="bg-yellow-500 hover:bg-yellow-600">Pending</Badge>
-                      </SelectItem>
-                      <SelectItem value={PaymentStatus.SUCCESS}>
-                        <Badge className="bg-green-500 hover:bg-green-600">Success</Badge>
-                      </SelectItem>
-                      <SelectItem value={PaymentStatus.FAILED}>
-                        <Badge className="bg-red-500 hover:bg-red-600">Failed</Badge>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {getStatusBadge(payment.status)}
                 </TableCell>
                 <TableCell className="text-sm">
                   {formatDate(payment.paidAt)}
