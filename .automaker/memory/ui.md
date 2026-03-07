@@ -84,3 +84,22 @@ usageStats:
 - **Problem solved:** Header brand name 'Car Parts' where only 'Car' should have primary color styling, requiring text to be split across elements
 - **Why this works:** React/JSX requires styling to be applied to elements, but only first word needs the color. Splitting the text allows applying className to only the relevant word without losing semantic meaning
 - **Trade-offs:** Slightly more verbose but provides explicit control. More readable than CSS-only selectors. Harder to refactor if branding text changes (need to update multiple places)
+
+### Changed text color from white to slate-900 when switching banner background from dark to yellow (2026-03-07)
+- **Context:** Banner background changed from dark gradient (slate-900) to bright yellow (yellow-500/yellow-400)
+- **Why:** White text on yellow background creates poor contrast and readability. Dark text (slate-900) on bright yellow maintains WCAG contrast requirements and ensures accessibility
+- **Rejected:** Keeping white text would result in barely visible content on the bright yellow background
+- **Trade-offs:** Bright foreground colors on bright backgrounds reduce visual depth - now relies on structural hierarchy rather than color contrast for emphasis
+- **Breaking if changed:** Removing the text color adjustment would make the banner content unreadable with the yellow background
+
+#### [Pattern] Coordinated all related color elements (text, buttons, overlays, icons) when changing background color (2026-03-07)
+- **Problem solved:** Single banner background color change required cascading updates to secondary text, buttons, SVG pattern overlays, and icon colors
+- **Why this works:** Prevents visual inconsistency where some elements remain styled for the old dark background while the banner is now bright. Maintains cohesive design language
+- **Trade-offs:** Requires more edits and coordination, but prevents visual debt and maintains intentional design consistency
+
+### Adjusted SVG pattern overlay fill-opacity from white (fill='%23ffffff') to black (fill='%23000000') with matching opacity (2026-03-07)
+- **Context:** Light gray background with repeating SVG pattern - white pattern visible on dark background, but invisible on bright yellow
+- **Why:** White pattern with low opacity blends into the bright yellow background. Switching to black maintains the subtle texture pattern visibility and depth on the new background
+- **Rejected:** Keeping white fill would make the texture pattern disappear entirely, losing the subtle visual detail that provides visual interest
+- **Trade-offs:** Black overlay on yellow is more visible than white on dark - required opacity reduction to maintain subtlety and prevent overwhelming the content
+- **Breaking if changed:** Without this adjustment, the banner would lose its texture depth and appear flat, eliminating the visual layering that separated background from content

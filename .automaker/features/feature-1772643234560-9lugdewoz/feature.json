@@ -1,0 +1,38 @@
+{
+  "category": "Uncategorized",
+  "description": "Sửa \"Car Parts\" thành \"Car Partss\"",
+  "title": "Sửa \"Car Parts\" thành \"Car Partss\"",
+  "images": [],
+  "imagePaths": [
+    {
+      "id": "img-1772643225076-7wycb4ot3",
+      "path": "/projects/full-stack-core-web/.automaker/features/feature-1772643234560-9lugdewoz/images/pasted-image-2026-03-04T16-53-44-917Z-1772643225211.png",
+      "filename": "pasted-image-2026-03-04T16-53-44-917Z.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "textFilePaths": [],
+  "skipTests": true,
+  "model": "opus",
+  "thinkingLevel": "none",
+  "reasoningEffort": "none",
+  "branchName": null,
+  "priority": 2,
+  "planningMode": "skip",
+  "requirePlanApproval": false,
+  "dependencies": [],
+  "workMode": "custom",
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1772643234560-9lugdewoz",
+  "descriptionHistory": [
+    {
+      "description": "Sửa \"Car Parts\" thành \"Car Partss\"",
+      "timestamp": "2026-03-04T16:53:54.729Z",
+      "source": "initial"
+    }
+  ],
+  "startedAt": "2026-03-04T16:53:54.604Z",
+  "updatedAt": "2026-03-04T16:54:55.577Z",
+  "justFinishedAt": "2026-03-04T16:54:55.577Z"
+}

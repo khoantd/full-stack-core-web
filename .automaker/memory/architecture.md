@@ -39,3 +39,8 @@ usageStats:
 - **Rejected:** Could have extracted to a constant (SITE_NAME or BRAND_NAME) and referenced everywhere, but that adds indirection for a single change
 - **Trade-offs:** Easier initial change (edit one file) but harder maintenance (consistency issues, multiple places to update for brand changes)
 - **Breaking if changed:** Future brand name changes require updates in multiple files; no single source of truth means inconsistency risk
+
+#### [Pattern] Brand name appears in 3 distinct locations: component structure (header/footer), content text, and metadata (page title). Each requires separate edits because they're in different file types and contexts. (2026-03-04)
+- **Problem solved:** The 'Car Parts'/'Car Partss' string exists as: JSX content in components, plain text in link labels, and metadata string in Next.js config.
+- **Why this works:** Different file types and contexts (React components, HTML content, Next.js metadata) don't share a single source of truth for the brand name.
+- **Trade-offs:** Current approach: each instance edited manually - simple but error-prone for future updates. Alternative (shared constants): more maintainable long-term but adds abstraction layer.

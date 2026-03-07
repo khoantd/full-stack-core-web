@@ -74,3 +74,8 @@ usageStats:
 - **Situation:** Attempted to create and run Playwright tests to verify the UI text fix but execution failed due to missing browser runtime dependencies
 - **Root cause:** Playwright needs to spawn actual browser instances which require system-level libraries. Sandboxed/minimal environments often strip these for security and size constraints
 - **How to avoid:** Had to fall back to source code verification (grep) instead of actual user-facing visual verification. Faster iteration but less confidence in actual UI rendering
+
+#### [Gotcha] Playwright E2E test creation for simple text verification failed due to missing system libraries (libglib-2.0.so.0), forcing fallback to source code verification via grep. (2026-03-04)
+- **Situation:** Attempted to create automated test to verify changes, but environment lacked required dependencies for Playwright browser automation.
+- **Root cause:** E2E tests provide reliable verification that changes are actually rendered correctly in the browser, not just present in source code.
+- **How to avoid:** Manual source code verification (grep search) is faster and doesn't require environment setup, but doesn't verify actual rendering. E2E tests catch CSS hiding, conditional rendering issues.

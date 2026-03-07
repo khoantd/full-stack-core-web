@@ -1,0 +1,30 @@
+{
+  "category": "Uncategorized",
+  "description": "Sửa \"Car Parts\" thành \"Car Partss\"\nChange code giúp tôi nhé",
+  "title": "Sửa \"Car Parts\" thành \"Car Partss\"",
+  "images": [],
+  "imagePaths": [],
+  "textFilePaths": [],
+  "skipTests": false,
+  "model": "opus",
+  "thinkingLevel": "none",
+  "reasoningEffort": "none",
+  "branchName": null,
+  "priority": 2,
+  "planningMode": "skip",
+  "requirePlanApproval": false,
+  "dependencies": [],
+  "workMode": "custom",
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1772643400080-0pg3mhkox",
+  "descriptionHistory": [
+    {
+      "description": "Sửa \"Car Parts\" thành \"Car Partss\"\nChange code giúp tôi nhé",
+      "timestamp": "2026-03-04T16:56:40.261Z",
+      "source": "initial"
+    }
+  ],
+  "startedAt": "2026-03-04T16:56:41.297Z",
+  "updatedAt": "2026-03-04T16:58:07.022Z"
+}

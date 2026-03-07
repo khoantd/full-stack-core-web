@@ -1,0 +1,37 @@
+{
+  "category": "Uncategorized",
+  "description": "Thay màu banner này thành màu vàng giúp tôi\nNhớ sửa code nhé",
+  "title": "Thay màu banner",
+  "images": [],
+  "imagePaths": [
+    {
+      "id": "img-1772872109514-qt5norj0n",
+      "path": "/projects/full-stack-core-web/.automaker/features/feature-1772872158379-7t7utlmqn/images/pasted-image-2026-03-07T08-28-28-855Z-1772872109522.png",
+      "filename": "pasted-image-2026-03-07T08-28-28-855Z.png",
+      "mimeType": "image/png"
+    }
+  ],
+  "textFilePaths": [],
+  "skipTests": true,
+  "model": "opus",
+  "thinkingLevel": "none",
+  "reasoningEffort": "none",
+  "priority": 2,
+  "planningMode": "skip",
+  "requirePlanApproval": false,
+  "dependencies": [],
+  "workMode": "current",
+  "titleGenerating": false,
+  "status": "verified",
+  "id": "feature-1772872158379-7t7utlmqn",
+  "descriptionHistory": [
+    {
+      "description": "Thay màu banner này thành màu vàng giúp tôi\nNhớ sửa code nhé",
+      "timestamp": "2026-03-07T08:29:18.478Z",
+      "source": "initial"
+    }
+  ],
+  "startedAt": "2026-03-07T08:29:18.484Z",
+  "updatedAt": "2026-03-07T08:30:26.917Z",
+  "justFinishedAt": "2026-03-07T08:30:26.917Z"
+}

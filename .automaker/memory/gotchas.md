@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 13
-  referenced: 8
-  successfulFeatures: 8
+  loaded: 16
+  referenced: 11
+  successfulFeatures: 11
 ---
 # Gotchas
 
@@ -41,3 +41,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** After fixing source file, grep results still showed 'Partsssss' in .next build artifacts, creating false impression that fix didn't work
 - **Root cause:** Next.js and similar frameworks generate optimized production artifacts during build. These are cached and only regenerated on explicit builds, not on source changes
 - **How to avoid:** Source verification is immediate but gives false sense of security - actual verification requires running build pipeline. More reliable = slower feedback loop
+
+#### [Gotcha] Text replacement across multiple files requires systematic discovery before modification. Initial grep search found instances in 3 different files (LandingNav.tsx, LandingFooter.tsx, page.tsx) with inconsistent states. (2026-03-04)
+- **Situation:** Task appeared simple (rename 'Car Parts' to 'Car Partss') but required checking multiple locations. LandingNav.tsx already had the target state while other files didn't.
+- **Root cause:** Brand name strings are duplicated across header, footer, and metadata. Without comprehensive search, some instances could be missed, leading to inconsistent brand display.
+- **How to avoid:** Taking time to verify all instances before editing ensured consistency but added extra steps. Automated find-and-replace could miss context-specific variations.
