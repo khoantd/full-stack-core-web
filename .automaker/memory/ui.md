@@ -275,3 +275,15 @@ usageStats:
 - **Problem solved:** White SVG pattern overlay (opacity 0.05) was retained despite changing from gradient to solid black background
 - **Why this works:** SVG pattern serves as subtle texture/depth layer independent of background color. With low opacity (0.05), it works across different backgrounds by adding visual complexity without being dominant
 - **Trade-offs:** Single overlay pattern works universally but may need opacity adjustments for different backgrounds; lower opacity required for black vs gradient
+
+#### [Gotcha] SVG pattern overlays with opacity can create visual complexity that obscures intent. The original HeroSection used a data-URI SVG pattern with 5% fill-opacity nested inside a 50% opacity container, creating a compounded opacity effect (0.05 * 0.50 = 0.025 effective opacity). (2026-03-07)
+- **Situation:** Hero banner background appeared to have visual decoration but the opacity layering made the actual visual contribution minimal and confusing to maintain.
+- **Root cause:** Removing the pattern overlay simplifies the DOM structure and eliminates unnecessary data-URIs. This reduces cognitive load for future maintainers who need to understand the component's appearance.
+- **How to avoid:** Lost potential subtle texture/depth effect in exchange for clarity and performance (one less SVG render). Component now matches modern minimalist design trends over decorated backgrounds.
+
+### Preserved all non-background styling (padding, text color, overflow handling) while only modifying the background treatment. Changed from dynamic background declaration to explicit `bg-black` on container and simple `absolute inset-0 bg-black` for the overlay div. (2026-03-07)
+- **Context:** Needed to change visual appearance of hero without breaking layout or affecting text content.
+- **Why:** Minimal change surface area reduces risk of unintended side effects. By keeping margin/padding/typography intact, the component continues to function identically except for background appearance.
+- **Rejected:** Could have completely rewritten the section styling or introduced new classes, but that introduces risk of breaking responsive behavior or spacing.
+- **Trade-offs:** Conservative change is safer but less flexible if future requirements need other styling adjustments. Would require another edit cycle.
+- **Breaking if changed:** If future code relies on the SVG pattern existing (e.g., CSS selectors looking for specific opacity values, or animations targeting the pattern div), those would break. Unlikely since pattern was decorative, but worth documenting in commit message.

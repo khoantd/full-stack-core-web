@@ -136,3 +136,8 @@ usageStats:
 - **Rejected:** Could have extracted colors to Tailwind config or component props, but adds complexity for static styling that isn't reused elsewhere
 - **Trade-offs:** Easy to implement quickly but makes future color changes harder; hardcoded classes are difficult to change globally without multiple edits
 - **Breaking if changed:** If hero section needs dynamic theming or multiple color variants later, hardcoded classes would need refactoring to extract color values
+
+#### [Pattern] Used systematic exploration (Glob patterns → directory structure → file reading) to locate and understand component before modification. Started with broad search patterns (*hero*, *banner*) then narrowed to specific file system paths. (2026-03-07)
+- **Problem solved:** Task required finding and modifying a specific UI component in an unknown/large codebase structure.
+- **Why this works:** This discovery pattern prevents blind assumptions about folder structure and component locations. By exploring first, avoided editing wrong files and understood the landing page component architecture.
+- **Trade-offs:** Initial exploration takes more time upfront but provides confidence and prevents rework. Better for unfamiliar codebases than jumping to edits.
