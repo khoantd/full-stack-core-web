@@ -127,3 +127,20 @@ usageStats:
 - **Situation:** Yellow background used fill='%23000000' (black) at opacity-50. Red background requires fill='%23ffffff' (white) to remain visible
 - **Root cause:** Pattern overlay visibility depends on contrast with background. Black pattern on yellow is visible. Black pattern on red becomes nearly invisible. Inverting fill color maintains consistent texture perception
 - **How to avoid:** Requires understanding SVG data URLs and color encoding. Easy to miss during quick refactors. Worth documenting as a 'pattern inversion rule'
+
+#### [Gotcha] Visual discrepancy between design mockup (yellow banner) and implementation (red banner) - multiple worktrees/branches with different color states created confusion during investigation (2026-03-07)
+- **Situation:** Feature request showed yellow banner in reference image, but current codebase had red gradient. Multiple file paths and worktree versions existed, making it unclear which was the source of truth.
+- **Root cause:** Branch-based development with multiple worktrees can lead to different states. The implementation had already been changed from yellow→red, but the reference image showed the original yellow state.
+- **How to avoid:** Image-based requirements vs code reality - worktrees allow isolated work but create version confusion. Having the 'before' image helps confirm the change was intentional.
+
+#### [Pattern] Used Tailwind gradient with three color stops (from-red-600 via-red-500 to-red-600) instead of flat color - creates subtle depth effect (2026-03-07)
+- **Problem solved:** Banner background color implementation for hero section
+- **Why this works:** Gradient (600→500→600) creates visual interest and depth while maintaining color consistency - the middle 500 creates a slight lightening effect across the width/height
+- **Trade-offs:** Slightly more complex (3 color values vs 1) but provides better visual polish. Gradient direction matters for the effect.
+
+### Text hierarchy maintained with two color levels: primary text white (text-white) and secondary text muted red (text-red-100) on red gradient background (2026-03-07)
+- **Context:** Ensuring readability and visual hierarchy when banner color changed from yellow to red
+- **Why:** White on red-600 provides strong contrast (WCAG compliant). Using text-red-100 for secondary content instead of another gray maintains color theme cohesion while establishing hierarchy through tone variation.
+- **Rejected:** Could have used gray colors (text-gray-200) for secondary text, but would break the red color theme. Using white for all text would eliminate hierarchy.
+- **Trade-offs:** text-red-100 is less contrasted than gray would be, but maintains design cohesion. Requires verification that contrast ratio still meets accessibility standards.
+- **Breaking if changed:** Removing the text-red-100 distinction would flatten the visual hierarchy. Using text-gray/text-slate would create visual discord with the red theme
