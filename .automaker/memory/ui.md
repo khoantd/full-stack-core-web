@@ -243,3 +243,8 @@ usageStats:
 - **Problem solved:** Hero section needs to adapt vertical spacing between mobile and desktop viewports
 - **Why this works:** Tailwind's responsive prefixes (lg:) enable mobile-first design that scales gracefully. Relative spacing (24, 28 units) maintains proportions across screen sizes rather than hardcoded breakpoints.
 - **Trade-offs:** Responsive classes add className length but provide built-in mobile optimization; requires understanding Tailwind breakpoint system
+
+#### [Pattern] Used Tailwind CSS gradient utility classes (from-pink-500 via-pink-600 to-pink-700) for hero section background instead of custom CSS or CSS-in-JS (2026-03-07)
+- **Problem solved:** Need to change hero section color scheme from purple to pink gradient
+- **Why this works:** Tailwind gradient utilities provide semantic, maintainable color transitions that leverage the design system token set. The via- modifier creates smooth 3-step gradients without manual color interpolation
+- **Trade-offs:** Tailwind approach trades explicit control for consistency and maintenance; changes to design tokens automatically cascade to all gradient uses
