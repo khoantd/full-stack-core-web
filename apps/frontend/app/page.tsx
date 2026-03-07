@@ -6,7 +6,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Car Partss - Quality Auto Parts for Every Ride",
+  title: "Car Parts - Quality Auto Parts for Every Ride",
   description:
     "From engine components to braking systems, we offer top-notch parts that meet the highest standards of quality and durability.",
 };

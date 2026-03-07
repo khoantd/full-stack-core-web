@@ -9,7 +9,7 @@ export function LandingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <Link href="/" className="font-bold text-xl text-white">
-              Car Partss
+              Car Parts
             </Link>
             <p className="mt-4 text-sm max-w-md">
               From engine components to braking systems, we offer top-notch parts that meet the highest standards of quality and durability.
@@ -36,7 +36,7 @@ export function LandingFooter() {
           </div>
         </div>
         <div className="mt-12 pt-8 border-t border-slate-700 text-center text-sm text-slate-500">
-          &copy; {new Date().getFullYear()} Car Partss. All rights reserved.
+          &copy; {new Date().getFullYear()} Car Parts. All rights reserved.
         </div>
       </div>
     </footer>

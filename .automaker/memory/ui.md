@@ -173,3 +173,8 @@ usageStats:
 - **Problem solved:** Banner color changed from gray to ocean blue gradient, requiring supporting text color adjustments
 - **Why this works:** Maintaining visual hierarchy and contrast ratios. Gray text (gray-100) on gray gradient is high contrast, but gray text on blue gradient reduces readability. Cyan-100 on cyan/blue gradient maintains intended contrast levels.
 - **Trade-offs:** More granular edits required (4 separate changes vs 1) but ensures cohesive design. Risk of missing text elements if not done systematically.
+
+#### [Pattern] Text split across JSX elements using className styling: `<span className="text-primary">Car</span> Partss` separates 'Car' into styled span while 'Partss' remains as text node (2026-03-07)
+- **Problem solved:** Header branding in LandingNav.tsx uses partial styling for visual effect (making 'Car' a different color)
+- **Why this works:** Allows styling specific portions of text differently (primary color) while keeping code maintainable; spans don't add semantic meaning, just styling
+- **Trade-offs:** Makes the typo less obvious visually (people parse 'Car' and 'Parts' separately), but also means the typo is easier to miss during code review

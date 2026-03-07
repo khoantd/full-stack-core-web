@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 30
-  referenced: 17
-  successfulFeatures: 17
+  loaded: 31
+  referenced: 18
+  successfulFeatures: 18
 ---
 # Gotchas
 
@@ -51,3 +51,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Original gray gradient: 'from-gray-600 via-gray-500 to-gray-600'. Replacement used same pattern with cyan/blue but subtle differences in undertone meaning
 - **Root cause:** Gray gradient created visual depth with mid-tone. Direct swap to cyan-600/blue-500/cyan-600 changes gradient intensity and direction. The 'via' color (blue-500) is lighter than terminal colors, creating different visual effect than original.
 - **How to avoid:** Maintained visual complexity but shifted color psychology from neutral-cool to active-cool. May appear more 'energetic' than intended.
+
+#### [Gotcha] Visual discrepancy between screenshot and grep results: typo appeared in header visually but grep initially found matches in footer and page.tsx, not the header component (2026-03-07)
+- **Situation:** Developer was troubleshooting based on visual inspection of UI but search results pointed to different files initially
+- **Root cause:** The grep search without path specification may have found results in unexpected files; developer needed to explicitly search for Header components to locate the actual source
+- **How to avoid:** Required additional Glob and Read operations to pinpoint the correct component, but ensured finding the actual source of truth rather than just text occurrences

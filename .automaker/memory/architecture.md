@@ -66,3 +66,10 @@ usageStats:
 - **Rejected:** Separate CSS files would require mapping class names to selectors; CSS variables would add abstraction layer; styled-components would require additional dependencies
 - **Trade-offs:** Easier for simple changes, harder to maintain consistent design tokens across many components. No single place to update brand colors globally without grep-and-replace.
 - **Breaking if changed:** If design system later requires centralized color management, would need refactoring to extract magic color strings into config or CSS variables
+
+### Fixed typo in multiple locations (header, footer, page title metadata) rather than just the visually apparent location (2026-03-07)
+- **Context:** After fixing the header, developer proactively searched for and fixed the same typo in other files for consistency
+- **Why:** Ensures brand consistency across the entire user journey and prevents confusion where same text appears with different spellings in different contexts
+- **Rejected:** Fixing only the header component since that's what the user reported visually
+- **Trade-offs:** Required additional edits and file reads, but prevented brand inconsistency and potential SEO issues (page title is used for search results and bookmarks)
+- **Breaking if changed:** If only header was fixed: users would see 'Car Parts' in header but 'Car Partss' in footer and browser tabs, appearing unprofessional and creating duplicate/conflicting brand messaging
