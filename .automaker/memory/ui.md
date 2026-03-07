@@ -144,3 +144,27 @@ usageStats:
 - **Rejected:** Could have used gray colors (text-gray-200) for secondary text, but would break the red color theme. Using white for all text would eliminate hierarchy.
 - **Trade-offs:** text-red-100 is less contrasted than gray would be, but maintains design cohesion. Requires verification that contrast ratio still meets accessibility standards.
 - **Breaking if changed:** Removing the text-red-100 distinction would flatten the visual hierarchy. Using text-gray/text-slate would create visual discord with the red theme
+
+#### [Gotcha] Visual color mismatch between CSS class names and actual rendering: CSS classes named 'red-*' were rendering as yellow in the UI (2026-03-07)
+- **Situation:** Banner styling used Tailwind classes `from-red-600 via-red-500 to-red-600` but appeared yellow in the browser, requiring color change to purple
+- **Root cause:** Indicates either incorrect Tailwind color mapping, custom theme configuration, or CSS override elsewhere in the codebase that wasn't immediately visible
+- **How to avoid:** Required visual inspection and source code reading to identify the actual color being used; automation/CSS linting wouldn't catch this mismatch
+
+### Systematic replacement of color tokens across all text variations (primary color, subtitles, descriptions, secondary elements) to maintain visual cohesion (2026-03-07)
+- **Context:** Changed 4 separate CSS selectors containing color references from red to purple, all on the same component
+- **Why:** Ensures design consistency - primary gradient, supporting text, and secondary accents must all harmonize; changing only the background would create visual discord
+- **Rejected:** Changing only the main gradient background would result in mismatched accent colors that contradict design intent
+- **Trade-offs:** More edits required but prevents design inconsistency; single source of truth approach would be better
+- **Breaking if changed:** Missing any color reference creates visual inconsistency; if new accent colors are added to the component later, they must follow the same pattern
+
+#### [Pattern] Color theme migration using systematic find-and-replace across gradient and text color classes (2026-03-07)
+- **Problem solved:** Changing hero banner from red to gray theme required updating multiple CSS classes across a single component
+- **Why this works:** Tailwind CSS uses consistent naming patterns (red-600, red-500, red-100 → gray-600, gray-500, gray-100) allowing mechanical replacement while maintaining design system coherence
+- **Trade-offs:** Quick mechanical replacement is easy for one-off changes but creates maintenance burden if theme system needs flexibility later. No centralized color definition means theme changes require component edits
+
+### Color semantic preservation: text color hierarchy (primary text white, secondary text gray-100) maintained independently from background color migration (2026-03-07)
+- **Context:** Some color changes (red-100 → gray-100) affected text elements that denote semantic importance levels, not backgrounds
+- **Why:** Text contrast and readability require semantic relationship to background color. Gray-100 on gray-600 maintains sufficient contrast as gray-100 on red-600 did, but the semantic meaning differs - gray on gray is more muted/secondary than red on red
+- **Rejected:** Keeping red-100 text (would clash with gray background); using pure white everywhere (would lose semantic hierarchy); using completely different gray values for text
+- **Trade-offs:** Consistent mechanical color replacement simplified the change but may have subtly altered the visual hierarchy/emphasis of secondary text elements. Gray-100 on gray background feels more subtle than red-100 on red background
+- **Breaking if changed:** If contrast ratios drop below WCAG standards (unlikely with gray-100 on gray-600) or if designers intended different visual emphasis for secondary text, this mapping fails the visual design intent

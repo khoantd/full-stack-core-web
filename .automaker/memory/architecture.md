@@ -49,3 +49,13 @@ usageStats:
 - **Problem solved:** Parent page component had mutation hooks and handlers that were no longer needed after removing inline edit capability
 - **Why this works:** Prevents zombie code that creates unused mutations and API call infrastructure. Eliminates API endpoints being configured but never called, reducing mental overhead for future developers
 - **Trade-offs:** If inline editing needs to be re-added later, mutation hook setup and handlers must be recreated. But this is discoverable from git history and cleaner than maintaining dead code
+
+#### [Pattern] Using git worktrees for feature branches (`.worktrees/feature-change-color`) to isolate experimental work (2026-03-07)
+- **Problem solved:** Project structure shows feature work isolated in `.worktrees/feature-change-color/` directory rather than traditional git branches
+- **Why this works:** Worktrees allow multiple working directories on the same repository without switching branches, enabling parallel development and isolated testing of features
+- **Trade-offs:** Worktrees add filesystem complexity but enable true parallel work; requires cleanup of worktree directories; not all tools understand worktree structure
+
+#### [Gotcha] Gradient backgrounds with multiple color stops (from-X via-Y to-Z) require updating all three values atomically to maintain visual consistency (2026-03-07)
+- **Situation:** Hero section uses 3-color gradient. Updating only some color values would create visual inconsistency or mismatched color transitions
+- **Root cause:** Gradients rely on color relationships for visual balance. Red-600→Red-500→Red-600 has specific contrast and saturation curve that must map consistently to Gray-600→Gray-500→Gray-600
+- **How to avoid:** Maintaining multi-stop gradients preserves visual sophistication but increases coordination cost when changing themes. Single-color backgrounds would be easier to theme but less visually interesting
