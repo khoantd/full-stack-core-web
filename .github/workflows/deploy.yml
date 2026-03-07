@@ -68,10 +68,17 @@ jobs:
               haupham2311/fe-core-web-cms:latest
 
       - name: Gửi thông báo Telegram (deploy xong)
-        if: success() && secrets.TELEGRAM_BOT_TOKEN != '' && secrets.TELEGRAM_CHAT_ID != ''
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          TEXT="✅ Deploy hoàn tất (branch main)%0A%0ALên hệ thống test nhé 🚀"
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d "text=${TEXT}" || true
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            TEXT="✅ Deploy hoàn tất (branch main)%0A%0ALên hệ thống test nhé 🚀"
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d "chat_id=${TELEGRAM_CHAT_ID}" \
+              -d "text=${TEXT}" || true
+          else
+            echo "Skip Telegram notification (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set)"
+          fi
 
