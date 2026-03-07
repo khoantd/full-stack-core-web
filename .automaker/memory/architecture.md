@@ -117,3 +117,10 @@ usageStats:
 - **Problem solved:** Home page is composed of multiple modular components rather than a single monolithic file
 - **Why this works:** Component modularity enables reusability, independent testing, easier maintenance, and clear separation of concerns. Each section has single responsibility.
 - **Trade-offs:** More files and directory nesting (slightly harder to navigate) vs better code organization and testability
+
+### Discovery phase used multiple exploration tools (Glob patterns, Grep, Bash find commands) before reading component - redundant searches could have been consolidated (2026-03-07)
+- **Context:** Executed 15+ search commands (glob, grep, find, ls) to locate HeroSection.tsx when direct path could have been inferred from naming conventions
+- **Why:** Defensive exploration in unfamiliar codebase reduces risk of missing files or misunderstanding structure. Cost is verbose tool usage
+- **Rejected:** Direct path assumption without verification - could miss refactored components or non-standard layouts
+- **Trade-offs:** Thorough exploration is slower but more reliable; direct paths are faster but fragile to codebase reorganization
+- **Breaking if changed:** Skipping exploration and hardcoding paths creates brittle scripts that break when components move or are renamed

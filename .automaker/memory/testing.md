@@ -94,3 +94,8 @@ usageStats:
 - **Situation:** Color change in HeroSection.tsx required corresponding updates in verify-banner-color.spec.ts for tests to remain valid
 - **Root cause:** Tests serve as contracts that verify expected behavior. If UI changes without test updates, tests become misleading documentation that no longer validate actual behavior
 - **How to avoid:** Easier: immediate feedback that color change was complete. Harder: requires finding and updating all related test assertions across the codebase
+
+#### [Gotcha] Test assertions must match exact Tailwind class names - updating UI colors requires parallel test updates or tests fail silently (2026-03-07)
+- **Situation:** Changed hero section gradient from pink to red, which required updating both component className and test assertions checking for specific color classes
+- **Root cause:** E2E tests use getAttribute('class') to verify CSS classes applied - Tailwind class names are the source of truth, not computed styles. Mismatch between component and test causes false negatives
+- **How to avoid:** Class-based assertions are more brittle to refactoring but more reliable across browsers; computed style checks are resilient but environment-dependent

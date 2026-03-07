@@ -248,3 +248,8 @@ usageStats:
 - **Problem solved:** Need to change hero section color scheme from purple to pink gradient
 - **Why this works:** Tailwind gradient utilities provide semantic, maintainable color transitions that leverage the design system token set. The via- modifier creates smooth 3-step gradients without manual color interpolation
 - **Trade-offs:** Tailwind approach trades explicit control for consistency and maintenance; changes to design tokens automatically cascade to all gradient uses
+
+#### [Pattern] Using Tailwind gradient color stops (from/via/to) for consistent color transitions instead of hardcoded hex values (2026-03-07)
+- **Problem solved:** Hero section uses `bg-gradient-to-br from-red-500 via-red-600 to-red-700` to create direction and intensity progression
+- **Why this works:** Semantic color tokens ensure design system consistency, enable global theme changes, and make maintenance declarative. Three-stop gradients provide smoother visual transitions than two-stop
+- **Trade-offs:** Tailwind classes are more readable and themeable but less flexible for arbitrary angles/positions; custom CSS offers more control but requires manual color management
