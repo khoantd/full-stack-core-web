@@ -107,3 +107,8 @@ usageStats:
 - **Rejected:** CSS variables or design tokens would require additional abstraction layer but would provide centralized color management across entire design system
 - **Trade-offs:** Faster development and easier to read in context, but harder to enforce design system consistency. Changing color requires code modification rather than configuration
 - **Breaking if changed:** If moving to design tokens system later, all Tailwind color classes would need extraction and centralization. Multiple hero sections with different colors would be difficult to manage
+
+#### [Pattern] Used exploration-first approach (Glob patterns, Bash file discovery, Git history search) before making edits to locate component implementation (2026-03-07)
+- **Problem solved:** Required to modify hero section styling but started with unknown codebase structure and file locations
+- **Why this works:** Prevents blind modifications to wrong files; discovers related branches/commits showing previous similar changes; maps component hierarchy (landing folder structure)
+- **Trade-offs:** Takes more time upfront but prevents rework; exploration discovered existing test file (verify-banner-color.spec.ts) and related branches (hotfix/change-text-banner)

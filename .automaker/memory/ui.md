@@ -219,3 +219,15 @@ usageStats:
 - **Problem solved:** Hero section styling isolated in dedicated HeroSection component with gradient background
 - **Why this works:** Centralizing UI styling in dedicated components allows for consistent theme application and easier maintenance of visual hierarchy across the application
 - **Trade-offs:** Easier to update brand colors globally (single file change), but requires developers to know component structure. Tailwind CSS constraint means gradients limited to predefined color stops rather than arbitrary values
+
+#### [Gotcha] Changing color gradients in Tailwind requires modifying all three gradient stops (from-, via-, to-) consistently to maintain visual coherence (2026-03-07)
+- **Situation:** Changed hero section from cyan-blue gradient (from-cyan-500 via-blue-600 to-blue-700) to green gradient (from-green-500 via-green-600 to-green-700)
+- **Root cause:** Using three-stop gradients with varying shades creates depth; changing only one stop creates visual inconsistency and broken contrast
+- **How to avoid:** Multi-stop gradients provide richer visuals but require coordinated updates across all stops; single-color backgrounds are simpler to maintain
+
+### Kept text colors (white, gray-200) and SVG overlay patterns unchanged when modifying hero section background gradient (2026-03-07)
+- **Context:** Hero section redesign involved color scheme change from blue to green while maintaining accessibility and visual hierarchy
+- **Why:** Text contrast ratios against green-700 remain compliant with WCAG standards; white text on green maintains existing readability. SVG patterns with low opacity work across color schemes
+- **Rejected:** Re-optimizing text colors and patterns for each color scheme would introduce maintenance burden with diminishing returns on contrast improvements
+- **Trade-offs:** Simpler maintenance and fewer files modified vs. potential minor accessibility gains from re-tuning all dependent elements
+- **Breaking if changed:** If text colors were removed or SVG patterns deleted, the hero section would lose visual hierarchy and become harder to read
