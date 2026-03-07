@@ -124,3 +124,8 @@ usageStats:
 - **Rejected:** Direct path assumption without verification - could miss refactored components or non-standard layouts
 - **Trade-offs:** Thorough exploration is slower but more reliable; direct paths are faster but fragile to codebase reorganization
 - **Breaking if changed:** Skipping exploration and hardcoding paths creates brittle scripts that break when components move or are renamed
+
+#### [Pattern] Isolated styling changes to single component file (HeroSection.tsx) rather than creating wrapper components or separate style modules (2026-03-07)
+- **Problem solved:** Need to rebrand hero section colors while maintaining component functionality
+- **Why this works:** Hero section is cohesive visual unit with single responsibility - keeping all related styles together improves maintainability and reduces cognitive load. Component is self-contained and doesn't cascade styles to children
+- **Trade-offs:** Gained: simplicity, quick visual feedback, direct cause-effect relationship. Lost: potential color reusability if multiple components need sea blue gradient

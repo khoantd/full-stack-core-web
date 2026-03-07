@@ -253,3 +253,15 @@ usageStats:
 - **Problem solved:** Hero section uses `bg-gradient-to-br from-red-500 via-red-600 to-red-700` to create direction and intensity progression
 - **Why this works:** Semantic color tokens ensure design system consistency, enable global theme changes, and make maintenance declarative. Three-stop gradients provide smoother visual transitions than two-stop
 - **Trade-offs:** Tailwind classes are more readable and themeable but less flexible for arbitrary angles/positions; custom CSS offers more control but requires manual color management
+
+### Used Tailwind CSS gradient classes (from-cyan-500 via-blue-500 to-blue-700) instead of custom CSS or hex colors (2026-03-07)
+- **Context:** Changing hero section background from gray gradient to sea blue gradient
+- **Why:** Tailwind's built-in color palette ensures consistency with design system, maintains responsive behavior, and avoids CSS specificity conflicts. Using gradient-to-br direction preserves the diagonal flow established in original design
+- **Rejected:** Custom hex colors (#0891b2 to #1e40af) would require separate CSS file, risking design token divergence from Tailwind theme
+- **Trade-offs:** Gained: design consistency, easier maintenance, built-in color scale transitions. Lost: precise color control without theme customization
+- **Breaking if changed:** If Tailwind version changes or theme colors are modified, this component automatically inherits new values - could cause unexpected appearance changes
+
+#### [Gotcha] Text color hierarchy needed adjustment from gray-200 to cyan-100 across multiple text elements, not just background (2026-03-07)
+- **Situation:** Changing background colors impacts contrast ratios with existing text colors
+- **Root cause:** Gray-200 provides insufficient contrast against blue/cyan backgrounds (likely WCAG AA failure). Cyan-100 maintains proper luminance contrast while keeping visual harmony with new color scheme
+- **How to avoid:** Gained: proper color theory application, better visual elegance. Lost: maximum contrast ratio - but still meets WCAG AA standards with cyan-100
