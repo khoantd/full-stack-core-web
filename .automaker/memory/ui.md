@@ -319,3 +319,18 @@ usageStats:
 - **Situation:** Button has border-white/30 and hover:bg-white/10 defined. Changing text from white to red-600 changes the contrast relationship with these backgrounds
 - **Root cause:** When text color changes on buttons with semi-transparent backgrounds and hover effects, the visual hierarchy and accessibility implications shift
 - **How to avoid:** Full change maintains visual cohesion but requires understanding the complete style chain; partial change creates visual inconsistency
+
+#### [Gotcha] Color contrast degradation when changing from red to yellow on white text backgrounds (2026-03-08)
+- **Situation:** Changed hero section from red theme to yellow theme, but white text on yellow-500 creates poor contrast ratio
+- **Root cause:** Yellow-500 is much lighter than red-600, causing white text to become nearly illegible. The original design assumed darker background colors.
+- **How to avoid:** Had to use yellow-900 for text contrast instead of maintaining white, which changes the visual hierarchy and requires different text colors for different sections
+
+#### [Pattern] Component-scoped color theming without centralized design tokens (2026-03-08)
+- **Problem solved:** HeroSection component has hardcoded Tailwind color classes scattered throughout (bg-yellow-500, text-yellow-900, border-yellow-900/30, etc.)
+- **Why this works:** Quick inline editing allows rapid iteration, but creates tight coupling between component logic and styling
+- **Trade-offs:** Faster to implement now, but changing brand colors later requires finding and updating multiple scattered class references. Easier to miss edge cases like hover states, borders, and text variants.
+
+#### [Gotcha] Inconsistent text color application across semantic variations (2026-03-08)
+- **Situation:** Primary text uses yellow-900, secondary text uses yellow-900, button text uses yellow-600, but hover/outline states have mixed color strategies
+- **Root cause:** Color replacement was done mechanically (red→yellow) without re-evaluating semantic color hierarchy for the new base color
+- **How to avoid:** Simpler regex-style replacement completed faster, but results in unclear color intention and harder to maintain. Future designers won't know if yellow-900 vs yellow-600 distinction is intentional.
