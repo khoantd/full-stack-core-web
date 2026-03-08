@@ -153,3 +153,10 @@ usageStats:
 - **Rejected:** Single grep for 'About Us' might miss the file if component uses dynamic text or translation strings
 - **Trade-offs:** Multiple searches are slower but more reliable; a project index or documentation would be faster but requires maintenance
 - **Breaking if changed:** If component names don't match directory structure or if UI text is dynamicized from API/translations, this discovery approach becomes unreliable
+
+### Using Tailwind CSS color naming conventions (cyan-500, cyan-900) instead of semantic color variables for theme colors (2026-03-08)
+- **Context:** The HeroSection component uses hardcoded Tailwind classes like 'bg-cyan-500' instead of CSS custom properties or theme configuration variables
+- **Why:** Tailwind's class-based approach provides immediate visual feedback and type safety through IDE autocomplete, reducing color mismatch bugs
+- **Rejected:** CSS variables or theme configuration would require changes in multiple locations (config file + component) and add indirection when debugging colors
+- **Trade-offs:** Faster initial development and fewer indirection layers, but makes future theme-wide color changes require multi-file refactoring instead of a single configuration update
+- **Breaking if changed:** Converting to a CSS variable system would require extracting all hardcoded color classes into a theme provider, affecting any component using direct Tailwind color classes

@@ -334,3 +334,8 @@ usageStats:
 - **Situation:** Primary text uses yellow-900, secondary text uses yellow-900, button text uses yellow-600, but hover/outline states have mixed color strategies
 - **Root cause:** Color replacement was done mechanically (red→yellow) without re-evaluating semantic color hierarchy for the new base color
 - **How to avoid:** Simpler regex-style replacement completed faster, but results in unclear color intention and harder to maintain. Future designers won't know if yellow-900 vs yellow-600 distinction is intentional.
+
+#### [Pattern] Systematic color palette replacement across all related UI elements (background, text, buttons, borders) when updating theme colors (2026-03-08)
+- **Problem solved:** Changing hero section from yellow to cyan required updating not just the main background but also text colors, button hover states, and border colors to maintain visual consistency and contrast ratios
+- **Why this works:** Partial color updates would break contrast accessibility and visual coherence. All interdependent color values must change together to maintain the design system's integrity
+- **Trade-offs:** Requires more edits per color change but ensures accessibility standards (WCAG contrast) and design consistency are maintained throughout

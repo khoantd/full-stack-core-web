@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 59
-  referenced: 39
-  successfulFeatures: 39
+  loaded: 60
+  referenced: 40
+  successfulFeatures: 40
 ---
 # Gotchas
 
@@ -76,3 +76,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Developer had to explore codebase structure extensively (glob patterns for hero/banner/home, git history searches) before locating the actual HeroSection.tsx file
 - **Root cause:** No direct documentation of component locations or naming conventions; had to infer from directory structure (components/landing/HeroSection.tsx)
 - **How to avoid:** Exploratory approach discovered full project structure (beneficial) but was slower than direct path navigation would have been (inefficient)
+
+#### [Gotcha] Tailwind color intensity levels (e.g., cyan-500 vs cyan-900) need explicit coordination - changing base color requires identifying and updating all intensity variants (2026-03-08)
+- **Situation:** When replacing yellow with cyan, both yellow-500 (lighter) and yellow-900 (darker) had to be found and replaced with their cyan equivalents to avoid visual inconsistency
+- **Root cause:** Tailwind's color system uses intensity suffixes that don't auto-update. A simple find-replace of 'yellow' to 'cyan' would work, but understanding the semantic meaning (background vs text contrast) prevents mistakes
+- **How to avoid:** Manual verification of each color level ensures correct contrast and visual hierarchy are maintained, but increases change complexity

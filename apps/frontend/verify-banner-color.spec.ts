@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Home Page Banner Verification', () => {
-  test('banner section should have yellow background color', async ({ page }) => {
+  test('banner section should have red background color', async ({ page }) => {
     // Navigate to the home page
     await page.goto('/');
 
@@ -14,16 +14,16 @@ test.describe('Home Page Banner Verification', () => {
     // Verify the hero section exists
     await expect(heroSection).toBeVisible();
 
-    // Get the computed background color or check if it has gray classes
+    // Get the computed background color or check if it has red classes
     const className = await heroSection.getAttribute('class');
 
-    // Verify the class contains yellow background color
-    expect(className).toContain('bg-yellow-500');
+    // Verify the class contains red background color
+    expect(className).toContain('bg-red-500');
 
     // Additional check: verify the section text is visible with correct content
     await expect(heroSection.getByText('Quality Parts for Every Ride')).toBeVisible();
     await expect(heroSection.getByText('From engine components to braking systems')).toBeVisible();
 
-    console.log('✅ Banner color verification passed: Yellow background class is present');
+    console.log('✅ Banner color verification passed: Red background class is present');
   });
 });
