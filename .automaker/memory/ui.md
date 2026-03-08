@@ -309,3 +309,13 @@ usageStats:
 - **Situation:** Converting yellow hero section (naturally bright, needed dark text) to red (naturally dark, works with light text), requiring opposite button treatment
 - **Root cause:** The primary CTA button (Products) needs maximum visual distinction from the background. On yellow, dark button text worked. On red, white background button with red text creates stronger contrast and draws eye better than red button with white text, which blends with surrounding text.
 - **How to avoid:** Inverted button styling is less conventional (white-on-red) but more effective for CTA emphasis; requires developers to understand context-specific button logic rather than applying one consistent style
+
+#### [Pattern] Tailwind CSS utility classes used for direct styling instead of CSS modules or inline styles (2026-03-08)
+- **Problem solved:** Button component styling in HeroSection using className with Tailwind utilities like 'text-white', 'border-white/30', 'hover:bg-white/10'
+- **Why this works:** Tailwind enables rapid prototyping and maintains consistency through predefined color palette (red-600 = #dc2626). Opacity modifiers (white/30) provide fine-grained control without custom CSS
+- **Trade-offs:** Easier to modify and audit styling changes (single className string), but className strings become long and harder to read; no type safety for class names
+
+#### [Gotcha] Color contrast and hover states require simultaneous consideration - changing text color from white to red-600 on transparent/outlined button may impact readability (2026-03-08)
+- **Situation:** Button has border-white/30 and hover:bg-white/10 defined. Changing text from white to red-600 changes the contrast relationship with these backgrounds
+- **Root cause:** When text color changes on buttons with semi-transparent backgrounds and hover effects, the visual hierarchy and accessibility implications shift
+- **How to avoid:** Full change maintains visual cohesion but requires understanding the complete style chain; partial change creates visual inconsistency

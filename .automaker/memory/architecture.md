@@ -146,3 +146,10 @@ usageStats:
 - **Problem solved:** HeroSection.tsx contains hardcoded Tailwind classes (bg-yellow-500, text-gray-900) with no centralized color management
 - **Why this works:** Tailwind utilities are applied directly; no theme abstraction layer created despite being a landing page that may have reusable color scheme
 - **Trade-offs:** Faster initial implementation vs. reduced maintainability; single color change required editing component files rather than config
+
+### Exploration strategy: Multiple search patterns used (hero/banner/Products/button) to locate component before modification (2026-03-08)
+- **Context:** Finding HeroSection.tsx required searching by pattern names (hero, banner), text content (Products), and file location (components/landing/)
+- **Why:** Without a clear mental model of project structure, multiple search vectors increase probability of finding the correct component. Button text 'Products' was a unique identifier
+- **Rejected:** Single grep for 'About Us' might miss the file if component uses dynamic text or translation strings
+- **Trade-offs:** Multiple searches are slower but more reliable; a project index or documentation would be faster but requires maintenance
+- **Breaking if changed:** If component names don't match directory structure or if UI text is dynamicized from API/translations, this discovery approach becomes unreliable
