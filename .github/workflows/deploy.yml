@@ -59,6 +59,7 @@ jobs:
             docker run -d --name be-core-web-cms --restart unless-stopped -p 3066:3000 \
               -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e TELEGRAM_ENABLED=false \
               haupham2311/be-core-web-cms:latest
 
             docker pull haupham2311/fe-core-web-cms:latest

@@ -17,6 +17,8 @@ import { PaymentModule } from './payment/payment.module';
 import { AutomakerModule } from './automaker/automaker.module';
 import { TelegramModule } from './telegram/telegram.module';
 
+const telegramEnabled = process.env.TELEGRAM_ENABLED !== 'false';
+
 @Module({
   imports: [
     FriendModule,
@@ -45,7 +47,7 @@ import { TelegramModule } from './telegram/telegram.module';
     EventModule,
     PaymentModule,
     AutomakerModule,
-    TelegramModule,
+    ...(telegramEnabled ? [TelegramModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],
