@@ -116,3 +116,8 @@ usageStats:
 - **Situation:** Playwright E2E test for banner color verification
 - **Root cause:** Class-based approach is simpler and more maintainable than computing actual CSS colors, which requires browser rendering and color space conversion
 - **How to avoid:** Faster tests but couples test to implementation detail (Tailwind classes); if CSS framework changes, test breaks despite visual correctness
+
+#### [Gotcha] Test file was updated to verify new color class name (bg-cyan-500) instead of old one (bg-green-500), preventing false-positive test passing (2026-03-10)
+- **Situation:** Color change to UI elements could silently fail in production if tests weren't updated to match new implementation
+- **Root cause:** CSS class names are the source of truth in Tailwind-based projects. Tests must verify the actual classes applied, not just visual appearance, because Tailwind generates styles from class names.
+- **How to avoid:** Class-name based testing is implementation-specific but catches CSS generation issues early. Visual testing would be more resilient to refactoring but slower.

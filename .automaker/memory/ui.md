@@ -351,3 +351,15 @@ usageStats:
 - **Problem solved:** Updating HeroSection from red to green required 6+ separate edits across multiple CSS classes
 - **Why this works:** Direct Tailwind class usage provides runtime flexibility but creates refactoring burden
 - **Trade-offs:** Easier initial development (no abstraction layer) but harder maintenance; all color changes require multiple edits
+
+### Used Tailwind CSS color system (cyan-500, cyan-900, cyan-600, cyan-50) for cohesive theme changes across all UI elements (2026-03-10)
+- **Context:** Changing hero section theme from green to cyan required updating multiple color references across components, buttons, text, borders, and hover states
+- **Why:** Tailwind's semantic color scale ensures visual consistency. Using the same color family (cyan-X00) maintains proper contrast ratios and visual hierarchy automatically. Single color family change cascades across all shades.
+- **Rejected:** Using arbitrary hex colors or CSS variables would require manual contrast validation and multiple updates if brand color changes again
+- **Trade-offs:** Tailwind constraints mean limited customization, but gain atomic predictability and automatic responsive-safe color variations
+- **Breaking if changed:** If cyan color scale is removed from Tailwind config, all styling breaks. Changing from semantic to arbitrary colors loses auto-generated shade system.
+
+#### [Pattern] Applied color changes systematically across semantic layers: background (bg-), text (text-), borders (border-), and interaction states (hover:) (2026-03-10)
+- **Problem solved:** Single feature change (hero color) touched 6+ different Tailwind utilities across primary button, secondary button, background, text, and hover states
+- **Why this works:** Component design separates concerns into base, text, interactive, and state layers. Updating all layers together prevents visual inconsistency where interactive states don't match base colors.
+- **Trade-offs:** More changes to coordinate (higher complexity), but ensures professional, polished appearance. Fewer changes = risk of incomplete theming.
