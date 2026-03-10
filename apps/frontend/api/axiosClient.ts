@@ -19,13 +19,6 @@ export const removeStoredToken = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
 
-// const axiosClient = axios.create({
-//   baseURL: "https://cms-api.haudev.online",
-//   // baseURL: "http://localhost:3000",
-//   headers: {
-//     "Content-Type": "application/json",
-//   },
-// });
 const axiosClient = axios.create({
   baseURL: "https://cms-api.haudev.online",
   // baseURL: "http://localhost:3000",
