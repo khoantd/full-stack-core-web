@@ -121,3 +121,10 @@ usageStats:
 - **Situation:** Color change to UI elements could silently fail in production if tests weren't updated to match new implementation
 - **Root cause:** CSS class names are the source of truth in Tailwind-based projects. Tests must verify the actual classes applied, not just visual appearance, because Tailwind generates styles from class names.
 - **How to avoid:** Class-name based testing is implementation-specific but catches CSS generation issues early. Visual testing would be more resilient to refactoring but slower.
+
+### Test assertions must be updated when color specifications change, requiring test maintenance to stay synchronized with implementation (2026-03-11)
+- **Context:** Playwright E2E test was checking for 'bg-cyan-500' class, which would fail after color change to 'bg-red-500'
+- **Why:** E2E tests verify actual CSS classes present in the DOM, not logical intent. The test tightly couples to implementation details (specific color values) rather than semantic behavior
+- **Rejected:** Leaving test unchanged would create false negatives; alternatively, could write tests that verify contrast ratios or color accessibility rather than specific hex/tailwind values
+- **Trade-offs:** Class-based assertions are simple and direct but brittle across design changes; semantic assertions would be more resilient but harder to implement reliably
+- **Breaking if changed:** Unsynced tests create false test failures that either get ignored or cause deployment blocking; creates distrust in test suite reliability

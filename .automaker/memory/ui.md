@@ -375,3 +375,20 @@ usageStats:
 - **Situation:** Simply changing all instances of cyan-* to yellow-* could result in low contrast if not carefully paired
 - **Root cause:** WCAG accessibility requires sufficient contrast ratio; cyan-900 on cyan-500 works, but yellow requires yellow-900 (darker shade) on yellow-500 to maintain readability
 - **How to avoid:** Requires understanding of color shade hierarchy vs. simple find-replace; safer approach prevents accessibility violations
+
+### Color palette consistency required updates across multiple interconnected UI elements when changing hero section background color (2026-03-11)
+- **Context:** Changing hero section from yellow to red necessitated coordinated updates to text colors, button styles, and hover states to maintain visual hierarchy and contrast
+- **Why:** A single color change in a prominent component cascades through dependent UI elements. Text colors must maintain WCAG contrast ratios against the new background, and interactive elements (buttons) need coordinated styling to preserve intended visual feedback
+- **Rejected:** Direct color replacement without considering contrast ratios would result in unreadable text or loss of visual hierarchy
+- **Trade-offs:** More comprehensive changes required upfront (7 edit operations) but ensures consistent UX; alternatively, could have used CSS variables to centralize color definitions for future maintainability
+- **Breaking if changed:** Partial color updates would result in broken contrast ratios (e.g., yellow text on red background), making content inaccessible and visually incoherent
+
+#### [Gotcha] Text color adjustments on colored backgrounds require different strategies: primary text uses opposite end of spectrum (white) while secondary/accent text uses lighter tones (e.g., red-100 instead of red-900) (2026-03-11)
+- **Situation:** Initial color changes attempted to map yellow-900 directly to red-900, which would have poor contrast on red-500 background
+- **Root cause:** Yellow and red have different luminance characteristics in Tailwind's color scale. Red-900 is too dark against red-500, requiring white or red-100 depending on semantic importance of the text
+- **How to avoid:** More complex color decisions upfront ensure accessibility, but requires understanding color theory and Tailwind's luminance scale
+
+#### [Pattern] Button styling on colored backgrounds uses inverted contrast strategy: white button with colored text on colored background, with matching colored hover states (2026-03-11)
+- **Problem solved:** Primary CTA button needed to stand out on red hero background while maintaining visual hierarchy and interaction feedback
+- **Why this works:** White-on-red provides maximum contrast for readability while red text (matching background) on white hover state creates visual continuity. This pattern preserves accessibility while maintaining design coherence
+- **Trade-offs:** Requires coordinating button color with background color for optimal UX; if background changes, button strategy may need revision. Benefits: clear CTAs, good accessibility, coherent design
