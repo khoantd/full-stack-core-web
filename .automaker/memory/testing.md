@@ -128,3 +128,8 @@ usageStats:
 - **Rejected:** Leaving test unchanged would create false negatives; alternatively, could write tests that verify contrast ratios or color accessibility rather than specific hex/tailwind values
 - **Trade-offs:** Class-based assertions are simple and direct but brittle across design changes; semantic assertions would be more resilient but harder to implement reliably
 - **Breaking if changed:** Unsynced tests create false test failures that either get ignored or cause deployment blocking; creates distrust in test suite reliability
+
+#### [Pattern] Test file validates CSS classes directly (className contains 'bg-blue-600') rather than computed styles (2026-03-12)
+- **Problem solved:** Playwright test in verify-banner-color.spec.ts checks element class attributes
+- **Why this works:** Class-based validation is simpler and faster than computing rendered colors; directly tests the implementation intent rather than browser rendering variations
+- **Trade-offs:** Class checking is fast and deterministic but doesn't catch CSS override bugs; won't catch if class exists but CSS file is broken

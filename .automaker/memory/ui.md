@@ -409,3 +409,15 @@ usageStats:
 - **Problem solved:** Changed hero section from red to orange color scheme by replacing all Tailwind color classes
 - **Why this works:** Tailwind CSS provides built-in color scales (red-*, orange-*) that maintain consistent design tokens across component variants. Using semantic class names allows batch replacement and ensures design coherence across all color intensities (100, 500, 600, 50).
 - **Trade-offs:** Mass find-replace is simple but couples component styling to framework class names; refactoring to CSS modules or styled-components would decouple but add complexity
+
+### Used Tailwind's blue-600 (#2563eb) as 'ocean blue' rather than creating custom color (2026-03-12)
+- **Context:** Feature required changing hero banner color to 'màu xanh biển' (ocean blue)
+- **Why:** Tailwind's predefined color palette provides consistency and avoids custom color management. blue-600 is dark enough to provide sufficient contrast with white text while being recognizable as ocean blue
+- **Rejected:** Could have added custom color to tailwind.config.ts (e.g., 'oceanBlue': '#0066cc') or used arbitrary Tailwind values like bg-[#0066cc]
+- **Trade-offs:** Predefined colors reduce configuration overhead but lose semantic naming specificity; custom colors would be self-documenting but require config maintenance
+- **Breaking if changed:** If design system later requires a different shade of 'ocean blue', all color references would need updating rather than a single config change
+
+#### [Gotcha] Secondary button text color changed from orange-500 to white instead of blue-500 (2026-03-12)
+- **Situation:** When updating button styles, the secondary 'About Us' button's text color strategy differed from primary button
+- **Root cause:** Secondary button uses outline variant with transparent background, so text needs sufficient contrast against white overlay on blue background. blue-500 text on blue-600 background would have poor contrast; white text maintains visibility
+- **How to avoid:** White text on blue is more accessible but less visually distinctive than colored text; reduces visual hierarchy slightly

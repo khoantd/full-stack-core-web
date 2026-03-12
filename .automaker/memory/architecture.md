@@ -189,3 +189,10 @@ usageStats:
 - **Rejected:** Creating a colors.ts constants file or extracting to Tailwind theme config extensions - overhead for single-component styling
 - **Trade-offs:** Easy to understand and modify in HeroSection.tsx but color scheme is not reusable across other components. Future orange sections would duplicate class names.
 - **Breaking if changed:** If the design system expands to multiple orange sections, this approach creates maintenance burden. Refactoring to centralized tokens would require updating all files simultaneously.
+
+### Updated both component and test file together in same change set (2026-03-12)
+- **Context:** Feature required coordinated changes to HeroSection.tsx and verify-banner-color.spec.ts
+- **Why:** Prevents test-code mismatch that would cause CI failures; ensures feature completeness in single changeset
+- **Rejected:** Could update component first, let test fail, then fix test separately - but creates broken CI state
+- **Trade-offs:** Coordinated changes require more care during implementation but prevent broken tests; makes reviewing code changes slightly more complex as reviewer sees multiple files
+- **Breaking if changed:** If test wasn't updated to match component colors, test suite would fail and block deployment
