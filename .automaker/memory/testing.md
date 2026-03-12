@@ -133,3 +133,8 @@ usageStats:
 - **Problem solved:** Playwright test in verify-banner-color.spec.ts checks element class attributes
 - **Why this works:** Class-based validation is simpler and faster than computing rendered colors; directly tests the implementation intent rather than browser rendering variations
 - **Trade-offs:** Class checking is fast and deterministic but doesn't catch CSS override bugs; won't catch if class exists but CSS file is broken
+
+#### [Pattern] Updated Playwright test from checking 'bg-blue-600' to 'bg-yellow-500' using class attribute assertion rather than computed styles (2026-03-12)
+- **Problem solved:** Component color changes require test updates to prevent false positives
+- **Why this works:** Testing className directly is simpler and more reliable than checking computed CSS styles in Playwright, which requires more setup. Tailwind classes guarantee specific color values
+- **Trade-offs:** Class-based testing is less robust to CSS refactoring but faster and more maintainable for Tailwind projects

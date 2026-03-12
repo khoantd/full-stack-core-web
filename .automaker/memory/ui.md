@@ -421,3 +421,22 @@ usageStats:
 - **Situation:** When updating button styles, the secondary 'About Us' button's text color strategy differed from primary button
 - **Root cause:** Secondary button uses outline variant with transparent background, so text needs sufficient contrast against white overlay on blue background. blue-500 text on blue-600 background would have poor contrast; white text maintains visibility
 - **How to avoid:** White text on blue is more accessible but less visually distinctive than colored text; reduces visual hierarchy slightly
+
+### Changed hero section background from blue-600 to yellow-500 with coordinated text color shifts (white→gray-900, blue-100→yellow-900/yellow-800) (2026-03-12)
+- **Context:** Color scheme update requiring comprehensive contrast and accessibility adjustments across component
+- **Why:** Yellow-500 requires dark text for readability. Light text on bright yellow backgrounds fails WCAG contrast ratios. Using gray-900 and yellow-900 ensures AA compliance while maintaining visual hierarchy
+- **Rejected:** Keeping white text on yellow-500 (fails WCAG AA contrast ratio of 4.5:1); using yellow-600 or yellow-400 without text adjustment
+- **Trade-offs:** More text color changes required than typical color swap (3 different text colors now instead of 1). Increased complexity but mandatory for accessibility
+- **Breaking if changed:** Keeping original white text on yellow background will fail accessibility audits and reduce readability. Tests will fail if not updated to verify new color classes
+
+#### [Gotcha] Button styling required inverted color scheme: background changed to gray-900 with yellow-500 text (inverse of section colors) to maintain contrast (2026-03-12)
+- **Situation:** Buttons sitting on yellow-500 background needed sufficient contrast for interaction targets
+- **Root cause:** Buttons on same-color backgrounds (yellow button on yellow background) have zero contrast. Using inverse colors (dark background, bright text) creates visual distinction and meets accessibility minimums
+- **How to avoid:** Buttons now visually distinct from background (good for UX) but create higher visual weight requiring careful layout consideration
+
+### Updated outline button hover state from 'hover:bg-white/10' to 'hover:bg-yellow-400' for secondary call-to-action (2026-03-12)
+- **Context:** Outline button needed hover feedback that works on yellow background context
+- **Why:** White hover overlay (10% opacity) becomes barely visible on yellow-500. Using yellow-400 creates sufficient lightness shift to indicate interactivity while remaining in color family
+- **Rejected:** Keeping white overlay hover (poor visibility on yellow); using gray overlay (breaks color consistency)
+- **Trade-offs:** Hover state is now more visible but uses adjacent Tailwind color which requires harder cognitive mapping than simple opacity shift
+- **Breaking if changed:** If hover state removed or reverted, button loses affordance for interactivity. Users may not recognize it as clickable on yellow backgrounds
