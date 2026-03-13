@@ -138,3 +138,10 @@ usageStats:
 - **Problem solved:** Component color changes require test updates to prevent false positives
 - **Why this works:** Testing className directly is simpler and more reliable than checking computed CSS styles in Playwright, which requires more setup. Tailwind classes guarantee specific color values
 - **Trade-offs:** Class-based testing is less robust to CSS refactoring but faster and more maintainable for Tailwind projects
+
+### Using Tailwind class assertions in test specs rather than computed style checks (2026-03-13)
+- **Context:** Test verifies `className.toContain('bg-pink-500')` rather than checking computed CSS values
+- **Why:** Class-based assertions work in test environments where Tailwind compilation is available and are more readable. Avoids headless browser CSS computation complexity
+- **Rejected:** Computing actual pixel colors or RGB values - requires headless browser rendering and is brittle to theme changes
+- **Trade-offs:** Tightly couples tests to Tailwind framework vs being agnostic to CSS implementation
+- **Breaking if changed:** If Tailwind class names change or CSS-in-JS replaces Tailwind, tests break immediately

@@ -440,3 +440,8 @@ usageStats:
 - **Rejected:** Keeping white overlay hover (poor visibility on yellow); using gray overlay (breaks color consistency)
 - **Trade-offs:** Hover state is now more visible but uses adjacent Tailwind color which requires harder cognitive mapping than simple opacity shift
 - **Breaking if changed:** If hover state removed or reverted, button loses affordance for interactivity. Users may not recognize it as clickable on yellow backgrounds
+
+#### [Pattern] Color system coordination across component, test, and documentation layers (2026-03-13)
+- **Problem solved:** Changing hero section color from yellow to pink required synchronized updates across: component classes, test assertions, and inline comments
+- **Why this works:** UI color changes must maintain consistency across presentation, verification, and maintainability layers. Misalignment causes test failures and confusion
+- **Trade-offs:** More changes to coordinate (easier to break) vs better maintainability and test reliability

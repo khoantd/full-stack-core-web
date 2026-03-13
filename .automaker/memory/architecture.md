@@ -196,3 +196,8 @@ usageStats:
 - **Rejected:** Could update component first, let test fail, then fix test separately - but creates broken CI state
 - **Trade-offs:** Coordinated changes require more care during implementation but prevent broken tests; makes reviewing code changes slightly more complex as reviewer sees multiple files
 - **Breaking if changed:** If test wasn't updated to match component colors, test suite would fail and block deployment
+
+#### [Pattern] Component-level test files verify presentation layer integrity alongside unit tests (2026-03-13)
+- **Problem solved:** Dedicated Playwright test file (`verify-banner-color.spec.ts`) for specific UI color requirement
+- **Why this works:** Brand/design requirements need dedicated verification beyond generic component tests. Playwright allows testing actual rendered output in browser context
+- **Trade-offs:** Slower E2E tests vs higher confidence in visual correctness; requires separate test framework

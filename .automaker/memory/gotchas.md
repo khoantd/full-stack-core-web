@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 81
-  referenced: 49
-  successfulFeatures: 49
+  loaded: 82
+  referenced: 50
+  successfulFeatures: 50
 ---
 # Gotchas
 
@@ -86,3 +86,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Button had independent color classes for text (text-red-600) and hover (hover:bg-red-50) that needed synchronized updates
 - **Root cause:** CSS doesn't enforce relationships between semantically-linked classes. Changing text color without updating hover state creates visual inconsistency and fails accessibility contrast requirements.
 - **How to avoid:** Manual synchronization across 7 color class changes was tedious but guaranteed consistency. Alternatively, extracting to a color token system would require additional infrastructure.
+
+#### [Gotcha] Multiple color references scattered across component require exhaustive search before editing (2026-03-13)
+- **Situation:** Hero section had 6 different color modifications needed: background, overlay, text variants, button states
+- **Root cause:** Color isn't centralized in a theme or CSS module - it's hardcoded in component classNames and comments, requiring manual discovery of all instances
+- **How to avoid:** Direct inline classes are simple initially but become fragile at scale; centralized theme would prevent this
