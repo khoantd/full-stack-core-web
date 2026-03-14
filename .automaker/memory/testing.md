@@ -150,3 +150,8 @@ usageStats:
 - **Situation:** Test checks for 'bg-red-500' class presence rather than verifying actual rendered color (e.g., rgb(239, 68, 68))
 - **Root cause:** Simpler to implement - just check class attribute vs. computing styles, less flaky than color value matching with browser rendering differences
 - **How to avoid:** Test passes if class is present but CSS is broken/overridden; test fails if designer switches to CSS modules or different CSS solution even if visual output identical
+
+#### [Gotcha] Test file was checking for 'bg-red-500' but component had 'bg-yellow-500', indicating test-code mismatch that would have caught this color change verification (2026-03-14)
+- **Situation:** Test specification didn't match implementation, suggesting either test was outdated or implementation diverged from requirements
+- **Root cause:** Discovered during update that the original test expected red but code was yellow - this mismatch means the test suite was already broken and wouldn't have caught the color change properly
+- **How to avoid:** Found and fixed test during implementation, but this reveals the test suite wasn't being actively maintained. Test-driven updates are safer than code-first changes

@@ -464,3 +464,15 @@ usageStats:
 - **Rejected:** Could have changed all colors including gray-900 to different shades, but this would require contrast testing and compound changes
 - **Trade-offs:** Limiting scope to red→yellow replacements reduces risk but requires validating yellow shade maintains acceptable contrast (yellow is lower luminosity than red)
 - **Breaking if changed:** If background shade changes (yellow-400 vs yellow-600), text contrast assumptions may fail and require re-evaluation
+
+### Changed hero section background from yellow-500 to cyan-500 with corresponding text color from gray-900 to white (2026-03-14)
+- **Context:** Banner color redesign required updating not just the primary background color but also all dependent text colors and button states to maintain contrast ratios
+- **Why:** Yellow backgrounds with gray/dark text had sufficient contrast, but cyan backgrounds required white text for WCAG compliance. This cascading change prevented partial updates that would have left inaccessible color combinations
+- **Rejected:** Could have kept yellow text on cyan (poor contrast) or dark gray text on cyan (insufficient contrast). Could have applied changes only to main background without updating overlay, buttons, and text colors (visual inconsistency)
+- **Trade-offs:** Changing to white text increases contrast (accessibility gain) but removes the warm yellow aesthetic. Button styling becomes inverted (white primary button instead of dark) which may feel less prominent
+- **Breaking if changed:** If only background color is changed without text color updates, page becomes inaccessible with contrast ratio failures. Button hover states and secondary button styling depend on coordinated color strategy
+
+#### [Pattern] Applied systematic color replacement across button states (primary: bg-white text-cyan-600, hover states: cyan-400/cyan-50) rather than ad-hoc color updates (2026-03-14)
+- **Problem solved:** Multiple UI elements depend on primary brand color - buttons, text, overlays, hover states. A single color value change shouldn't require individual component updates
+- **Why this works:** Centralizing color strategy through Tailwind classes ensures consistency and makes future color changes maintainable. Button states (normal/hover) must coordinate with background to maintain accessibility
+- **Trade-offs:** Using Tailwind utilities requires knowing the color palette and how contrasts work, but eliminates hardcoded color values. More upfront thinking, less technical debt
