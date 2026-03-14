@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 83
-  referenced: 51
-  successfulFeatures: 51
+  loaded: 85
+  referenced: 52
+  successfulFeatures: 52
 ---
 # Gotchas
 
@@ -91,3 +91,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Hero section had 6 different color modifications needed: background, overlay, text variants, button states
 - **Root cause:** Color isn't centralized in a theme or CSS module - it's hardcoded in component classNames and comments, requiring manual discovery of all instances
 - **How to avoid:** Direct inline classes are simple initially but become fragile at scale; centralized theme would prevent this
+
+#### [Gotcha] Comment text ('Red background') also needed updating to match color changes, not just CSS classes (2026-03-14)
+- **Situation:** Implementation included comment documentation that explicitly referenced removed color names
+- **Root cause:** Stale comments create maintenance debt and developer confusion. Comments describing 'Red background' on yellow element violates principle of least surprise.
+- **How to avoid:** Updating comments increases change scope but prevents future confusion. Cost of inaccurate documentation accumulates.

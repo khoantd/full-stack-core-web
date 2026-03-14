@@ -450,3 +450,17 @@ usageStats:
 - **Problem solved:** Changing hero section from pink to red required updating 5 separate Tailwind classes across multiple elements (bg-pink-500, text-pink-900, text-pink-800, text-pink-500, hover:bg-pink-400)
 - **Why this works:** Direct class substitution provides immediate visual feedback and is simple for one-off changes, but the approach scales poorly when theme colors need to change across entire application
 - **Trade-offs:** Easy to implement one change, hard to maintain consistency across codebase. Changes require multiple file updates. If a new red shade is needed later, scattered references break DRY principle
+
+### Color scheme migration from red to yellow in HeroSection component using Tailwind CSS utility classes (2026-03-14)
+- **Context:** Updating hero banner appearance required systematic color replacement across multiple Tailwind classes (bg-*, text-*, hover:*)
+- **Why:** Tailwind's utility-first approach enables consistent color updates by replacing class names rather than modifying CSS values. Using semantic color tokens (red-500, yellow-500) maintains design system consistency and scales to multiple shade variations (400, 500, 800, 900)
+- **Rejected:** Direct CSS modification or inline styles would require duplicating color logic across multiple elements and lose the design system relationship
+- **Trade-offs:** Utility class approach requires updating multiple class strings but guarantees consistency across all color applications and hover states. Alternative of CSS variables would centralize change but add runtime overhead.
+- **Breaking if changed:** If Tailwind color palette is replaced without remapping classes, the entire color scheme breaks across the component. Direct CSS overrides via specificity would silently override intended colors.
+
+### Preserved contrast ratios by keeping text colors (gray-900) consistent with new background while updating accent colors (red→yellow) (2026-03-14)
+- **Context:** Yellow background has different luminosity than red, potentially affecting text readability if not carefully managed
+- **Why:** Tailwind's color scale (900 shade) maintains sufficient contrast against both red-500 and yellow-500 backgrounds. Updating only accent colors (text-*-500, text-*-800, text-*-900) tied to background ensures proportional contrast. Primary text (gray-900) works on both backgrounds.
+- **Rejected:** Could have changed all colors including gray-900 to different shades, but this would require contrast testing and compound changes
+- **Trade-offs:** Limiting scope to red→yellow replacements reduces risk but requires validating yellow shade maintains acceptable contrast (yellow is lower luminosity than red)
+- **Breaking if changed:** If background shade changes (yellow-400 vs yellow-600), text contrast assumptions may fail and require re-evaluation

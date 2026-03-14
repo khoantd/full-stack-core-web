@@ -208,3 +208,8 @@ usageStats:
 - **Rejected:** Creating design token system with exported color constants (e.g., HERO_BG_COLOR = 'bg-red-500') or higher-order component wrapping
 - **Trade-offs:** Zero refactoring effort now, but each new section needing red requires copy-paste colors. Adding dark mode or brand variations becomes exponentially harder
 - **Breaking if changed:** If product needs to support multiple brands with different color schemes, or implement dynamic theming, this scattered approach requires wholesale component rewrite
+
+#### [Pattern] Multi-stage discovery process: Task agent → File pattern search → Content grep → Direct file read → Targeted modification (2026-03-14)
+- **Problem solved:** Locating hero section required searching through unknown file structure without knowing exact component location
+- **Why this works:** Progressive refinement reduces wasted searches. Starting with generic patterns (hero*, banner*) then narrowing with grep on file types (tsx, jsx, css, scss) avoids expensive full codebase scans. Task delegation to Explore agent for initial reconnaissance decouples discovery from modification.
+- **Trade-offs:** Multiple tool invocations increased latency but achieved high precision. Direct path assumption would be faster but fragile across project variations.
