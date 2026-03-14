@@ -27,7 +27,7 @@ function extractDescriptions(content: string): string[] {
   while ((m = re4.exec(content)) !== null) add(m[1]);
   return list;
 }
-
+//aaaa
 @Update()
 @Injectable()
 export class TelegramUpdate {
