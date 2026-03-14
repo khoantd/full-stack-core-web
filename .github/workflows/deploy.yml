@@ -52,18 +52,22 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
-          script: |
+          script: |            
             docker pull haupham2311/be-core-web-cms:latest
             docker stop be-core-web-cms || true
             docker rm be-core-web-cms || true
+            
             docker run -d --name be-core-web-cms --restart unless-stopped -p 3066:3000 \
+              -e NODE_OPTIONS="--dns-result-order=ipv4first" \
               -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               haupham2311/be-core-web-cms:latest
 
+            
             docker pull haupham2311/fe-core-web-cms:latest
             docker stop fe-core-web-cms || true
             docker rm fe-core-web-cms || true
+            
             docker run -d --name fe-core-web-cms --restart unless-stopped -p 3000:3000 \
               haupham2311/fe-core-web-cms:latest
 
@@ -81,4 +85,3 @@ jobs:
           else
             echo "Skip Telegram notification (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set)"
           fi
-
