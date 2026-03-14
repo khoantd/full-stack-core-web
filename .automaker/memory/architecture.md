@@ -201,3 +201,10 @@ usageStats:
 - **Problem solved:** Dedicated Playwright test file (`verify-banner-color.spec.ts`) for specific UI color requirement
 - **Why this works:** Brand/design requirements need dedicated verification beyond generic component tests. Playwright allows testing actual rendered output in browser context
 - **Trade-offs:** Slower E2E tests vs higher confidence in visual correctness; requires separate test framework
+
+### Color changes applied directly to component file with no abstraction layer or design token system (2026-03-13)
+- **Context:** HeroSection.tsx contains hardcoded Tailwind classes for colors mixed with layout and structure concerns
+- **Why:** Fastest path to implementation for single component change; no architectural overhead for point fix
+- **Rejected:** Creating design token system with exported color constants (e.g., HERO_BG_COLOR = 'bg-red-500') or higher-order component wrapping
+- **Trade-offs:** Zero refactoring effort now, but each new section needing red requires copy-paste colors. Adding dark mode or brand variations becomes exponentially harder
+- **Breaking if changed:** If product needs to support multiple brands with different color schemes, or implement dynamic theming, this scattered approach requires wholesale component rewrite

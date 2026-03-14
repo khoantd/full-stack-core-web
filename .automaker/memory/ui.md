@@ -445,3 +445,8 @@ usageStats:
 - **Problem solved:** Changing hero section color from yellow to pink required synchronized updates across: component classes, test assertions, and inline comments
 - **Why this works:** UI color changes must maintain consistency across presentation, verification, and maintainability layers. Misalignment causes test failures and confusion
 - **Trade-offs:** More changes to coordinate (easier to break) vs better maintainability and test reliability
+
+#### [Pattern] Color theming implemented via Tailwind CSS utility classes rather than CSS variables or theme configuration (2026-03-13)
+- **Problem solved:** Changing hero section from pink to red required updating 5 separate Tailwind classes across multiple elements (bg-pink-500, text-pink-900, text-pink-800, text-pink-500, hover:bg-pink-400)
+- **Why this works:** Direct class substitution provides immediate visual feedback and is simple for one-off changes, but the approach scales poorly when theme colors need to change across entire application
+- **Trade-offs:** Easy to implement one change, hard to maintain consistency across codebase. Changes require multiple file updates. If a new red shade is needed later, scattered references break DRY principle

@@ -145,3 +145,8 @@ usageStats:
 - **Rejected:** Computing actual pixel colors or RGB values - requires headless browser rendering and is brittle to theme changes
 - **Trade-offs:** Tightly couples tests to Tailwind framework vs being agnostic to CSS implementation
 - **Breaking if changed:** If Tailwind class names change or CSS-in-JS replaces Tailwind, tests break immediately
+
+#### [Gotcha] E2E test verification relies on Tailwind class names rather than computed styles, creating brittle coupling to CSS framework (2026-03-13)
+- **Situation:** Test checks for 'bg-red-500' class presence rather than verifying actual rendered color (e.g., rgb(239, 68, 68))
+- **Root cause:** Simpler to implement - just check class attribute vs. computing styles, less flaky than color value matching with browser rendering differences
+- **How to avoid:** Test passes if class is present but CSS is broken/overridden; test fails if designer switches to CSS modules or different CSS solution even if visual output identical
