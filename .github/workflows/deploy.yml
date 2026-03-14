@@ -61,7 +61,8 @@ jobs:
               -e NODE_OPTIONS="--dns-result-order=ipv4first" \
               -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              haupham2311/be-core-web-cms:latest
+              haupham2311/be-core-web-cms:latest \
+              node -e "const { setDefaultResultOrder } = require('node:dns'); setDefaultResultOrder('ipv4first'); require('./dist/main');"
 
             
             docker pull haupham2311/fe-core-web-cms:latest
