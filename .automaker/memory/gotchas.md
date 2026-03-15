@@ -5,9 +5,9 @@ relevantTo: [error, bug, fix, issue, problem]
 importance: 0.9
 relatedFiles: []
 usageStats:
-  loaded: 90
-  referenced: 56
-  successfulFeatures: 56
+  loaded: 91
+  referenced: 57
+  successfulFeatures: 57
 ---
 # Gotchas
 
@@ -106,3 +106,8 @@ Mistakes and edge cases to avoid. These are lessons learned from past issues.
 - **Situation:** Button hover state (hover:bg-cyan-500) needs to work over gradient background (cyan-500 to blue-600)
 - **Root cause:** Gradient changes visual appearance across banner height; hover states must account for varying background luminosity to maintain readability
 - **How to avoid:** Requires testing hover states at different vertical positions; guarantees readability but adds validation step
+
+#### [Gotcha] Gradient overlay comment ('Sea blue background') became stale after color change (2026-03-15)
+- **Situation:** Comments describing visual appearance can become outdated when styling changes
+- **Root cause:** Comments were treated as pure documentation rather than as semantic code requiring updates alongside implementation
+- **How to avoid:** Updated comment increases maintenance burden but improves code clarity; alternative is lower clarity but less work per change

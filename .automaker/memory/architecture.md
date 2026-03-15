@@ -227,3 +227,10 @@ usageStats:
 - **Rejected:** Creating CSS custom properties (--banner-color) or Tailwind theme config would be over-engineering for single-component change
 - **Trade-offs:** Easier to implement and understand now; harder to scale if multiple components need same color scheme later
 - **Breaking if changed:** If future requirement demands consistent color changes across 5+ components, current approach requires 5+ separate edits; would need theme system refactor
+
+### Direct component file editing rather than extracting color values to configuration or design token system (2026-03-15)
+- **Context:** Multiple Tailwind color classes needed updating in a single component file
+- **Why:** For single-component changes, direct editing is fastest and requires no architectural setup. App appears to be early-stage without established design token system
+- **Rejected:** Creating design tokens/theme configuration (would be premature optimization if only one component affected); using CSS-in-JS with dynamic theme object
+- **Trade-offs:** Quick implementation vs. scalability - easy now, but creates technical debt if brand colors need to change across multiple components later
+- **Breaking if changed:** If this pattern spreads (colors hardcoded in multiple components), achieving consistent branding becomes exponentially harder; each component becomes a separate point of maintenance

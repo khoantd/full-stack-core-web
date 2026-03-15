@@ -505,3 +505,8 @@ usageStats:
 - **Problem solved:** Multiple UI elements (text, buttons, hover states) needed coordinated color theming
 - **Why this works:** Tailwind's color scale (50, 100, 500, 600) provides built-in contrast ratios that ensure accessibility and visual hierarchy without custom values. Each shade serves a semantic purpose: darker for primary, lighter for secondary text
 - **Trade-offs:** Limited to Tailwind's predefined palette but guarantees WCAG compliance; faster implementation than custom color systems
+
+#### [Pattern] Component-based color theming through Tailwind CSS class names rather than CSS variables or theme context (2026-03-15)
+- **Problem solved:** Hero section color scheme needed to be updated from cyan/blue to red across multiple UI elements
+- **Why this works:** Direct Tailwind class manipulation is straightforward for single-component changes and requires no additional infrastructure. Trade-off: doesn't support dynamic runtime theme switching without re-rendering or CSS-in-JS
+- **Trade-offs:** Simple for static themes, but fragile for multi-component theme changes - requires manual grep/replace across codebase rather than single source of truth
