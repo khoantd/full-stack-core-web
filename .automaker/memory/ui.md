@@ -552,3 +552,25 @@ usageStats:
 - **Problem solved:** Hero section background required both solid color and gradient overlay without blocking button clicks or text selection
 - **Why this works:** Absolute positioning with inset-0 creates a stacking context that overlays don't interfere with interactive elements or text flow
 - **Trade-offs:** Slightly more DOM elements and CSS complexity vs. simpler styling but more performant and flexible for future animations
+
+#### [Pattern] Color replacement strategy using Tailwind utility classes across multiple elements (2026-03-15)
+- **Problem solved:** Changing a hero banner color theme from violet to red across background, gradients, and interactive elements
+- **Why this works:** Tailwind's semantic color naming (violet-500, red-500) enables systematic theme changes by treating color as a replaceable property. This approach maintains consistency across all related UI elements without introducing CSS variables or theme providers.
+- **Trade-offs:** Easier: Direct class replacement is immediate and requires no runtime computation. Harder: Cannot support dynamic theme switching without rebuilding/redeploying; scales poorly if many colors need to change across large codebase
+
+#### [Pattern] Gradient color pairs (from-X-400 to-X-600) maintain depth perception through shade variation (2026-03-15)
+- **Problem solved:** Background uses `from-violet-400 to-violet-600` gradient, replaced with `from-red-400 to-red-600`
+- **Why this works:** Gradient from lighter to darker shade of same color creates visual depth and prevents flat appearance. The 200-unit shade difference (400 vs 600) is chosen to balance subtle depth without creating harsh contrasts.
+- **Trade-offs:** Easier: Gradient adds sophistication and visual hierarchy. Harder: Requires understanding of shade relationships; changing only base color without gradient creates visual regression
+
+#### [Pattern] Color palette changes propagated across multiple related elements (background, gradient, button text, button hover states) simultaneously using batch edits (2026-03-15)
+- **Problem solved:** Changing banner color from red to yellow required updating 5 different CSS class values across gradient overlays and interactive button states
+- **Why this works:** Maintaining visual consistency across related UI elements prevents partial color updates that would break the design system. All hover states and text colors must harmonize with the primary background to preserve contrast ratios and visual hierarchy
+- **Trade-offs:** Batch editing is safer but requires careful identification of all related color references. Single-file approach means one source of truth reduces inconsistency risk but increases per-change complexity
+
+### White text preserved despite yellow background color change, relying on contrast ratio validation (2026-03-15)
+- **Context:** Hero section uses white text on colored backgrounds. When switching from red to yellow, text color remained white without evaluation shown
+- **Why:** Yellow (especially yellow-500) has lower luminosity than red, potentially affecting WCAG contrast ratios. Keeping white text assumes contrast validation occurred or will be tested post-deployment
+- **Rejected:** Changing text to dark color (e.g., text-gray-900) would maintain contrast but break the light-on-dark aesthetic of the original design
+- **Trade-offs:** White text works aesthetically but requires verification that yellow-500 meets WCAG AA minimum 4.5:1 contrast ratio. Dark text would guarantee accessibility but change the design intent
+- **Breaking if changed:** If WCAG contrast validation fails for white-on-yellow, users with low vision cannot read the banner content, creating accessibility failure

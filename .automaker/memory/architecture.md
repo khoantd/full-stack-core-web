@@ -249,3 +249,13 @@ usageStats:
 - **Situation:** Hero section hardcodes Tailwind color names (violet-400, violet-500, etc.) making color scheme changes require editing component JSX rather than configuration
 - **Root cause:** Direct Tailwind usage is convenient for rapid development but creates brittleness for design system changes
 - **How to avoid:** Speed of initial implementation vs. maintainability of future brand/design changes; no IDE refactoring support for color name changes
+
+#### [Gotcha] Button hover states must match banner color theme even though buttons are separate semantic components (2026-03-15)
+- **Situation:** Initial focus on banner background color (bg-violet-500 → bg-red-500) required secondary pass to update button states (hover:bg-violet-400 → hover:bg-red-400)
+- **Root cause:** Buttons inherit visual coherence from parent container. Hover states are interactive feedback that must align with container's color language to maintain design consistency.
+- **How to avoid:** Easier: Single component file to modify. Harder: Hidden dependencies between button styling and banner color require awareness of indirect relationships
+
+#### [Gotcha] Gradient overlays require explicit color palette alignment - from-yellow-400 to-yellow-600 uses different tones than the base yellow-500 for visual depth (2026-03-15)
+- **Situation:** Hero section used gradient overlay (from-red-400 to-red-600) on top of base bg-red-500, creating a layered color effect
+- **Root cause:** Tailwind's gradient requires explicit color stops. Using consistent yellow shades (400-500-600) maintains the intended depth hierarchy. Mismatched shades (e.g., 400 to 700) would create jarring visual jumps
+- **How to avoid:** Gradient overlays add visual sophistication but require coordinating multiple color values. Removing gradient simplifies maintenance but reduces visual impact
