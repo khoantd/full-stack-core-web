@@ -179,3 +179,8 @@ usageStats:
 - **Rejected:** Using `getComputedStyle()` would be more robust but requires browser style computation and is harder to maintain when theme changes
 - **Trade-offs:** Class matching is faster and more maintainable but couples tests to implementation details (Tailwind class names); computed styles would be implementation-agnostic but slower
 - **Breaking if changed:** If class name is renamed or CSS framework changes, test fails even if visual appearance is correct; class attribute assertion is brittle to refactoring
+
+#### [Gotcha] Test file uses className attribute inspection which is brittle when Tailwind classes change, even though visual appearance may remain similar (2026-03-22)
+- **Situation:** Test checks 'expect(className).toContain("bg-yellow-500")' rather than verifying actual computed colors or visual properties
+- **Root cause:** Tailwind utility classes are straightforward to query and the test file needed quick updates. Direct class checking is faster than computing styles
+- **How to avoid:** Simple string matching is easy to maintain for known Tailwind versions but breaks if Tailwind classes are refactored or custom CSS is introduced. Computed style checking would be more robust but slower

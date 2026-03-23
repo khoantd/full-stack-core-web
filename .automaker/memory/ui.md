@@ -586,3 +586,13 @@ usageStats:
 - **Rejected:** Inverted colors or complementary palette would break visual cohesion; darker shades would reduce contrast with text
 - **Trade-offs:** Simpler to implement and understand than computed hover states, but limits design flexibility if hover effects need to be more dramatic
 - **Breaking if changed:** If hover color lightness is reversed or changed to unrelated palette, buttons lose affordance clarity or fail WCAG contrast requirements
+
+#### [Gotcha] Color scheme changes require updates across multiple files including test specifications, not just component files (2026-03-22)
+- **Situation:** Changed banner color from red to yellow in HeroSection.tsx but also had to update verify-banner-color.spec.ts test file which was checking for pink/red classes
+- **Root cause:** Test files contain hardcoded assertions about specific color classes (bg-red-500, bg-pink-500). When UI colors change, tests break because they're tightly coupled to implementation details rather than semantic properties
+- **How to avoid:** Tight coupling of tests to Tailwind classes makes refactoring easier to catch (no stale colors slip through) but requires more maintenance when design changes. Could use semantic test IDs instead but would lose visual regression detection
+
+#### [Pattern] Gradient overlays and base background colors are used redundantly - section has both bg-yellow-500 and a gradient absolute div (2026-03-22)
+- **Problem solved:** HeroSection uses both 'bg-yellow-500' on the section and 'absolute inset-0 bg-gradient-to-br from-yellow-400 to-yellow-600' on a child div
+- **Why this works:** The absolute positioned gradient div covers the base color completely, making the section's bg-yellow-500 invisible. This pattern allows the base color to be a fallback/fallback or supports responsive behavior where gradient might be disabled
+- **Trade-offs:** Extra div and duplicate color definition costs minimal performance but adds code complexity. Makes it clearer what the fallback color is during render states
