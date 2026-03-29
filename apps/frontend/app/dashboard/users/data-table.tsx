@@ -14,6 +14,7 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal, PlusCircle, Eye, Pencil, Trash2 } from "lucide-react";
+import { useRoles } from "@/hooks/useUsers";
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -311,36 +312,14 @@ export default function UsersDataTable({ data, actions }: UsersDataTableProps) {
     }
   ];
 
-  const roles = [
-    {
-      value: "construction-foreman",
-      label: "Construction Foreman"
-    },
-    {
-      value: "project-manager",
-      label: "Project Manager"
-    },
-    {
-      value: "surveyor",
-      label: "Surveyor"
-    },
-    {
-      value: "architect",
-      label: "Architect"
-    },
-    {
-      value: "subcontractor",
-      label: "Subcontractor"
-    },
-    {
-      value: "electrician",
-      label: "Electrician"
-    },
-    {
-      value: "estimator",
-      label: "Estimator"
-    }
-  ];
+  const { data: rolesResp } = useRoles();
+  const roles = React.useMemo(() => {
+    if (!rolesResp?.data) return [];
+    return rolesResp.data.map(role => ({
+      value: role._id,
+      label: role.name.charAt(0).toUpperCase() + role.name.slice(1)
+    }));
+  }, [rolesResp]);
 
   return (
     <div className="w-full">

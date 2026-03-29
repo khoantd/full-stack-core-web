@@ -20,6 +20,12 @@ export interface Role {
   name: string;
 }
 
+export interface RolesResponse {
+  message: string;
+  data: Role[];
+  total?: number;
+}
+
 // User types - matching API response structure
 export interface User {
   _id?: string; // MongoDB ID from API

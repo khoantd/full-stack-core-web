@@ -5,6 +5,7 @@ import { userService } from "@/services/user.service";
 import type { UsersQueryParams, CreateUserRequest, UpdateUserRequest } from "@/api/types";
 
 export const USERS_QUERY_KEY = "users";
+export const ROLES_QUERY_KEY = "roles";
 
 /**
  * Hook to fetch list of users with pagination, search, filter
@@ -19,6 +20,18 @@ export function useUsers(params: UsersQueryParams = {}) {
     gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time (trước đây là cacheTime)
     retry: 1,
     refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Hook to fetch all roles
+ */
+export function useRoles() {
+  return useQuery({
+    queryKey: [ROLES_QUERY_KEY],
+    queryFn: () => userService.getRoles(),
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 2 * 60 * 60 * 1000,
   });
 }
 

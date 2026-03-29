@@ -22,6 +22,18 @@ export class User extends Document {
 
   @Prop({ default: false })
   securityConfirmed: boolean;
+
+  @Prop()
+  image?: string;
+
+  @Prop()
+  country?: string;
+
+  @Prop()
+  status?: string;
+
+  @Prop()
+  plan_name?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

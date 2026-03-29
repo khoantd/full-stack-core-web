@@ -1,5 +1,5 @@
 import axiosClient, { removeStoredToken, setStoredToken } from "@/api/axiosClient";
-import type { LoginRequest, LoginResponse } from "@/api/types";
+import type { LoginRequest, LoginResponse, CreateUserRequest, User } from "@/api/types";
 
 // Hỗ trợ nhiều format response - token có thể là string hoặc object { token, accessToken, ... }
 function toTokenString(val: unknown): string | null {
@@ -38,6 +38,15 @@ export const authService = {
     } else {
       throw new Error("Token không tồn tại trong response API");
     }
+    return response.data;
+  },
+
+  register: async (data: CreateUserRequest): Promise<User> => {
+    const payload = {
+      ...data,
+      securityConfirmed: true, // Backend required to succeed registration
+    };
+    const response = await axiosClient.post<User>("/auth/create", payload);
     return response.data;
   },
 

@@ -7,8 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
 import { Role } from '../auth/schemas/role.schema';
-// Note: For production, consider using bcrypt for password hashing
-// import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 // Helper function để loại bỏ dấu tiếng Việt
 function removeVietnameseTones(str: string): string {
@@ -46,7 +45,7 @@ export class UserService {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page) || 1;
     const limit = isGetAll
-      ? Number.MAX_SAFE_INTEGER
+      ? 1000 // Limit to 1000 for page=all to prevent server crashes
       : parseInt(query.limit) || 10;
     const skip = (page - 1) * limit;
 
@@ -58,92 +57,16 @@ export class UserService {
       filter.role = new Types.ObjectId(query.role);
     }
 
-    // Nếu có search, filter ở application level để hỗ trợ search không dấu
     if (query.search && query.search.trim()) {
-      const searchTerm = query.search.trim().toLowerCase();
-      const normalizedSearch = removeVietnameseTones(searchTerm);
-
-      // Lấy tất cả documents (không có pagination ở DB level)
-      const allUsers = await this.userModel
-        .find(filter)
-        .populate('role', 'name')
-        .sort({ createdAt: -1 })
-        .exec();
-
-      // Filter ở application level: so sánh cả name và email
-      const filteredUsers = allUsers.filter((user) => {
-        const userNameNormalized = removeVietnameseTones(
-          user.name.toLowerCase(),
-        );
-        const userNameLower = user.name.toLowerCase();
-        const userEmailLower = user.email.toLowerCase();
-
-        // Match nếu name hoặc email (có dấu hoặc không dấu) chứa search term
-        return (
-          userNameLower.includes(searchTerm) ||
-          userNameNormalized.includes(normalizedSearch) ||
-          userEmailLower.includes(searchTerm)
-        );
-      });
-
-      // Nếu page=all, trả về toàn bộ không phân trang
-      if (isGetAll) {
-        return {
-          data: filteredUsers,
-          pagination: {
-            total: filteredUsers.length,
-            page: 1,
-            limit: filteredUsers.length,
-            totalPages: 1,
-            hasNextPage: false,
-            hasPrevPage: false,
-          },
-        };
-      }
-
-      // Apply pagination sau khi filter
-      const total = filteredUsers.length;
-      const totalPages = Math.ceil(total / limit);
-      const data = filteredUsers.slice(skip, skip + limit);
-
-      return {
-        data,
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
-        },
-      };
+      const searchRegex = new RegExp(query.search.trim(), 'i');
+      filter.$or = [
+        { name: { $regex: searchRegex } },
+        { email: { $regex: searchRegex } }
+      ];
     }
 
-    // Nếu không có search, dùng cách thông thường với DB query
     const total = await this.userModel.countDocuments(filter);
 
-    // Nếu page=all, lấy tất cả không phân trang
-    if (isGetAll) {
-      const data = await this.userModel
-        .find(filter)
-        .populate('role', 'name')
-        .sort({ createdAt: -1 })
-        .exec();
-
-      return {
-        data,
-        pagination: {
-          total: data.length,
-          page: 1,
-          limit: data.length,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      };
-    }
-
-    // Có phân trang
     const data = await this.userModel
       .find(filter)
       .populate('role', 'name')
@@ -206,11 +129,11 @@ export class UserService {
         }
       }
 
-      // Store password (for production, use bcrypt to hash)
-      // if (data.password) {
-      //   hashedPassword = await bcrypt.hash(data.password, 10);
-      // }
-      const hashedPassword = data.password;
+      // Store password
+      let hashedPassword = data.password;
+      if (data.password) {
+        hashedPassword = await bcrypt.hash(data.password, 10);
+      }
 
       // Kiểm tra role có tồn tại không (nếu có)
       if (data.role) {
@@ -299,9 +222,9 @@ export class UserService {
       }
 
       // Hash password mới nếu có (for production, use bcrypt)
-      // if (data.password) {
-      //   data.password = await bcrypt.hash(data.password, 10);
-      // }
+      if (data.password) {
+        data.password = await bcrypt.hash(data.password, 10);
+      }
 
       // Cập nhật các field
       if (data.name) user.name = data.name;

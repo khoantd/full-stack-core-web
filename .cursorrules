@@ -1,0 +1,28 @@
+# AI Agent Instructions for full-stack-core-web
+
+This is a monorepo consisting of:
+- A Next.js (App Router) frontend (`apps/frontend`)
+- A NestJS backend (`apps/backend`)
+
+## Core Tech Stack
+### Frontend (`apps/frontend`)
+- Framework: Next.js 16 (App Router)
+- Language: TypeScript
+- UI: React, Tailwind CSS, shadcn/ui (Radix UI)
+- State/Data: React Query, React Hook Form + Zod
+- Testing: Playwright
+
+### Backend (`apps/backend`)
+- Framework: NestJS 10
+- Language: TypeScript
+- Database: MongoDB (via Mongoose)
+- Cloud/Auth: Firebase Admin, AWS SDK
+- Other integrations: Telegraf (Telegram Bot), Nodemailer
+
+## Coding Standards
+- Strictly use TypeScript. Avoid `any`.
+- Write clean and modular code following the framework's standard patterns.
+- For the frontend, favor Server Components when possible, but use Client Components (`"use client"`) when interactivity or hooks are needed. Keep styles in Tailwind.
+- For the backend, adhere to NestJS architecture: Modules, Controllers, Services. Use Dependency Injection. Add DTOs for data validation using `class-validator`.
+
+For more detailed architectural instructions and file structures, refer to `AI_AGENT_GUIDE.md` at the project root.

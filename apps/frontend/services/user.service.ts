@@ -6,6 +6,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   DeleteUserResponse,
+  RolesResponse,
 } from "@/api/types";
 
 export const userService = {
@@ -17,6 +18,14 @@ export const userService = {
     const response = await axiosClient.get<UsersResponse>("/users", {
       params: { page, limit, search, role },
     });
+    return response.data;
+  },
+
+  /**
+   * Get all roles
+   */
+  getRoles: async (): Promise<RolesResponse> => {
+    const response = await axiosClient.get<RolesResponse>("/users/roles");
     return response.data;
   },
 

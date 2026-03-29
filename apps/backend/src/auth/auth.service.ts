@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import axios from "axios";
 import { FriendGateway } from './socket/friend.gateway';
 import { Role } from './schemas/role.schema';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,8 @@ export class AuthService {
         throw new NotFoundException('Người dùng không tồn tại');
       }
 
-      if (user.password !== password) {
+      const isMatch = await bcrypt.compare(password, user.password || '');
+      if (!isMatch) {
         throw new UnauthorizedException('Mật khẩu không chính xác');
       }
 
@@ -77,10 +79,12 @@ export class AuthService {
     const roleName = userCount === 0 ? 'admin' : 'user';
     const role = await this.roleModel.findOne({ name: roleName });
 
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
     const newUser = new this.userModel({
       name: data.name,
       email: data.email,
-      password: data.password,
+      password: hashedPassword,
       securityConfirmed: data.securityConfirmed,
       role: role?._id,
     });
