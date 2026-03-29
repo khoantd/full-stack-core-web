@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { CategoryProduct } from '../../category-product/schemas/category-product.schema';
 
 export type ProductDocument = Product & Document;
 
@@ -20,6 +19,18 @@ export class Product {
 
   @Prop({ type: Types.ObjectId, ref: 'CategoryProduct', required: true })
   category: Types.ObjectId;
+
+  @Prop({ required: false })
+  sku?: string;
+
+  @Prop({ default: 0, min: 0 })
+  stock: number;
+
+  @Prop({ default: 5, min: 0 })
+  stockThreshold: number;
+
+  @Prop({ default: false })
+  isOutOfStock: boolean;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

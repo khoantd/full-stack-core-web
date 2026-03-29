@@ -136,6 +136,22 @@ export function ProductTable({
       },
     },
     {
+      accessorKey: "stock",
+      header: "Stock",
+      cell: ({ row }) => {
+        const product = row.original;
+        if (product.isOutOfStock) {
+          return <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">Out of Stock</span>;
+        }
+        const isLow = product.stock <= product.stockThreshold;
+        return (
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${isLow ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+            {product.stock} {isLow ? "(Low)" : ""}
+          </span>
+        );
+      },
+    },
+    {
       accessorKey: "category",
       header: "Category",
       cell: ({ row }) => {

@@ -17,47 +17,26 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto): Promise<Product> {
-    // Verify that the category exists
     const categoryExists = await this.categoryProductModel.findById(createProductDto.category).exec();
-    if (!categoryExists) {
-      throw new BadRequestException(`Category with ID ${createProductDto.category} not found`);
-    }
+    if (!categoryExists) throw new BadRequestException(`Category with ID ${createProductDto.category} not found`);
 
-    const createdProduct = new this.productModel(createProductDto);
+    const data: any = { ...createProductDto };
+    data.isOutOfStock = (data.stock ?? 0) === 0;
+
+    const createdProduct = new this.productModel(data);
     return await createdProduct.save();
   }
 
   async findAll(queryDto: QueryProductDto) {
     const { page = '1', limit = '10', search, categoryId } = queryDto;
-
     const query: any = {};
 
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
-    }
-
-    if (categoryId) {
-      query.category = categoryId;
-    }
+    if (search) query.name = { $regex: search, $options: 'i' };
+    if (categoryId) query.category = categoryId;
 
     if (page === 'all') {
-      const data = await this.productModel
-        .find(query)
-        .populate('category')
-        .sort({ createdAt: -1 })
-        .exec();
-
-      return {
-        data,
-        pagination: {
-          total: data.length,
-          page: 'all',
-          limit: data.length,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        },
-      };
+      const data = await this.productModel.find(query).populate('category').sort({ createdAt: -1 }).exec();
+      return { data, pagination: { total: data.length, page: 'all', limit: data.length, totalPages: 1, hasNextPage: false, hasPrevPage: false } };
     }
 
     const pageNum = parseInt(page, 10);
@@ -65,66 +44,62 @@ export class ProductService {
     const skip = (pageNum - 1) * limitNum;
 
     const [data, total] = await Promise.all([
-      this.productModel
-        .find(query)
-        .populate('category')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .exec(),
+      this.productModel.find(query).populate('category').sort({ createdAt: -1 }).skip(skip).limit(limitNum).exec(),
       this.productModel.countDocuments(query).exec(),
     ]);
 
     const totalPages = Math.ceil(total / limitNum);
-
-    return {
-      data,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages,
-        hasNextPage: pageNum < totalPages,
-        hasPrevPage: pageNum > 1,
-      },
-    };
+    return { data, pagination: { total, page: pageNum, limit: limitNum, totalPages, hasNextPage: pageNum < totalPages, hasPrevPage: pageNum > 1 } };
   }
 
   async findOne(id: string): Promise<Product> {
     const product = await this.productModel.findById(id).populate('category').exec();
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
-    }
+    if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
     return product;
   }
 
   async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
-    // If updating category, verify it exists
     if (updateProductDto.category) {
       const categoryExists = await this.categoryProductModel.findById(updateProductDto.category).exec();
-      if (!categoryExists) {
-        throw new BadRequestException(`Category with ID ${updateProductDto.category} not found`);
-      }
+      if (!categoryExists) throw new BadRequestException(`Category with ID ${updateProductDto.category} not found`);
     }
 
-    const updatedProduct = await this.productModel
-      .findByIdAndUpdate(id, updateProductDto, { new: true })
-      .populate('category')
-      .exec();
-
-    if (!updatedProduct) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+    const updateData: any = { ...updateProductDto };
+    if (updateData.stock !== undefined) {
+      updateData.isOutOfStock = updateData.stock === 0;
     }
 
+    const updatedProduct = await this.productModel.findByIdAndUpdate(id, updateData, { new: true }).populate('category').exec();
+    if (!updatedProduct) throw new NotFoundException(`Product with ID ${id} not found`);
     return updatedProduct;
   }
 
   async remove(id: string): Promise<void> {
     const product = await this.productModel.findById(id).exec();
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found`);
+    if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
+    await this.productModel.findByIdAndDelete(id).exec();
+  }
+
+  async getLowStockProducts() {
+    return this.productModel.find({
+      $expr: { $lte: ['$stock', '$stockThreshold'] },
+      isOutOfStock: false,
+    }).populate('category').exec();
+  }
+
+  async bulkImport(products: CreateProductDto[]): Promise<{ success: number; errors: { row: number; message: string }[] }> {
+    const errors: { row: number; message: string }[] = [];
+    let success = 0;
+
+    for (let i = 0; i < products.length; i++) {
+      try {
+        await this.create(products[i]);
+        success++;
+      } catch (err: any) {
+        errors.push({ row: i + 1, message: err.message || 'Unknown error' });
+      }
     }
 
-    await this.productModel.findByIdAndDelete(id).exec();
+    return { success, errors };
   }
 }

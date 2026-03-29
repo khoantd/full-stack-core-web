@@ -52,6 +52,12 @@ export class UserController {
     return this.userService.updateSecurityConfirm(email, body);
   }
 
+  // 📊 GET - Dashboard statistics
+  @Get('stats/dashboard')
+  async getDashboardStats() {
+    return this.userService.getDashboardStats();
+  }
+
   // 🟢 GET user by ID
   @Get(':id')
   async getUserById(@Param('id') id: string) {
@@ -95,6 +101,18 @@ export class UserController {
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.userService.delete(id);
+  }
+
+  // 🔴 PATCH - Deactivate user (invalidate refresh tokens)
+  @Put(':id/deactivate')
+  async deactivateUser(@Param('id') id: string) {
+    return this.userService.deactivate(id);
+  }
+
+  // 🟢 PATCH - Activate user
+  @Put(':id/activate')
+  async activateUser(@Param('id') id: string) {
+    return this.userService.activate(id);
   }
 }
 

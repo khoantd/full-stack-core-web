@@ -25,10 +25,21 @@ export class ProductController {
     return this.productService.create(createProductDto);
   }
 
+  @Post('bulk-import')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  bulkImport(@Body() body: { products: CreateProductDto[] }) {
+    return this.productService.bulkImport(body.products);
+  }
+
   @Get()
   @UsePipes(new ValidationPipe({ transform: true }))
   findAll(@Query() queryDto: QueryProductDto) {
     return this.productService.findAll(queryDto);
+  }
+
+  @Get('low-stock')
+  getLowStock() {
+    return this.productService.getLowStockProducts();
   }
 
   @Get(':id')
@@ -38,10 +49,7 @@ export class ProductController {
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
-  update(
-    @Param('id') id: string,
-    @Body() updateProductDto: UpdateProductDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(id, updateProductDto);
   }
 

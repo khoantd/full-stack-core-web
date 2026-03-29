@@ -32,6 +32,9 @@ const productSchema = z.object({
   price: z.number().min(0, "Price must be >= 0"),
   category: z.string().min(1, "Category is required"),
   image: z.string().optional(),
+  sku: z.string().optional(),
+  stock: z.number().min(0).default(0),
+  stockThreshold: z.number().min(0).default(5),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -62,6 +65,9 @@ export function ProductForm({
           ? initialData.category
           : initialData?.category?._id || "",
       image: initialData?.image || "",
+      sku: initialData?.sku || "",
+      stock: initialData?.stock ?? 0,
+      stockThreshold: initialData?.stockThreshold ?? 5,
     },
   });
 
@@ -191,6 +197,61 @@ export function ProductForm({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="sku"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SKU (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. PROD-001" {...field} disabled={isLoading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="stock"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stock</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="stockThreshold"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Low Stock Threshold</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="5"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                    disabled={isLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? "Saving..." : initialData ? "Update" : "Create"}
         </Button>

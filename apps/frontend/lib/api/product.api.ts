@@ -9,9 +9,7 @@ import {
 
 export const productApi = {
   getProducts: async (params?: ProductQueryParams): Promise<ProductsResponse> => {
-    const response = await axiosClient.get<ProductsResponse>("/products", {
-      params,
-    });
+    const response = await axiosClient.get<ProductsResponse>("/products", { params });
     return response.data;
   },
 
@@ -25,15 +23,22 @@ export const productApi = {
     return response.data;
   },
 
-  updateProduct: async (
-    id: string,
-    data: UpdateProductRequest
-  ): Promise<Product> => {
+  updateProduct: async (id: string, data: UpdateProductRequest): Promise<Product> => {
     const response = await axiosClient.put<Product>(`/products/${id}`, data);
     return response.data;
   },
 
   deleteProduct: async (id: string): Promise<void> => {
     await axiosClient.delete(`/products/${id}`);
+  },
+
+  getLowStockProducts: async (): Promise<Product[]> => {
+    const response = await axiosClient.get<Product[]>("/products/low-stock");
+    return response.data;
+  },
+
+  bulkImport: async (products: CreateProductRequest[]): Promise<{ success: number; errors: { row: number; message: string }[] }> => {
+    const response = await axiosClient.post("/products/bulk-import", { products });
+    return response.data;
   },
 };

@@ -1,174 +1,230 @@
 "use client";
 
-import Link from "next/link";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
-
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Save, Loader2, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
-const profileFormSchema = z.object({
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters."
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters."
-    }),
-  email: z
-    .string({
-      required_error: "Please select an email to display."
-    })
-    .email(),
-  bio: z.string().max(160).min(4),
-  urls: z
-    .array(
-      z.object({
-        value: z.string().url({ message: "Please enter a valid URL." })
-      })
-    )
-    .optional()
-});
+const TIMEZONES = [
+  "UTC",
+  "Asia/Ho_Chi_Minh",
+  "Asia/Bangkok",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Seoul",
+  "Europe/London",
+  "Europe/Paris",
+  "America/New_York",
+  "America/Los_Angeles",
+];
 
-type ProfileFormValues = z.infer<typeof profileFormSchema>;
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "vi", label: "Tiếng Việt" },
+  { code: "ja", label: "日本語" },
+  { code: "ko", label: "한국어" },
+];
 
-// This can come from your database or API.
-const defaultValues: Partial<ProfileFormValues> = {
-  bio: "I own a computer.",
-  urls: [{ value: "https://shadcn.com" }, { value: "http://twitter.com/shadcn" }]
+const PREF_KEY = "user_preferences";
+
+interface Preferences {
+  language: string;
+  timezone: string;
+  emailNotifications: boolean;
+  dashboardAlerts: boolean;
+}
+
+const DEFAULT_PREFS: Preferences = {
+  language: "en",
+  timezone: "Asia/Ho_Chi_Minh",
+  emailNotifications: true,
+  dashboardAlerts: true,
 };
 
-export function ProfileForm() {
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileFormSchema),
-    defaultValues,
-    mode: "onChange"
-  });
+function loadPrefs(): Preferences {
+  if (typeof window === "undefined") return DEFAULT_PREFS;
+  try {
+    const raw = localStorage.getItem(PREF_KEY);
+    return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
+  } catch {
+    return DEFAULT_PREFS;
+  }
+}
 
-  const { fields, append } = useFieldArray({
-    name: "urls",
-    control: form.control
-  });
+export default function ProfileSettingsPage() {
+  const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
+  const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string | null>(null);
 
-  function onSubmit(data: ProfileFormValues) {}
+  useEffect(() => {
+    setPrefs(loadPrefs());
+  }, []);
+
+  // Update clock every second, client-only to avoid hydration mismatch
+  useEffect(() => {
+    const tick = () =>
+      setCurrentTime(
+        new Date().toLocaleTimeString("en-GB", { timeZone: prefs.timezone })
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [prefs.timezone]);
+
+  const set = <K extends keyof Preferences>(key: K, value: Preferences[K]) =>
+    setPrefs((p) => ({ ...p, [key]: value }));
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    // Persist locally (backend user-prefs endpoint can be wired in when ready)
+    await new Promise((r) => setTimeout(r, 400));
+    localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+    setIsSaving(false);
+    setSaved(true);
+    toast.success("Preferences saved — your settings have been updated.");
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input placeholder="shadcn" {...field} />
-              </FormControl>
-              <FormDescription>
-                This is your public display name. It can be your real name or a pseudonym. You can
-                only change this once every 30 days.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a verified email to display" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="m@example.com">m@example.com</SelectItem>
-                  <SelectItem value="m@google.com">m@google.com</SelectItem>
-                  <SelectItem value="m@support.com">m@support.com</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                You can manage verified email addresses in your{" "}
-                <Link href="/examples/forms">email settings</Link>.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="bio"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bio</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Tell us a little bit about yourself"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                You can <span>@mention</span> other users and organizations to link to them.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div className="flex items-center justify-between">
         <div>
-          {fields.map((field, index) => (
-            <FormField
-              control={form.control}
-              key={field.id}
-              name={`urls.${index}.value`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={cn(index !== 0 && "sr-only")}>URLs</FormLabel>
-                  <FormDescription className={cn(index !== 0 && "sr-only")}>
-                    Add links to your website, blog, or social media profiles.
-                  </FormDescription>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => append({ value: "" })}>
-            Add URL
-          </Button>
+          <h1 className="text-2xl font-bold tracking-tight">User Preferences</h1>
+          <p className="text-sm text-muted-foreground">
+            Personalise the CMS to match your context.
+          </p>
         </div>
-        <Button type="submit">Update profile</Button>
-      </form>
-    </Form>
+        <Button onClick={handleSave} disabled={isSaving} id="prefs-save-btn">
+          {isSaving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : saved ? (
+            <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          {isSaving ? "Saving…" : saved ? "Saved!" : "Save"}
+        </Button>
+      </div>
+
+      {/* Language & Timezone */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Locale</CardTitle>
+          <CardDescription>
+            Controls language and time display across the entire CMS.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="pref-language">Language</Label>
+            <Select
+              value={prefs.language}
+              onValueChange={(v) => set("language", v)}
+            >
+              <SelectTrigger id="pref-language" className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {LANGUAGES.map((l) => (
+                  <SelectItem key={l.code} value={l.code}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-1.5">
+            <Label htmlFor="pref-timezone">Timezone</Label>
+            <p className="text-xs text-muted-foreground">
+              All date/time displays across the CMS will reflect this zone.
+            </p>
+            <Select
+              value={prefs.timezone}
+              onValueChange={(v) => set("timezone", v)}
+            >
+              <SelectTrigger id="pref-timezone" className="max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONES.map((tz) => (
+                  <SelectItem key={tz} value={tz}>
+                    {tz}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Current time:{" "}
+              <span className="font-medium text-foreground">
+                {currentTime ?? "—"}
+              </span>{" "}
+              ({prefs.timezone})
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Notifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Notifications</CardTitle>
+          <CardDescription>Choose which alerts you receive.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="pref-email-notif" className="font-medium">
+                Email Notifications
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Receive important updates by email.
+              </p>
+            </div>
+            <Switch
+              id="pref-email-notif"
+              checked={prefs.emailNotifications}
+              onCheckedChange={(v) => set("emailNotifications", v)}
+            />
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="pref-dashboard-alerts" className="font-medium">
+                Dashboard Alerts
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Show system metric alerts on the dashboard widgets.
+              </p>
+            </div>
+            <Switch
+              id="pref-dashboard-alerts"
+              checked={prefs.dashboardAlerts}
+              onCheckedChange={(v) => set("dashboardAlerts", v)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

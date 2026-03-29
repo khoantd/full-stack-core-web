@@ -90,6 +90,21 @@ export function EventDetailDialog({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Capacity
+                </h3>
+                <p className="text-base">{event.capacity ?? "Unlimited"}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Registration Type
+                </h3>
+                <p className="text-base capitalize">{event.registrationType?.replace("_", " ") ?? "paid"}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
                   Start Date
                 </h3>
                 <p className="text-base">{formatDate(event.startDate)}</p>

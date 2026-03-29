@@ -16,6 +16,9 @@ import { EventModule } from './event/event.module';
 import { PaymentModule } from './payment/payment.module';
 import { AutomakerModule } from './automaker/automaker.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { SystemSettingsModule } from './config/system-settings.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { LandingModule } from './landing/landing.module';
 
 @Module({
   imports: [
@@ -46,6 +49,9 @@ import { TelegramModule } from './telegram/telegram.module';
     PaymentModule,
     AutomakerModule,
     TelegramModule,
+    SystemSettingsModule,
+    AuditLogModule,
+    LandingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

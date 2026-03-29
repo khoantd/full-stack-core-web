@@ -6,7 +6,9 @@ import {
   IsOptional,
   Min,
   IsDateString,
+  IsEnum,
 } from 'class-validator';
+import { RegistrationType } from '../schemas/event.schema';
 
 export class CreateEventDto {
   @IsString()
@@ -41,4 +43,17 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   image?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(1)
+  capacity?: number;
+
+  @IsEnum(RegistrationType)
+  @IsOptional()
+  registrationType?: RegistrationType;
+
+  @IsBoolean()
+  @IsOptional()
+  waitlistEnabled?: boolean;
 }

@@ -34,6 +34,21 @@ export class User extends Document {
 
   @Prop()
   plan_name?: string;
+
+  @Prop({ default: 0 })
+  failedLoginAttempts?: number;
+
+  @Prop()
+  lockUntil?: Date;
+
+  @Prop()
+  refreshToken?: string;
+
+  @Prop()
+  resetPasswordToken?: string;
+
+  @Prop()
+  resetPasswordExpires?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

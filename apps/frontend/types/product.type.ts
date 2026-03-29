@@ -7,6 +7,10 @@ export interface Product {
   price: number;
   image?: string;
   category: CategoryProduct | string;
+  sku?: string;
+  stock: number;
+  stockThreshold: number;
+  isOutOfStock: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,6 +21,9 @@ export interface CreateProductRequest {
   price: number;
   image?: string;
   category: string;
+  sku?: string;
+  stock?: number;
+  stockThreshold?: number;
 }
 
 export interface UpdateProductRequest {
@@ -25,6 +32,9 @@ export interface UpdateProductRequest {
   price?: number;
   image?: string;
   category?: string;
+  sku?: string;
+  stock?: number;
+  stockThreshold?: number;
 }
 
 export interface ProductsResponse {

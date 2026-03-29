@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -11,6 +13,7 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { QueryPaymentDto } from './dto/query-payment.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
+import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class PaymentService {
@@ -19,6 +22,8 @@ export class PaymentService {
     private paymentModel: Model<PaymentDocument>,
     @InjectModel(Event.name)
     private eventModel: Model<EventDocument>,
+    @Inject(forwardRef(() => TelegramService))
+    private readonly telegramService: TelegramService,
   ) {}
 
   async create(createPaymentDto: CreatePaymentDto): Promise<Payment> {
@@ -197,6 +202,15 @@ export class PaymentService {
       .findByIdAndUpdate(id, updateData, { new: true })
       .populate('event', 'title price')
       .exec();
+
+    // Notify via Telegram if payment failed
+    if (updateStatusDto.status === PaymentStatus.FAILED) {
+      this.telegramService.notifyPaymentFailed(
+        id,
+        (payment as any).amount ?? 0,
+        'Status updated to FAILED',
+      ).catch(() => {});
+    }
 
     return updatedPayment!;
   }

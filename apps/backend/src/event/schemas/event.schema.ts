@@ -3,6 +3,12 @@ import { Document } from 'mongoose';
 
 export type EventDocument = Event & Document;
 
+export enum RegistrationType {
+  FREE = 'free',
+  PAID = 'paid',
+  INVITE_ONLY = 'invite_only',
+}
+
 @Schema({ timestamps: true })
 export class Event {
   @Prop({ required: true })
@@ -28,6 +34,15 @@ export class Event {
 
   @Prop({ required: false })
   image?: string;
+
+  @Prop({ default: null })
+  capacity?: number;
+
+  @Prop({ enum: RegistrationType, default: RegistrationType.PAID })
+  registrationType: RegistrationType;
+
+  @Prop({ default: false })
+  waitlistEnabled: boolean;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

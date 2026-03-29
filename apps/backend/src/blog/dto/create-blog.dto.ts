@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
+import { BlogStatus } from '../schemas/blog.schema';
 
 export class CreateBlogDto {
   @IsNotEmpty({ message: 'Title is required' })
@@ -12,4 +13,20 @@ export class CreateBlogDto {
   @IsOptional()
   @IsString({ message: 'Image must be a string' })
   image?: string;
+
+  @IsOptional()
+  @IsEnum(BlogStatus)
+  status?: BlogStatus;
+
+  @IsOptional()
+  @IsString()
+  author?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
 }

@@ -122,6 +122,20 @@ export function BlogDetailDialog({ open, onOpenChange, blog }: BlogDetailDialogP
           {/* Title */}
           <div>
             <h3 className="text-lg font-semibold">{blog.title}</h3>
+            <div className="flex items-center gap-2 mt-1">
+              {blog.status && (
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  blog.status === "Published" ? "bg-green-100 text-green-700" :
+                  blog.status === "Archived" ? "bg-yellow-100 text-yellow-700" :
+                  "bg-gray-100 text-gray-700"
+                }`}>
+                  {blog.status}
+                </span>
+              )}
+              {blog.author && (
+                <span className="text-xs text-muted-foreground">by {blog.author}</span>
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -132,6 +146,27 @@ export function BlogDetailDialog({ open, onOpenChange, blog }: BlogDetailDialogP
             </div>
             <p className="text-sm whitespace-pre-wrap">{blog.description}</p>
           </div>
+
+          {(blog.seoTitle || blog.seoDescription) && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">SEO</p>
+                {blog.seoTitle && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Title</p>
+                    <p className="text-sm">{blog.seoTitle}</p>
+                  </div>
+                )}
+                {blog.seoDescription && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Description</p>
+                    <p className="text-sm">{blog.seoDescription}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <Separator />
 
@@ -151,6 +186,15 @@ export function BlogDetailDialog({ open, onOpenChange, blog }: BlogDetailDialogP
               </div>
               <p>{formatDate(blog.updatedAt)}</p>
             </div>
+            {blog.publishedAt && (
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                  <Calendar className="h-4 w-4" />
+                  Published At
+                </div>
+                <p>{formatDate(blog.publishedAt)}</p>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

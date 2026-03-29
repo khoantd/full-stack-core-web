@@ -1,3 +1,6 @@
+export type RegistrationType = 'free' | 'paid' | 'invite_only';
+export type AttendeeStatus = 'registered' | 'waitlisted' | 'attended' | 'cancelled';
+
 export interface Event {
   _id: string;
   title: string;
@@ -8,6 +11,19 @@ export interface Event {
   price: number;
   isPublished: boolean;
   image?: string;
+  capacity?: number;
+  registrationType: RegistrationType;
+  waitlistEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Attendee {
+  _id: string;
+  event: string;
+  name: string;
+  email: string;
+  status: AttendeeStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,6 +58,9 @@ export interface CreateEventRequest {
   price: number;
   isPublished?: boolean;
   image?: string;
+  capacity?: number;
+  registrationType?: RegistrationType;
+  waitlistEnabled?: boolean;
 }
 
 export interface UpdateEventRequest {
@@ -53,4 +72,7 @@ export interface UpdateEventRequest {
   price?: number;
   isPublished?: boolean;
   image?: string;
+  capacity?: number;
+  registrationType?: RegistrationType;
+  waitlistEnabled?: boolean;
 }

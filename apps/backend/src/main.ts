@@ -11,6 +11,6 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Authorization',
     credentials: false, // Tắt cookie nếu không cần
   });
-  await app.listen(3000);
+  await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();

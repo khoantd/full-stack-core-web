@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -31,7 +32,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { IconDotsVertical, IconEdit, IconTrash, IconEye } from "@tabler/icons-react";
+import { IconDotsVertical, IconEdit, IconTrash, IconEye, IconUsers } from "@tabler/icons-react";
 import { Event } from "@/types/event.type";
 import Image from "next/image";
 
@@ -52,6 +53,7 @@ export function EventTable({
   onTogglePublish,
   isLoading,
 }: EventTableProps) {
+  const router = useRouter();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
 
@@ -161,6 +163,10 @@ export function EventTable({
                       <DropdownMenuItem onClick={() => onView(event)}>
                         <IconEye className="mr-2 h-4 w-4" />
                         View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/events/${event._id}/attendees`)}>
+                        <IconUsers className="mr-2 h-4 w-4" />
+                        Attendees
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit(event)}>
                         <IconEdit className="mr-2 h-4 w-4" />

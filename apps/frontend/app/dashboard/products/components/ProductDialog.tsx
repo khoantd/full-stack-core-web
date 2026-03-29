@@ -142,6 +142,22 @@ export function ProductDetailDialog({
               <p className="text-base">{category || "N/A"}</p>
             </div>
           </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">SKU</h4>
+              <p className="text-base">{product.sku || "—"}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Stock</h4>
+              <p className={`text-base font-medium ${product.isOutOfStock ? "text-red-600" : product.stock <= product.stockThreshold ? "text-yellow-600" : "text-green-600"}`}>
+                {product.isOutOfStock ? "Out of Stock" : product.stock}
+              </p>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Low Stock At</h4>
+              <p className="text-base">{product.stockThreshold}</p>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h4 className="text-sm font-semibold text-muted-foreground mb-1">

@@ -92,6 +92,9 @@ importers:
       sharp:
         specifier: ^0.34.1
         version: 0.34.5
+      socket.io:
+        specifier: ^4.8.3
+        version: 4.8.3
       telegraf:
         specifier: ^4.16.3
         version: 4.16.3

@@ -7,6 +7,8 @@ import axios from "axios";
 import { FriendGateway } from './socket/friend.gateway';
 import { Role } from './schemas/role.schema';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
+import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class AuthService {
@@ -37,8 +39,10 @@ export class AuthService {
     }
 
     const payload = { uid: user.uid, email: user.email };
-    const token = await this.generateUserTokens(payload);
-    return { user, token };
+    const tokens = await this.generateUserTokens(payload);
+    user.refreshToken = tokens.refreshToken;
+    await user.save();
+    return { user, ...tokens };
   }
 
   async login(email: string, password: string) {
@@ -49,15 +53,32 @@ export class AuthService {
         throw new NotFoundException('Người dùng không tồn tại');
       }
 
+      if (user.lockUntil && user.lockUntil > new Date()) {
+        throw new UnauthorizedException('Tài khoản đã bị tạm khóa. Vui lòng thử lại sau 15 phút.');
+      }
+
       const isMatch = await bcrypt.compare(password, user.password || '');
       if (!isMatch) {
+        user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+        if (user.failedLoginAttempts >= 5) {
+          user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+        }
+        await user.save();
         throw new UnauthorizedException('Mật khẩu không chính xác');
       }
 
-      const payload = { uid: user.uid, email: user.email };
-      const token = await this.generateUserTokens(payload);
+      user.failedLoginAttempts = 0;
+      user.lockUntil = undefined;
 
-      return { user, token };
+      // Extract role name if populated
+      const roleName = user.role && (user.role as any).name ? (user.role as any).name : user.role;
+      const payload = { uid: user.uid, email: user.email, role: roleName };
+      const tokens = await this.generateUserTokens(payload);
+      
+      user.refreshToken = tokens.refreshToken;
+      await user.save();
+
+      return { user, ...tokens };
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
         throw error; // ⚡ Giữ nguyên lỗi gốc
@@ -93,9 +114,42 @@ export class AuthService {
 
   async generateUserTokens(payload) {
     const accessToken = this.jwtService.sign({ payload }, {
-      expiresIn: '1h'
+      expiresIn: '15m'
     });
-    return { accessToken }
+    const refreshToken = this.jwtService.sign({ payload }, {
+      expiresIn: '7d'
+    });
+    return { accessToken, refreshToken };
+  }
+
+  async refreshToken(token: string) {
+    try {
+      // Verify signature 
+      const decoded: any = this.jwtService.verify(token);
+      
+      const payload = decoded.payload;
+      const user = await this.userModel.findOne({ email: payload.email });
+      if (!user || user.refreshToken !== token) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Generate new tokens
+      const tokens = await this.generateUserTokens(payload);
+      user.refreshToken = tokens.refreshToken;
+      await user.save();
+
+      return tokens;
+    } catch (e) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
+  async logout(userId: string) {
+    try {
+      await this.userModel.findByIdAndUpdate(userId, { refreshToken: null });
+    } catch (e) {
+      throw new BadRequestException('Cannot logout currently');
+    }
   }
 
   async getRoles() {
@@ -108,6 +162,65 @@ export class AuthService {
     } catch (error) {
       throw new Error('Không thể lấy danh sách role');
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      // Return success regardless to avoid email enumeration
+      return { message: 'If that email exists, a reset link has been sent.' };
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click the link below to reset your password. This link expires in 1 hour.</p>
+        <a href="${resetUrl}">${resetUrl}</a>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    });
+
+    return { message: 'If that email exists, a reset link has been sent.' };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.userModel.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    user.refreshToken = null; // invalidate existing sessions
+    await user.save();
+
+    return { message: 'Password has been reset successfully' };
   }
 
 

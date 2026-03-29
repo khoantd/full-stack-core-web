@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { Event } from "@/types/event.type";
 
 const eventSchema = z.object({
@@ -20,49 +23,41 @@ const eventSchema = z.object({
   price: z.coerce.number().min(0, "Price must be at least 0"),
   isPublished: z.boolean().optional(),
   image: z.string().optional(),
+  capacity: z.coerce.number().min(1).optional().or(z.literal("")),
+  registrationType: z.enum(["free", "paid", "invite_only"]).default("paid"),
+  waitlistEnabled: z.boolean().optional(),
 });
 
 type EventFormData = z.infer<typeof eventSchema>;
 
 interface EventFormProps {
   event?: Event | null;
-  onSubmit: (data: EventFormData) => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-export function EventForm({
-  event,
-  onSubmit,
-  onCancel,
-  isLoading,
-}: EventFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    watch,
-    setValue,
-  } = useForm<EventFormData>({
+export function EventForm({ event, onSubmit, onCancel, isLoading }: EventFormProps) {
+  const { register, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: event?.title || "",
       description: event?.description || "",
       location: event?.location || "",
-      startDate: event?.startDate
-        ? new Date(event.startDate).toISOString().slice(0, 16)
-        : "",
-      endDate: event?.endDate
-        ? new Date(event.endDate).toISOString().slice(0, 16)
-        : "",
+      startDate: event?.startDate ? new Date(event.startDate).toISOString().slice(0, 16) : "",
+      endDate: event?.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
       price: event?.price || 0,
       isPublished: event?.isPublished || false,
       image: event?.image || "",
+      capacity: event?.capacity || "",
+      registrationType: event?.registrationType || "paid",
+      waitlistEnabled: event?.waitlistEnabled || false,
     },
   });
 
   const isPublished = watch("isPublished");
+  const waitlistEnabled = watch("waitlistEnabled");
+  const registrationType = watch("registrationType");
 
   useEffect(() => {
     if (event) {
@@ -75,112 +70,97 @@ export function EventForm({
         price: event.price,
         isPublished: event.isPublished,
         image: event.image || "",
+        capacity: event.capacity || "",
+        registrationType: event.registrationType || "paid",
+        waitlistEnabled: event.waitlistEnabled || false,
       });
     }
   }, [event, reset]);
 
+  const handleFormSubmit = (data: EventFormData) => {
+    const payload: any = { ...data };
+    if (!payload.capacity || payload.capacity === "") delete payload.capacity;
+    else payload.capacity = Number(payload.capacity);
+    onSubmit(payload);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="title">Title *</Label>
-        <Input
-          id="title"
-          {...register("title")}
-          placeholder="Enter event title"
-        />
-        {errors.title && (
-          <p className="text-sm text-red-500">{errors.title.message}</p>
-        )}
+        <Input id="title" {...register("title")} placeholder="Enter event title" />
+        {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="description">Description *</Label>
-        <Textarea
-          id="description"
-          {...register("description")}
-          placeholder="Enter event description"
-          rows={4}
-        />
-        {errors.description && (
-          <p className="text-sm text-red-500">{errors.description.message}</p>
-        )}
+        <Textarea id="description" {...register("description")} placeholder="Enter event description" rows={4} />
+        {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="location">Location *</Label>
-        <Input
-          id="location"
-          {...register("location")}
-          placeholder="Enter event location"
-        />
-        {errors.location && (
-          <p className="text-sm text-red-500">{errors.location.message}</p>
-        )}
+        <Input id="location" {...register("location")} placeholder="Enter event location" />
+        {errors.location && <p className="text-sm text-red-500">{errors.location.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="startDate">Start Date *</Label>
-          <Input
-            id="startDate"
-            type="datetime-local"
-            {...register("startDate")}
-          />
-          {errors.startDate && (
-            <p className="text-sm text-red-500">{errors.startDate.message}</p>
-          )}
+          <Input id="startDate" type="datetime-local" {...register("startDate")} />
+          {errors.startDate && <p className="text-sm text-red-500">{errors.startDate.message}</p>}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="endDate">End Date *</Label>
           <Input id="endDate" type="datetime-local" {...register("endDate")} />
-          {errors.endDate && (
-            <p className="text-sm text-red-500">{errors.endDate.message}</p>
-          )}
+          {errors.endDate && <p className="text-sm text-red-500">{errors.endDate.message}</p>}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="price">Price *</Label>
+          <Input id="price" type="number" step="0.01" {...register("price")} placeholder="0.00" />
+          {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="capacity">Capacity (optional)</Label>
+          <Input id="capacity" type="number" min="1" {...register("capacity")} placeholder="Unlimited" />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="price">Price *</Label>
-        <Input
-          id="price"
-          type="number"
-          step="0.01"
-          {...register("price")}
-          placeholder="0.00"
-        />
-        {errors.price && (
-          <p className="text-sm text-red-500">{errors.price.message}</p>
-        )}
+        <Label>Registration Type</Label>
+        <Select value={registrationType} onValueChange={val => setValue("registrationType", val as any)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="free">Free</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="invite_only">Invite Only</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="image">Image URL</Label>
-        <Input
-          id="image"
-          {...register("image")}
-          placeholder="https://example.com/image.jpg"
-        />
-        {errors.image && (
-          <p className="text-sm text-red-500">{errors.image.message}</p>
-        )}
+        <Input id="image" {...register("image")} placeholder="https://example.com/image.jpg" />
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="isPublished"
-          checked={isPublished}
-          onCheckedChange={(checked) => setValue("isPublished", checked)}
-        />
-        <Label htmlFor="isPublished" className="cursor-pointer">
-          Published
-        </Label>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center space-x-2">
+          <Switch id="isPublished" checked={isPublished} onCheckedChange={checked => setValue("isPublished", checked)} />
+          <Label htmlFor="isPublished" className="cursor-pointer">Published</Label>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Switch id="waitlistEnabled" checked={waitlistEnabled} onCheckedChange={checked => setValue("waitlistEnabled", checked)} />
+          <Label htmlFor="waitlistEnabled" className="cursor-pointer">Enable Waitlist</Label>
+        </div>
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
+        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? "Saving..." : event ? "Update Event" : "Create Event"}
         </Button>

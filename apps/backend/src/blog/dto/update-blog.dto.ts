@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { BlogStatus } from '../schemas/blog.schema';
 
 export class UpdateBlogDto {
   @IsOptional()
@@ -12,4 +13,20 @@ export class UpdateBlogDto {
   @IsOptional()
   @IsString({ message: 'Image must be a string' })
   image?: string;
+
+  @IsOptional()
+  @IsEnum(BlogStatus)
+  status?: BlogStatus;
+
+  @IsOptional()
+  @IsString()
+  author?: string;
+
+  @IsOptional()
+  @IsString()
+  seoTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  seoDescription?: string;
 }

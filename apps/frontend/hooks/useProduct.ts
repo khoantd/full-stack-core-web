@@ -10,13 +10,7 @@ export const PRODUCTS_QUERY_KEY = "products";
 
 export function useProducts(params?: ProductQueryParams) {
   return useQuery({
-    queryKey: [
-      PRODUCTS_QUERY_KEY,
-      params?.page,
-      params?.limit,
-      params?.search,
-      params?.categoryId,
-    ],
+    queryKey: [PRODUCTS_QUERY_KEY, params?.page, params?.limit, params?.search, params?.categoryId],
     queryFn: () => productApi.getProducts(params),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -35,15 +29,20 @@ export function useProductById(id: string) {
   });
 }
 
+export function useLowStockProducts() {
+  return useQuery({
+    queryKey: [PRODUCTS_QUERY_KEY, "low-stock"],
+    queryFn: () => productApi.getLowStockProducts(),
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: CreateProductRequest) => productApi.createProduct(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [PRODUCTS_QUERY_KEY],
-      });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] }),
   });
 }
 
@@ -52,11 +51,7 @@ export function useUpdateProduct() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
       productApi.updateProduct(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [PRODUCTS_QUERY_KEY],
-      });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] }),
   });
 }
 
@@ -64,10 +59,14 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => productApi.deleteProduct(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: [PRODUCTS_QUERY_KEY],
-      });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] }),
+  });
+}
+
+export function useBulkImportProducts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (products: CreateProductRequest[]) => productApi.bulkImport(products),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [PRODUCTS_QUERY_KEY] }),
   });
 }

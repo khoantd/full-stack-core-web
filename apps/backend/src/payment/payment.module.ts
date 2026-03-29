@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PaymentController } from './payment.controller';
 import { PaymentService } from './payment.service';
 import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { Event, EventSchema } from '../event/schemas/event.schema';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { Event, EventSchema } from '../event/schemas/event.schema';
       { name: Payment.name, schema: PaymentSchema },
       { name: Event.name, schema: EventSchema },
     ]),
+    forwardRef(() => TelegramModule),
   ],
   controllers: [PaymentController],
   providers: [PaymentService],

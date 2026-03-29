@@ -14,8 +14,8 @@ export function useEvents(params: EventsQueryParams = {}) {
   return useQuery({
     queryKey: [EVENTS_QUERY_KEY, page, limit, search, isPublished],
     queryFn: () => eventApi.getEvents({ page, limit, search, isPublished }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
@@ -31,36 +31,56 @@ export function useEvent(id: string | null) {
   });
 }
 
+export function useEventAttendees(eventId: string | null) {
+  return useQuery({
+    queryKey: [EVENTS_QUERY_KEY, eventId, "attendees"],
+    queryFn: () => eventApi.getAttendees(eventId!),
+    enabled: !!eventId,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 export function useCreateEvent() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data: CreateEventRequest) => eventApi.createEvent(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] }),
   });
 }
 
 export function useUpdateEvent() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateEventRequest }) =>
       eventApi.updateEvent(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] }),
   });
 }
 
 export function useDeleteEvent() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (id: string) => eventApi.deleteEvent(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY] }),
+  });
+}
+
+export function useRegisterAttendee() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, data }: { eventId: string; data: { name: string; email: string } }) =>
+      eventApi.registerAttendee(eventId, data),
+    onSuccess: (_, { eventId }) =>
+      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY, eventId, "attendees"] }),
+  });
+}
+
+export function useUpdateAttendeeStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ eventId, attendeeId, status }: { eventId: string; attendeeId: string; status: string }) =>
+      eventApi.updateAttendeeStatus(eventId, attendeeId, status),
+    onSuccess: (_, { eventId }) =>
+      queryClient.invalidateQueries({ queryKey: [EVENTS_QUERY_KEY, eventId, "attendees"] }),
   });
 }

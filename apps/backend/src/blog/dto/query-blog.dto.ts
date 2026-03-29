@@ -12,4 +12,8 @@ export class QueryBlogDto {
   @IsOptional()
   @IsString({ message: 'Search must be a string' })
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

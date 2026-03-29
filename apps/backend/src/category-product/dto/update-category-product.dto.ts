@@ -1,4 +1,4 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsMongoId } from 'class-validator';
 
 export class UpdateCategoryProductDto {
   @IsString()
@@ -8,4 +8,8 @@ export class UpdateCategoryProductDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsMongoId()
+  @IsOptional()
+  parent?: string | null;
 }

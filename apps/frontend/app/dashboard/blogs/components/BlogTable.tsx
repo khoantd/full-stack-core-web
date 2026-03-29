@@ -48,6 +48,7 @@ export interface BlogTableActions {
   onView?: (blog: Blog) => void;
   onEdit?: (blog: Blog) => void;
   onDelete?: (blog: Blog) => void;
+  onVersions?: (blog: Blog) => void;
 }
 
 // Factory function to create columns with action handlers
@@ -136,19 +137,39 @@ export const createColumns = (actions?: BlogTableActions): ColumnDef<Blog>[] => 
     },
   },
   {
-    accessorKey: "createdAt",
-    header: ({ column }) => {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      const colors: Record<string, string> = {
+        Draft: "bg-gray-100 text-gray-700",
+        Published: "bg-green-100 text-green-700",
+        Archived: "bg-yellow-100 text-yellow-700",
+      };
       return (
-        <Button
-          className="-ml-3"
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Created At
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-700"}`}>
+          {status || "Draft"}
+        </span>
       );
     },
+  },
+  {
+    accessorKey: "author",
+    header: "Author",
+    cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("author") || "—"}</span>,
+  },
+  {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <Button
+        className="-ml-3"
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Created At
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as string;
       if (!date) return "N/A";
@@ -207,6 +228,12 @@ export const createColumns = (actions?: BlogTableActions): ColumnDef<Blog>[] => 
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
+            {actions?.onVersions && (
+              <DropdownMenuItem onClick={() => actions?.onVersions?.(blog)}>
+                <ArrowUpDown className="mr-2 h-4 w-4" />
+                Version History
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => actions?.onDelete?.(blog)}

@@ -21,4 +21,18 @@ export class UpdateProductDto {
   @IsMongoId()
   @IsOptional()
   category?: string;
+
+  @IsString()
+  @IsOptional()
+  sku?: string;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  stock?: number;
+
+  @IsNumber()
+  @IsOptional()
+  @Min(0)
+  stockThreshold?: number;
 }

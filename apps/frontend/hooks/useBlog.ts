@@ -6,77 +6,67 @@ import type { BlogsQueryParams, CreateBlogRequest, UpdateBlogRequest } from "@/t
 
 export const BLOGS_QUERY_KEY = "blogs";
 
-/**
- * Hook to fetch list of blogs with pagination and search
- */
 export function useBlogs(params: BlogsQueryParams = {}) {
-  const { page = 1, limit = 10, search } = params;
+  const { page = 1, limit = 10, search, status } = params;
 
   return useQuery({
-    queryKey: [BLOGS_QUERY_KEY, page, limit, search],
-    queryFn: () => blogApi.getBlogs({ page, limit, search }),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time)
+    queryKey: [BLOGS_QUERY_KEY, page, limit, search, status],
+    queryFn: () => blogApi.getBlogs({ page, limit, search, status }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
 }
 
-/**
- * Hook to fetch a single blog by ID
- */
 export function useBlog(id: string | null) {
   return useQuery({
     queryKey: [BLOGS_QUERY_KEY, id],
     queryFn: () => blogApi.getBlogById(id!),
-    enabled: !!id, // Only fetch if id is provided
+    enabled: !!id,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 }
 
-/**
- * Hook to create a new blog
- */
+export function useBlogVersions(id: string | null) {
+  return useQuery({
+    queryKey: [BLOGS_QUERY_KEY, id, "versions"],
+    queryFn: () => blogApi.getVersions(id!),
+    enabled: !!id,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 export function useCreateBlog() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (data: CreateBlogRequest) => blogApi.createBlog(data),
-    onSuccess: () => {
-      // Invalidate blogs list to refetch
-      queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
   });
 }
 
-/**
- * Hook to update an existing blog
- */
 export function useUpdateBlog() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateBlogRequest }) =>
-      blogApi.updateBlog(id, data),
-    onSuccess: () => {
-      // Invalidate blogs list to refetch
-      queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] });
-    },
+    mutationFn: ({ id, data }: { id: string; data: UpdateBlogRequest }) => blogApi.updateBlog(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
   });
 }
 
-/**
- * Hook to delete a blog
- */
 export function useDeleteBlog() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: (id: string) => blogApi.deleteBlog(id),
-    onSuccess: () => {
-      // Invalidate blogs list to refetch
-      queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
+  });
+}
+
+export function useRestoreBlogVersion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ blogId, versionId }: { blogId: string; versionId: string }) =>
+      blogApi.restoreVersion(blogId, versionId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
   });
 }

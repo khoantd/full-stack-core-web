@@ -1,11 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { FEATURED_PRODUCTS } from "@/lib/landing-data";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Package } from "lucide-react";
+import { Package, ArrowRight } from "lucide-react";
+import type { LandingProduct } from "@/services/landing.service";
 
 function formatPrice(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -15,49 +10,89 @@ function formatPrice(amount: number) {
   }).format(amount * 1000);
 }
 
-export function FeaturedProducts() {
+interface Props {
+  products: LandingProduct[];
+}
+
+export function FeaturedProducts({ products }: Props) {
   return (
-    <section id="products" className="py-16 lg:py-24">
+    <section id="products" className="py-20 bg-[#111111]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-14">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Featured Products</h2>
-            <p className="mt-1 text-muted-foreground">Popular products for your vehicle</p>
+            <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-2">
+              Top Picks
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
+              Featured Products
+            </h2>
+            <div className="mt-4 w-16 h-1 bg-orange-500 rounded" />
           </div>
-          <Button asChild variant="outline">
-            <Link href="/#products">Explore All</Link>
-          </Button>
+          <Link
+            href="/#products"
+            className="inline-flex items-center gap-2 text-orange-500 hover:text-orange-400 text-sm font-semibold transition"
+          >
+            View All Products
+            <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FEATURED_PRODUCTS.map((product) => (
-            <Card key={product._id} className="overflow-hidden group hover:shadow-lg transition-shadow">
-              <CardContent className="p-0">
-                <div className="aspect-square bg-muted flex items-center justify-center">
-                  <Package className="h-24 w-24 text-muted-foreground/50 group-hover:text-primary/50 transition" />
+
+        {products.length === 0 ? (
+          <p className="text-gray-500 text-center py-12">No products available.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <div
+                key={product._id}
+                className="group bg-[#1a1a1a] border border-white/5 rounded-lg overflow-hidden hover:border-orange-500/40 transition-all"
+              >
+                {/* Image */}
+                <div className="aspect-[4/3] bg-[#222] flex items-center justify-center relative overflow-hidden">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <Package className="h-20 w-20 text-gray-700 group-hover:text-orange-500/40 transition" />
+                  )}
+                  {product.salePrice && (
+                    <span className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
+                      SALE
+                    </span>
+                  )}
                 </div>
-                <div className="p-4">
-                  <p className="text-xs text-muted-foreground mb-1">{product.categoryName}</p>
-                  <h3 className="font-semibold mb-2">{product.name}</h3>
-                  <div className="flex items-center gap-2">
+
+                <div className="p-5">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    {product.category?.name ?? ""}
+                  </p>
+                  <h3 className="text-white font-semibold mb-3 group-hover:text-orange-500 transition">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center gap-3">
                     {product.salePrice ? (
                       <>
-                        <span className="text-lg font-bold text-primary">
+                        <span className="text-orange-500 font-bold text-lg">
                           {formatPrice(product.salePrice)}
                         </span>
-                        <span className="text-sm text-muted-foreground line-through">
+                        <span className="text-gray-600 text-sm line-through">
                           {formatPrice(product.price)}
                         </span>
-                        <Badge variant="secondary" className="text-xs">Sale</Badge>
                       </>
                     ) : (
-                      <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                      <span className="text-white font-bold text-lg">
+                        {formatPrice(product.price)}
+                      </span>
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -26,10 +26,32 @@ export class AuthController {
     return this.authService.login(email, password);
   }
 
+  @Post('refresh')
+  async refresh(@Body() body: any) {
+    const { refreshToken } = body;
+    return this.authService.refreshToken(refreshToken);
+  }
+
+  @Post('logout')
+  async logout(@Body() body: any) {
+    const { userId } = body;
+    return this.authService.logout(userId);
+  }
+
   @Get('role')
-async getRoles() {
-  return this.authService.getRoles();
-}
+  async getRoles() {
+    return this.authService.getRoles();
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body.email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() body: { token: string; password: string }) {
+    return this.authService.resetPassword(body.token, body.password);
+  }
 
 
 

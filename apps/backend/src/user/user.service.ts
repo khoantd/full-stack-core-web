@@ -273,6 +273,51 @@ export class UserService {
     }
   }
 
+  // 🔴 Deactivate user — invalidates their session (refresh token nulled)
+  async deactivate(id: string) {
+    const user = await this.userModel.findById(id);
+    if (!user) throw new NotFoundException('Không tìm thấy user');
+    user.status = 'inactive';
+    user.refreshToken = null;
+    await user.save();
+    return { message: 'User đã bị vô hiệu hóa', id };
+  }
+
+  // 🟢 Activate user
+  async activate(id: string) {
+    const user = await this.userModel.findById(id);
+    if (!user) throw new NotFoundException('Không tìm thấy user');
+    user.status = 'active';
+    await user.save();
+    return { message: 'User đã được kích hoạt', id };
+  }
+
+  // 📊 Dashboard stats
+  async getDashboardStats() {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [totalUsers, newTodayUsers, totalByStatus] = await Promise.all([
+      this.userModel.countDocuments(),
+      this.userModel.countDocuments({ createdAt: { $gte: startOfDay } }),
+      this.userModel.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const activeUsers = totalByStatus.find((s) => s._id === 'active')?.count ?? 0;
+    const inactiveUsers = totalByStatus.find((s) => s._id === 'inactive')?.count ?? 0;
+
+    return {
+      totalUsers,
+      newTodayUsers,
+      activeUsers,
+      inactiveUsers,
+      systemStatus: 'healthy',
+      generatedAt: now.toISOString(),
+    };
+  }
+
   // 🟢 Lấy tất cả roles
   async findAllRoles() {
     try {

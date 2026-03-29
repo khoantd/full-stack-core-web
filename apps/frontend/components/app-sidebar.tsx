@@ -15,7 +15,10 @@ import {
   IconFolder,
   IconListDetails,
   IconNews,
-  IconUsers
+  IconUsers,
+  IconCar,
+  IconPhoto,
+  IconClipboardList,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -72,6 +75,21 @@ const data = {
       title: "Payments",
       url: "/dashboard/payments",
       icon: IconCreditCard,
+    },
+    {
+      title: "Automakers",
+      url: "/dashboard/automakers",
+      icon: IconCar,
+    },
+    {
+      title: "Media Library",
+      url: "/dashboard/media",
+      icon: IconPhoto,
+    },
+    {
+      title: "Audit Log",
+      url: "/dashboard/audit-logs",
+      icon: IconClipboardList,
     },
     {
       title: "Settings",

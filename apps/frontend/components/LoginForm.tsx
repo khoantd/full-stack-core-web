@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
+import Link from "next/link";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -71,6 +72,11 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={isLoading}
           />
+          <div className="mt-1 text-right">
+            <Link href="/forgot-password" className="text-sm text-muted-foreground underline underline-offset-4">
+              Forgot password?
+            </Link>
+          </div>
         </div>
       </div>
 
