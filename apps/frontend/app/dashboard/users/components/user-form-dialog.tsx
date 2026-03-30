@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { useCreateUser, useUpdateUser } from "@/hooks/useUsers";
+import { useCreateUser, useUpdateUser, useRoles } from "@/hooks/useUsers";
 import type { User } from "@/api/types";
 
 // Form validation schema
@@ -64,6 +64,8 @@ export function UserFormDialog({
 
   const createUser = useCreateUser();
   const updateUser = useUpdateUser();
+  const { data: rolesData } = useRoles();
+  const roles = rolesData?.data ?? [];
 
   const isLoading = createUser.isPending || updateUser.isPending;
 
@@ -254,9 +256,18 @@ export function UserFormDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
+                      {roles.length > 0 ? (
+                        roles.map((r) => (
+                          <SelectItem key={r._id} value={r._id}>
+                            {r.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="user">User</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

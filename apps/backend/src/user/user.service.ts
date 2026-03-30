@@ -35,12 +35,13 @@ export class UserService {
     @InjectModel(Role.name) private readonly roleModel: Model<Role>,
   ) {}
 
-  // 🟢 Lấy tất cả users với phân trang và search
+  // 🟢 Lấy tất cả users với phân trang và search (scoped to tenant)
   async findAll(query: {
     page?: string;
     limit?: string;
     search?: string;
     role?: string;
+    tenantId?: string;
   }) {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page) || 1;
@@ -51,6 +52,11 @@ export class UserService {
 
     // Tạo filter
     const filter: any = {};
+
+    // Scope to tenant
+    if (query.tenantId) {
+      filter.tenantId = new Types.ObjectId(query.tenantId);
+    }
 
     // Filter theo role nếu có
     if (query.role) {
@@ -112,6 +118,7 @@ export class UserService {
     uid?: string;
     role?: string;
     securityConfirmed?: boolean;
+    tenantId?: string;
   }) {
     try {
       // Kiểm tra email đã tồn tại chưa
@@ -150,6 +157,7 @@ export class UserService {
         uid: data.uid,
         role: data.role ? new Types.ObjectId(data.role) : undefined,
         securityConfirmed: data.securityConfirmed || false,
+        tenantId: data.tenantId ? new Types.ObjectId(data.tenantId) : undefined,
       });
 
       const savedUser = await newUser.save();
@@ -330,6 +338,41 @@ export class UserService {
     } catch (error) {
       throw new BadRequestException('Không thể lấy danh sách roles');
     }
+  }
+
+  // 🟢 GET /users/me — current user profile
+  async getMe(email: string) {
+    const user = await this.userModel
+      .findOne({ email })
+      .populate('role', 'name')
+      .select('-password -refreshToken -resetPasswordToken -resetPasswordExpires')
+      .exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  // 🟢 GET /users/me/preferences
+  async getPreferences(email: string) {
+    const user = await this.userModel.findOne({ email }).select('preferences').exec();
+    if (!user) throw new NotFoundException('User not found');
+    return { data: user.preferences ?? {} };
+  }
+
+  // 🟡 PUT /users/me/preferences
+  async updatePreferences(
+    email: string,
+    prefs: {
+      language?: string;
+      timezone?: string;
+      emailNotifications?: boolean;
+      dashboardAlerts?: boolean;
+    },
+  ) {
+    const user = await this.userModel.findOne({ email });
+    if (!user) throw new NotFoundException('User not found');
+    user.preferences = { ...(user.preferences ?? {}), ...prefs };
+    await user.save();
+    return { message: 'Preferences updated', data: user.preferences };
   }
 
   // 🟢 Kiểm tra trạng thái securityConfirmed của user hiện tại

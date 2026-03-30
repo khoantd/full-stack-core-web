@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
+import { setStoredTokens } from "@/api/axiosClient";
 import { CheckCircle2 } from "lucide-react";
 
 export function ResetPasswordForm() {
@@ -39,7 +40,21 @@ export function ResetPasswordForm() {
 
     setIsLoading(true);
     try {
-      await authService.resetPassword(token, password);
+      const result = await authService.resetPassword(token, password) as any;
+      // Auto-login if the API returns tokens
+      const accessToken = result?.accessToken ?? result?.access_token;
+      const refreshToken = result?.refreshToken ?? result?.refresh_token;
+      if (accessToken) {
+        setStoredTokens(accessToken, refreshToken);
+        if (typeof document !== "undefined") {
+          document.cookie = `access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+          if (refreshToken) {
+            document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+          }
+        }
+        router.push("/dashboard");
+        return;
+      }
       setSuccess(true);
     } catch (err: unknown) {
       const message =

@@ -39,7 +39,8 @@ export interface User {
   status?: string;
   plan_name?: string;
   role?: string | Role; // Can be ObjectId string or populated Role object
-  uid?: string; // Firebase UID
+  uid?: string;
+  tenantId?: string; // Tenant this user belongs to
   securityConfirmed?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -49,8 +50,8 @@ export interface User {
 export interface CreateUserRequest {
   name: string;
   email: string;
-  password?: string; // Required if no uid
-  uid?: string; // Firebase UID (if provided, password not required)
+  password?: string;
+  uid?: string;
   role?: string; // ObjectId of Role
   securityConfirmed?: boolean;
   organizationName?: string;

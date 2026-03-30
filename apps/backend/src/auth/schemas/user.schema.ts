@@ -16,7 +16,7 @@ export class User extends Document {
   password?: string; // Chỉ cần khi đăng ký qua form
 
   @Prop({ unique: true, sparse: true })
-  uid?: string; // UID từ Firebase
+  uid?: string;
 
   @Prop({ type: Types.ObjectId, ref: Role.name })
   role: Role;
@@ -53,6 +53,14 @@ export class User extends Document {
 
   @Prop()
   resetPasswordExpires?: Date;
+
+  @Prop({ type: Object, default: {} })
+  preferences?: {
+    language?: string;
+    timezone?: string;
+    emailNotifications?: boolean;
+    dashboardAlerts?: boolean;
+  };
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

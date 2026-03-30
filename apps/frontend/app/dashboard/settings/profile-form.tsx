@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axiosClient from "@/api/axiosClient";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,8 +43,6 @@ const LANGUAGES = [
   { code: "ko", label: "한국어" },
 ];
 
-const PREF_KEY = "user_preferences";
-
 interface Preferences {
   language: string;
   timezone: string;
@@ -58,27 +57,28 @@ const DEFAULT_PREFS: Preferences = {
   dashboardAlerts: true,
 };
 
-function loadPrefs(): Preferences {
-  if (typeof window === "undefined") return DEFAULT_PREFS;
-  try {
-    const raw = localStorage.getItem(PREF_KEY);
-    return raw ? { ...DEFAULT_PREFS, ...JSON.parse(raw) } : DEFAULT_PREFS;
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
-
 export default function ProfileSettingsPage() {
   const [prefs, setPrefs] = useState<Preferences>(DEFAULT_PREFS);
   const [saved, setSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
 
   useEffect(() => {
-    setPrefs(loadPrefs());
+    axiosClient
+      .get<{ data: Partial<Preferences> }>("/users/me/preferences")
+      .then((res) => {
+        setPrefs({ ...DEFAULT_PREFS, ...res.data.data });
+      })
+      .catch(() => {
+        try {
+          const raw = localStorage.getItem("user_preferences");
+          if (raw) setPrefs({ ...DEFAULT_PREFS, ...JSON.parse(raw) });
+        } catch {}
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  // Update clock every second, client-only to avoid hydration mismatch
   useEffect(() => {
     const tick = () =>
       setCurrentTime(
@@ -94,14 +94,26 @@ export default function ProfileSettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Persist locally (backend user-prefs endpoint can be wired in when ready)
-    await new Promise((r) => setTimeout(r, 400));
-    localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
-    setIsSaving(false);
-    setSaved(true);
-    toast.success("Preferences saved — your settings have been updated.");
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      await axiosClient.put("/users/me/preferences", prefs);
+      localStorage.setItem("user_preferences", JSON.stringify(prefs));
+      setSaved(true);
+      toast.success("Preferences saved — your settings have been updated.");
+      setTimeout(() => setSaved(false), 3000);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? "Failed to save preferences");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
@@ -124,7 +136,6 @@ export default function ProfileSettingsPage() {
         </Button>
       </div>
 
-      {/* Language & Timezone */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Locale</CardTitle>
@@ -135,10 +146,7 @@ export default function ProfileSettingsPage() {
         <CardContent className="space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="pref-language">Language</Label>
-            <Select
-              value={prefs.language}
-              onValueChange={(v) => set("language", v)}
-            >
+            <Select value={prefs.language} onValueChange={(v) => set("language", v)}>
               <SelectTrigger id="pref-language" className="max-w-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -159,10 +167,7 @@ export default function ProfileSettingsPage() {
             <p className="text-xs text-muted-foreground">
               All date/time displays across the CMS will reflect this zone.
             </p>
-            <Select
-              value={prefs.timezone}
-              onValueChange={(v) => set("timezone", v)}
-            >
+            <Select value={prefs.timezone} onValueChange={(v) => set("timezone", v)}>
               <SelectTrigger id="pref-timezone" className="max-w-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -176,16 +181,13 @@ export default function ProfileSettingsPage() {
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
               Current time:{" "}
-              <span className="font-medium text-foreground">
-                {currentTime ?? "—"}
-              </span>{" "}
+              <span className="font-medium text-foreground">{currentTime ?? "—"}</span>{" "}
               ({prefs.timezone})
             </p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Notifications */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Notifications</CardTitle>

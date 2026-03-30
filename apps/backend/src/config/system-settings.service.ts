@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SystemSettings } from './system-settings.schema';
@@ -17,11 +17,15 @@ const DEFAULTS: Array<{ key: string; value: any; group: string; description: str
 ];
 
 @Injectable()
-export class SystemSettingsService {
+export class SystemSettingsService implements OnModuleInit {
   constructor(
     @InjectModel(SystemSettings.name)
     private readonly settingsModel: Model<SystemSettings>,
   ) {}
+
+  async onModuleInit() {
+    await this.seed();
+  }
 
   async seed() {
     for (const d of DEFAULTS) {

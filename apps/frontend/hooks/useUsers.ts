@@ -10,14 +10,15 @@ export const ROLES_QUERY_KEY = "roles";
 /**
  * Hook to fetch list of users with pagination, search, filter
  */
-export function useUsers(params: UsersQueryParams = {}) {
-  const { page = 1, limit = 10, search, role } = params;
+export function useUsers(params: UsersQueryParams & { enabled?: boolean } = {}) {
+  const { page = 1, limit = 10, search, role, enabled = true } = params;
 
   return useQuery({
     queryKey: [USERS_QUERY_KEY, page, limit, search, role],
     queryFn: () => userService.getUsers({ page, limit, search, role }),
-    staleTime: 5 * 60 * 1000, // 5 minutes - data được coi là fresh
-    gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time (trước đây là cacheTime)
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });

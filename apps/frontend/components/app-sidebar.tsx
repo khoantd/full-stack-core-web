@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useTenants } from "@/hooks/useTenant"
 import { getStoredToken } from "@/api/axiosClient"
-import { getTenantIdFromToken } from "@/lib/jwt"
+import { getTenantIdFromToken, getUserFromToken } from "@/lib/jwt"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,11 +63,25 @@ const navMain = [
   { title: "Settings", url: "/dashboard/settings", icon: IconChartBar },
 ];
 
-const defaultUser = {
-  name: "User",
-  email: "",
-  avatar: "",
-};
+function useCurrentUser() {
+  const [user, setUser] = React.useState({ name: "User", email: "", avatar: "" });
+
+  React.useEffect(() => {
+    const token = getStoredToken();
+    if (token) {
+      const payload = getUserFromToken(token);
+      if (payload) {
+        setUser({
+          name: payload.name || payload.email || "User",
+          email: payload.email || "",
+          avatar: payload.image || payload.avatar || "",
+        });
+      }
+    }
+  }, []);
+
+  return user;
+}
 
 function TenantSwitcher() {
   const { data: tenants } = useTenants();
@@ -117,6 +131,8 @@ function TenantSwitcher() {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const currentUser = useCurrentUser();
+
   return (
     <Sidebar collapsible="icon" forceDesktop {...props}>
       <SidebarHeader>
@@ -130,7 +146,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={defaultUser} />
+        <NavUser user={currentUser} />
       </SidebarFooter>
     </Sidebar>
   )

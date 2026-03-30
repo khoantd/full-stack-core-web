@@ -8,26 +8,36 @@ import { useUsers } from "@/hooks/useUsers";
 import UsersDataTable from "./data-table";
 import type { User } from "./data-table";
 import type { User as ApiUser } from "@/api/types";
+import { getStoredToken } from "@/api/axiosClient";
+import { getUserFromToken } from "@/lib/jwt";
 import {
   UserFormDialog,
   UserDetailDialog,
   DeleteUserDialog,
 } from "./components";
 
+const ALLOWED_ROLES = ["admin", "superadmin", "manager"];
+
 function UsersPageContent() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // Dialog states
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const { data, isLoading, isError, error, refetch } = useUsers({ page, limit });
+  // Check role from JWT before fetching
+  const token = getStoredToken();
+  const currentUser = token ? getUserFromToken(token) : null;
+  const userRole: string = currentUser?.role ?? "";
+  const canAccess = ALLOWED_ROLES.includes(userRole);
 
-  // Convert table User type to API User type for dialogs
+  const { data, isLoading, isError, error, refetch } = useUsers(
+    canAccess ? { page, limit } : { enabled: false }
+  );
+
   const toApiUser = (user: User | null): ApiUser | null => {
     if (!user) return null;
     return {
@@ -47,7 +57,6 @@ function UsersPageContent() {
     };
   };
 
-  // Action handlers
   const handleView = useCallback((user: User) => {
     setSelectedUser(user);
     setIsDetailDialogOpen(true);
@@ -72,12 +81,27 @@ function UsersPageContent() {
     refetch();
   }, [refetch]);
 
-  // Table actions
   const tableActions = {
     onView: handleView,
     onEdit: handleEdit,
     onDelete: handleDelete,
   };
+
+  if (!canAccess) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+        </div>
+        <Card>
+          <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-2 py-12">
+            <p className="text-destructive font-medium">Bạn không có quyền truy cập trang này.</p>
+            <p className="text-muted-foreground text-sm">Chỉ Admin hoặc Manager mới có thể quản lý người dùng.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -117,16 +141,13 @@ function UsersPageContent() {
     );
   }
 
-  // API có thể trả về { data: [] } hoặc mảng trực tiếp
   const rawUsers = (Array.isArray(data) ? data : (data?.data ?? [])) as Record<string, unknown>[];
 
-  // Transform API data để match với UsersDataTable columns (name, role, etc.)
   const users: User[] = rawUsers.map((u) => {
     const first = (u.firstName as string) || "";
     const last = (u.lastName as string) || "";
     const fullName = (u.name as string) ?? `${first} ${last}`.trim();
 
-    // Handle role - can be string or object with name
     let roleValue = "";
     if (typeof u.role === "string") {
       roleValue = u.role;
@@ -167,30 +188,23 @@ function UsersPageContent() {
         </CardContent>
       </Card>
 
-      {/* Create User Dialog */}
       <UserFormDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         user={null}
         onSuccess={handleSuccess}
       />
-
-      {/* Edit User Dialog */}
       <UserFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         user={toApiUser(selectedUser)}
         onSuccess={handleSuccess}
       />
-
-      {/* User Detail Dialog */}
       <UserDetailDialog
         open={isDetailDialogOpen}
         onOpenChange={setIsDetailDialogOpen}
         user={toApiUser(selectedUser)}
       />
-
-      {/* Delete Confirmation Dialog */}
       <DeleteUserDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}

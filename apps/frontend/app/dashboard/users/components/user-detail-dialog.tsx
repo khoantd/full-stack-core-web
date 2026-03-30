@@ -151,7 +151,7 @@ export function UserDetailDialog({
             {user.uid && (
               <DetailItem
                 icon={<Key className="h-4 w-4" />}
-                label="Firebase UID"
+                label="UID"
                 value={user.uid}
               />
             )}

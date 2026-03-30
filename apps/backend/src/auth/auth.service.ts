@@ -19,35 +19,6 @@ export class AuthService {
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     private readonly friendGateway: FriendGateway,
     private jwtService: JwtService,) { }
-  async createUserWithFirebase(data: { uid: string; email: string; name: string }) {
-    let user = await this.userModel.findOne({ uid: data.uid }).populate('role', 'name');
-    if (!user) {
-      const defaultRole = await this.roleModel.findOne({ name: 'user' });
-      // Find or create a default tenant
-      let tenant = await this.tenantModel.findOne();
-      if (!tenant) {
-        const slug = data.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
-        tenant = await this.tenantModel.create({ name: 'Default Organization', slug });
-      }
-      user = new this.userModel({
-        uid: data.uid,
-        email: data.email,
-        name: data.name,
-        role: defaultRole?._id,
-        tenantId: tenant._id,
-      });
-      await user.save();
-      user = await this.userModel.findById(user._id).populate('role', 'name').exec();
-    }
-
-    const roleName = user.role && (user.role as any).name ? (user.role as any).name : user.role;
-    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: user.tenantId?.toString() };
-    const tokens = await this.generateUserTokens(payload);
-    user.refreshToken = tokens.refreshToken;
-    await user.save();
-    return { user, ...tokens };
-  }
-
   async login(email: string, password: string) {
     try {
       const user = await this.userModel.findOne({ email }).populate('role', 'name');
@@ -62,6 +33,10 @@ export class AuthService {
 
       const isMatch = await bcrypt.compare(password, user.password || '');
       if (!isMatch) {
+        // User has no password (previously signed up via OAuth/Firebase) — guide them to set one
+        if (!user.password) {
+          throw new UnauthorizedException('This account has no password set. Please use "Forgot password" to create one.');
+        }
         user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
         if (user.failedLoginAttempts >= 5) {
           user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
@@ -73,8 +48,16 @@ export class AuthService {
       user.failedLoginAttempts = 0;
       user.lockUntil = undefined;
 
-      // Extract role name if populated
-      const roleName = user.role && (user.role as any).name ? (user.role as any).name : user.role;
+      // Extract role name if populated; repair missing role for legacy accounts
+      let roleName = user.role && (user.role as any).name ? (user.role as any).name : null;
+      if (!roleName) {
+        // Legacy account with no role — assign default 'admin' role and persist it
+        const defaultRole = await this.roleModel.findOne({ name: 'admin' });
+        if (defaultRole) {
+          user.role = defaultRole as any;
+          roleName = defaultRole.name;
+        }
+      }
       const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
       const tokens = await this.generateUserTokens(payload);
       
@@ -135,7 +118,22 @@ export class AuthService {
       role: role?._id,
       tenantId: tenant._id,
     });
-    return newUser.save();
+    const savedUser = await newUser.save();
+
+    // Issue tokens so the frontend can auto-login after registration
+    const roleName = role?.name ?? 'admin';
+    const payload = {
+      uid: savedUser.uid,
+      email: savedUser.email,
+      role: roleName,
+      tenantId: tenant._id.toString(),
+    };
+    const tokens = await this.generateUserTokens(payload);
+    savedUser.refreshToken = tokens.refreshToken;
+    await savedUser.save();
+
+    const user = await this.userModel.findById(savedUser._id).populate('role', 'name').exec();
+    return { user, ...tokens };
   }
 
   async generateUserTokens(payload) {
@@ -157,8 +155,16 @@ export class AuthService {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // Re-build payload with latest tenantId
-      const roleName = user.role && (user.role as any).name ? (user.role as any).name : payload.role;
+      // Re-build payload with latest role from DB (populate to get name)
+      await user.populate('role', 'name');
+      let roleName = user.role && (user.role as any).name ? (user.role as any).name : null;
+      if (!roleName) {
+        const defaultRole = await this.roleModel.findOne({ name: 'admin' });
+        if (defaultRole) {
+          user.role = defaultRole as any;
+          roleName = defaultRole.name;
+        }
+      }
       const freshPayload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
       const tokens = await this.generateUserTokens(freshPayload);
       user.refreshToken = tokens.refreshToken;
@@ -190,6 +196,11 @@ export class AuthService {
     }
   }
 
+  async getTokenUser(email: string) {
+    const user = await this.userModel.findOne({ email }).populate('role', 'name').select('-password -refreshToken -resetPasswordToken');
+    return { user, roleInDb: (user?.role as any)?.name ?? user?.role ?? null };
+  }
+
   async forgotPassword(email: string) {
     const user = await this.userModel.findOne({ email });
     if (!user) {
@@ -215,17 +226,22 @@ export class AuthService {
       },
     });
 
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: email,
-      subject: 'Password Reset Request',
-      html: `
-        <p>You requested a password reset.</p>
-        <p>Click the link below to reset your password. This link expires in 1 hour.</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>If you did not request this, please ignore this email.</p>
-      `,
-    });
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER,
+        to: email,
+        subject: 'Password Reset Request',
+        html: `
+          <p>You requested a password reset.</p>
+          <p>Click the link below to reset your password. This link expires in 1 hour.</p>
+          <a href="${resetUrl}">${resetUrl}</a>
+          <p>If you did not request this, please ignore this email.</p>
+        `,
+      });
+    } catch (mailErr) {
+      console.error('[forgotPassword] Failed to send reset email:', mailErr);
+      // Don't expose mail errors to the client
+    }
 
     return { message: 'If that email exists, a reset link has been sent.' };
   }
@@ -243,10 +259,24 @@ export class AuthService {
     user.password = await bcrypt.hash(newPassword, 10);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
-    user.refreshToken = null; // invalidate existing sessions
+
+    // Populate role and repair if missing
+    await user.populate('role', 'name');
+    let roleName = user.role && (user.role as any).name ? (user.role as any).name : null;
+    if (!roleName) {
+      const defaultRole = await this.roleModel.findOne({ name: 'admin' });
+      if (defaultRole) {
+        user.role = defaultRole as any;
+        roleName = defaultRole.name;
+      }
+    }
+
+    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
+    const tokens = await this.generateUserTokens(payload);
+    user.refreshToken = tokens.refreshToken;
     await user.save();
 
-    return { message: 'Password has been reset successfully' };
+    return { message: 'Password has been reset successfully', ...tokens };
   }
 
 

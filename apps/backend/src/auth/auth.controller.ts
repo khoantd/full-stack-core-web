@@ -10,15 +10,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService, private readonly httpService: HttpService) { }
   @Post('create')
   async createUser(@Body() body: any) {
-    if (body.uid) {
-      // Tạo user qua Firebase
-      const { uid, email, name } = body;
-      return this.authService.createUserWithFirebase({ uid, email, name });
-    } else {
-      // Tạo user qua form đăng ký
-      const { name, email, password, securityConfirmed, organizationName, organizationSlug } = body;
-      return this.authService.createUserWithForm({ name, email, password, securityConfirmed, organizationName, organizationSlug });
-    }
+    const { name, email, password, securityConfirmed, organizationName, organizationSlug } = body;
+    return this.authService.createUserWithForm({ name, email, password, securityConfirmed, organizationName, organizationSlug });
   }
   @Post('login')
   async login(@Body() body: any) {
@@ -41,6 +34,12 @@ export class AuthController {
   @Get('role')
   async getRoles() {
     return this.authService.getRoles();
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard)
+  async getMe(@Req() req: any) {
+    return this.authService.getTokenUser(req.user?.email);
   }
 
   @Post('forgot-password')
