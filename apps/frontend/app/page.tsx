@@ -9,6 +9,7 @@ import { BlogSection } from "@/components/landing/BlogSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { getLandingData } from "@/services/landing.service";
+import { LandingThemeProvider } from "@/context/ThemeContext";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -21,19 +22,21 @@ export default async function HomePage() {
   const { products, categories } = await getLandingData();
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d]">
-      <LandingNav />
-      <main>
-        <HeroSection />
-        <ProductCategories categories={categories} />
-        <StatsSection />
-        <AboutSection />
-        <FeaturedProducts products={products} />
-        <TestimonialsSection />
-        <BlogSection />
-        <ContactSection />
-        <LandingFooter />
-      </main>
-    </div>
+    <LandingThemeProvider>
+      <div className="min-h-screen bg-[#0d0d0d]">
+        <LandingNav />
+        <main>
+          <HeroSection />
+          <ProductCategories categories={categories} />
+          <StatsSection />
+          <AboutSection />
+          <FeaturedProducts products={products} />
+          <TestimonialsSection />
+          <BlogSection />
+          <ContactSection />
+          <LandingFooter />
+        </main>
+      </div>
+    </LandingThemeProvider>
   );
 }

@@ -9,15 +9,39 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/auth.service";
 import { GithubIcon, CheckCircle2 } from "lucide-react";
 
+function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 30);
+}
+
 export function RegisterForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [organizationName, setOrganizationName] = useState("");
+  const [organizationSlug, setOrganizationSlug] = useState("");
+  const [slugEdited, setSlugEdited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [registered, setRegistered] = useState(false);
+
+  const handleOrgNameChange = (value: string) => {
+    setOrganizationName(value);
+    if (!slugEdited) {
+      setOrganizationSlug(toSlug(value));
+    }
+  };
+
+  const handleSlugChange = (value: string) => {
+    setOrganizationSlug(toSlug(value));
+    setSlugEdited(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +55,20 @@ export function RegisterForm() {
       setError("Password must be at least 8 characters.");
       return;
     }
+    if (!organizationName.trim()) {
+      setError("Organization name is required.");
+      return;
+    }
 
     setIsLoading(true);
     try {
-      await authService.register({ name, email, password });
+      await authService.register({
+        name,
+        email,
+        password,
+        organizationName: organizationName.trim(),
+        organizationSlug: organizationSlug || toSlug(organizationName),
+      });
       setRegistered(true);
     } catch (err: unknown) {
       const message =
@@ -47,7 +81,6 @@ export function RegisterForm() {
     }
   };
 
-  // ✅ Post-registration pending screen (US-007 AC)
   if (registered) {
     return (
       <div className="flex flex-col items-center gap-6 py-8 text-center">
@@ -141,6 +174,45 @@ export function RegisterForm() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               disabled={isLoading}
             />
+          </div>
+
+          <div className="border-t pt-4">
+            <p className="mb-3 text-sm font-medium text-foreground">Organization</p>
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="reg-org-name">Organization Name</Label>
+                <Input
+                  id="reg-org-name"
+                  name="organizationName"
+                  type="text"
+                  required
+                  className="mt-1 w-full"
+                  placeholder="Acme Corp"
+                  value={organizationName}
+                  onChange={(e) => handleOrgNameChange(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="reg-org-slug">
+                  Slug
+                  <span className="ml-1 text-xs text-muted-foreground">(used in URLs)</span>
+                </Label>
+                <div className="mt-1 flex items-center rounded-md border border-input bg-background ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                  <span className="select-none px-3 text-sm text-muted-foreground">app/</span>
+                  <input
+                    id="reg-org-slug"
+                    name="organizationSlug"
+                    type="text"
+                    className="flex-1 bg-transparent py-2 pr-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="acme-corp"
+                    value={organizationSlug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

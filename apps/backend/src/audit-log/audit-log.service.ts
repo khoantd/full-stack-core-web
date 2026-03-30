@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { AuditLog, AuditLogDocument } from './schemas/audit-log.schema';
 
 export interface CreateAuditLogDto {
+  tenantId: string;
   userId: string;
   userEmail: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE';
@@ -32,12 +33,12 @@ export class AuditLogService {
     entity?: string;
     from?: string;
     to?: string;
-  }) {
+  }, tenantId: string) {
     const page = parseInt(query.page ?? '1') || 1;
     const limit = parseInt(query.limit ?? '20') || 20;
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = { tenantId };
     if (query.userId) filter.userId = query.userId;
     if (query.action) filter.action = query.action;
     if (query.entity) filter.entity = query.entity;
@@ -65,8 +66,8 @@ export class AuditLogService {
     };
   }
 
-  async exportCsv(query: { userId?: string; action?: string; entity?: string; from?: string; to?: string }): Promise<string> {
-    const filter: Record<string, any> = {};
+  async exportCsv(query: { userId?: string; action?: string; entity?: string; from?: string; to?: string }, tenantId: string): Promise<string> {
+    const filter: Record<string, any> = { tenantId };
     if (query.userId) filter.userId = query.userId;
     if (query.action) filter.action = query.action;
     if (query.entity) filter.entity = query.entity;

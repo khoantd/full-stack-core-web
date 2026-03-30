@@ -80,7 +80,7 @@ export class TelegramUpdate {
       const [userStats, payments, products] = await Promise.all([
         this.userService.getDashboardStats(),
         this.paymentService.findAll({ page: '1', limit: '5' }),
-        this.productService.findAll({ page: '1', limit: '5' }),
+        this.productService.findAll({ page: '1', limit: '5' }, ''),
       ]);
 
       const todaySales = payments.data

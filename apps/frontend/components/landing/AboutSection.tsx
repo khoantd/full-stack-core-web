@@ -26,7 +26,7 @@ export function AboutSection() {
               </div>
             </div>
             {/* Floating badge */}
-            <div className="absolute -bottom-6 -right-6 bg-orange-500 text-white rounded-lg p-5 shadow-xl">
+            <div className="absolute -bottom-6 -right-6 text-white rounded-lg p-5 shadow-xl" style={{ backgroundColor: "var(--accent-500)" }}>
               <div className="text-3xl font-extrabold">15+</div>
               <div className="text-xs font-medium uppercase tracking-wide">Years of Trust</div>
             </div>
@@ -34,7 +34,7 @@ export function AboutSection() {
 
           {/* Right: content */}
           <div>
-            <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">
+            <p className="text-sm font-semibold uppercase tracking-widest mb-3" style={{ color: "var(--accent-500)" }}>
               About Us
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-6 leading-tight">
@@ -53,7 +53,7 @@ export function AboutSection() {
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
               {FEATURES.map((f) => (
                 <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                  <CheckCircle className="h-4 w-4 text-orange-500 shrink-0" />
+                  <CheckCircle className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
                   {f}
                 </li>
               ))}
@@ -61,7 +61,10 @@ export function AboutSection() {
 
             <Link
               href="/#products"
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-7 py-3 rounded transition"
+              className="inline-flex items-center gap-2 text-white font-semibold px-7 py-3 rounded transition"
+              style={{ backgroundColor: "var(--accent-500)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-600)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-500)")}
             >
               Explore Products
               <ArrowRight className="h-4 w-4" />

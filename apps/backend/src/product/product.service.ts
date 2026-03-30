@@ -16,20 +16,20 @@ export class ProductService {
     private categoryProductModel: Model<CategoryProductDocument>,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto, tenantId: string): Promise<Product> {
     const categoryExists = await this.categoryProductModel.findById(createProductDto.category).exec();
     if (!categoryExists) throw new BadRequestException(`Category with ID ${createProductDto.category} not found`);
 
-    const data: any = { ...createProductDto };
+    const data: any = { ...createProductDto, tenantId };
     data.isOutOfStock = (data.stock ?? 0) === 0;
 
     const createdProduct = new this.productModel(data);
     return await createdProduct.save();
   }
 
-  async findAll(queryDto: QueryProductDto) {
+  async findAll(queryDto: QueryProductDto, tenantId: string) {
     const { page = '1', limit = '10', search, categoryId } = queryDto;
-    const query: any = {};
+    const query: any = { tenantId };
 
     if (search) query.name = { $regex: search, $options: 'i' };
     if (categoryId) query.category = categoryId;
@@ -52,13 +52,13 @@ export class ProductService {
     return { data, pagination: { total, page: pageNum, limit: limitNum, totalPages, hasNextPage: pageNum < totalPages, hasPrevPage: pageNum > 1 } };
   }
 
-  async findOne(id: string): Promise<Product> {
-    const product = await this.productModel.findById(id).populate('category').exec();
+  async findOne(id: string, tenantId: string): Promise<Product> {
+    const product = await this.productModel.findOne({ _id: id, tenantId }).populate('category').exec();
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<Product> {
+  async update(id: string, updateProductDto: UpdateProductDto, tenantId: string): Promise<Product> {
     if (updateProductDto.category) {
       const categoryExists = await this.categoryProductModel.findById(updateProductDto.category).exec();
       if (!categoryExists) throw new BadRequestException(`Category with ID ${updateProductDto.category} not found`);
@@ -69,31 +69,31 @@ export class ProductService {
       updateData.isOutOfStock = updateData.stock === 0;
     }
 
-    const updatedProduct = await this.productModel.findByIdAndUpdate(id, updateData, { new: true }).populate('category').exec();
+    const updatedProduct = await this.productModel.findOneAndUpdate({ _id: id, tenantId }, updateData, { new: true }).populate('category').exec();
     if (!updatedProduct) throw new NotFoundException(`Product with ID ${id} not found`);
     return updatedProduct;
   }
 
-  async remove(id: string): Promise<void> {
-    const product = await this.productModel.findById(id).exec();
+  async remove(id: string, tenantId: string): Promise<void> {
+    const product = await this.productModel.findOneAndDelete({ _id: id, tenantId }).exec();
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
-    await this.productModel.findByIdAndDelete(id).exec();
   }
 
-  async getLowStockProducts() {
+  async getLowStockProducts(tenantId: string) {
     return this.productModel.find({
+      tenantId,
       $expr: { $lte: ['$stock', '$stockThreshold'] },
       isOutOfStock: false,
     }).populate('category').exec();
   }
 
-  async bulkImport(products: CreateProductDto[]): Promise<{ success: number; errors: { row: number; message: string }[] }> {
+  async bulkImport(products: CreateProductDto[], tenantId: string): Promise<{ success: number; errors: { row: number; message: string }[] }> {
     const errors: { row: number; message: string }[] = [];
     let success = 0;
 
     for (let i = 0; i < products.length; i++) {
       try {
-        await this.create(products[i]);
+        await this.create(products[i], tenantId);
         success++;
       } catch (err: any) {
         errors.push({ row: i + 1, message: err.message || 'Unknown error' });

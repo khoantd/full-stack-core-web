@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export enum BlogStatus {
   DRAFT = 'Draft',
@@ -9,6 +9,9 @@ export enum BlogStatus {
 
 @Schema({ collection: 'blogs', timestamps: true })
 export class Blog extends Document {
+  @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
+  tenantId: Types.ObjectId;
+
   @Prop({ required: true })
   title: string;
 

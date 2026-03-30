@@ -16,8 +16,8 @@ export class AuthController {
       return this.authService.createUserWithFirebase({ uid, email, name });
     } else {
       // Tạo user qua form đăng ký
-      const { name, email, password, securityConfirmed } = body;
-      return this.authService.createUserWithForm({ name, email, password, securityConfirmed });
+      const { name, email, password, securityConfirmed, organizationName, organizationSlug } = body;
+      return this.authService.createUserWithForm({ name, email, password, securityConfirmed, organizationName, organizationSlug });
     }
   }
   @Post('login')

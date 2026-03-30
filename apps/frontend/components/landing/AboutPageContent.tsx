@@ -72,15 +72,19 @@ export function AboutPageContent() {
             backgroundSize: "20px 20px",
           }}
         />
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
+        <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: "var(--accent-500)" }} />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">About Us</h1>
           <nav className="flex items-center gap-2 text-sm text-gray-400">
-            <Link href="/" className="hover:text-orange-500 transition">
+            <Link
+              href="/"
+              className="transition hover:opacity-80"
+              style={{ color: "var(--accent-500)" }}
+            >
               Home
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-orange-500">About Us</span>
+            <span style={{ color: "var(--accent-500)" }}>About Us</span>
           </nav>
         </div>
       </section>
@@ -98,15 +102,21 @@ export function AboutPageContent() {
                 </div>
               </div>
               {/* Floating badge */}
-              <div className="absolute -bottom-6 -right-6 bg-orange-500 text-white rounded-lg p-5 shadow-xl">
+              <div
+                className="absolute -bottom-6 -right-6 text-white rounded-lg p-5 shadow-xl"
+                style={{ backgroundColor: "var(--accent-500)" }}
+              >
                 <div className="text-3xl font-extrabold">15+</div>
                 <div className="text-xs font-medium uppercase tracking-wide">Years of Trust</div>
               </div>
               {/* Appointment card */}
               <div className="absolute -top-6 -left-6 bg-[#1a1a1a] border border-white/10 rounded-lg p-4 shadow-xl hidden sm:block">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                    <Phone className="h-5 w-5 text-orange-500" />
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "color-mix(in srgb, var(--accent-500) 10%, transparent)" }}
+                  >
+                    <Phone className="h-5 w-5" style={{ color: "var(--accent-500)" }} />
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs">Call Us Anytime</p>
@@ -118,7 +128,10 @@ export function AboutPageContent() {
 
             {/* Content side */}
             <div>
-              <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">
+              <p
+                className="text-sm font-semibold uppercase tracking-widest mb-3"
+                style={{ color: "var(--accent-500)" }}
+              >
                 Who We Are
               </p>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-6 leading-tight">
@@ -138,7 +151,7 @@ export function AboutPageContent() {
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
                 {FEATURES.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                    <CheckCircle className="h-4 w-4 text-orange-500 shrink-0" />
+                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
                     {f}
                   </li>
                 ))}
@@ -146,7 +159,10 @@ export function AboutPageContent() {
 
               <Link
                 href="/#products"
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-7 py-3 rounded transition"
+                className="inline-flex items-center gap-2 text-white font-semibold px-7 py-3 rounded transition"
+                style={{ backgroundColor: "var(--accent-500)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-600)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-500)")}
               >
                 Explore Products
                 <ArrowRight className="h-4 w-4" />
@@ -157,13 +173,13 @@ export function AboutPageContent() {
       </section>
 
       {/* Stats Counter */}
-      <section className="py-16 bg-orange-500">
+      <section className="py-16" style={{ backgroundColor: "var(--accent-500)" }}>
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             {STATS.map(({ value, label }) => (
               <div key={label}>
                 <div className="text-4xl sm:text-5xl font-extrabold text-white mb-2">{value}</div>
-                <div className="text-orange-100 text-sm font-medium uppercase tracking-widest">
+                <div className="text-white/70 text-sm font-medium uppercase tracking-widest">
                   {label}
                 </div>
               </div>
@@ -176,7 +192,10 @@ export function AboutPageContent() {
       <section className="py-20 bg-[#111111]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">
+            <p
+              className="text-sm font-semibold uppercase tracking-widest mb-3"
+              style={{ color: "var(--accent-500)" }}
+            >
               Why Choose Us
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
@@ -187,10 +206,18 @@ export function AboutPageContent() {
             {WHY_US.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="bg-[#1a1a1a] border border-white/5 rounded-lg p-7 group hover:border-orange-500/40 transition"
+                className="bg-[#1a1a1a] border border-white/5 rounded-lg p-7 group transition"
+                style={{ ["--tw-border-opacity" as string]: "1" }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent-500) 40%, transparent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
               >
-                <div className="w-12 h-12 rounded bg-orange-500/10 flex items-center justify-center mb-5 group-hover:bg-orange-500 transition">
-                  <Icon className="h-6 w-6 text-orange-500 group-hover:text-white transition" />
+                <div
+                  className="w-12 h-12 rounded flex items-center justify-center mb-5 transition-colors"
+                  style={{ backgroundColor: "color-mix(in srgb, var(--accent-500) 10%, transparent)" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-500)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "color-mix(in srgb, var(--accent-500) 10%, transparent)")}
+                >
+                  <Icon className="h-6 w-6" style={{ color: "var(--accent-500)" }} />
                 </div>
                 <h3 className="text-white font-bold text-lg mb-3">{title}</h3>
                 <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
@@ -204,7 +231,10 @@ export function AboutPageContent() {
       <section className="py-20 bg-[#0d0d0d]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-3">
+            <p
+              className="text-sm font-semibold uppercase tracking-widest mb-3"
+              style={{ color: "var(--accent-500)" }}
+            >
               Our Team
             </p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
@@ -215,14 +245,24 @@ export function AboutPageContent() {
             {TEAM.map(({ name, role, initials }) => (
               <div key={name} className="group text-center">
                 <div className="relative mb-5 mx-auto w-40 h-40">
-                  <div className="w-full h-full rounded-full bg-[#1a1a1a] border-2 border-white/10 group-hover:border-orange-500 transition flex items-center justify-center">
-                    <span className="text-3xl font-extrabold text-orange-500">{initials}</span>
+                  <div
+                    className="w-full h-full rounded-full bg-[#1a1a1a] border-2 border-white/10 transition flex items-center justify-center"
+                    style={{ ["--hover-border" as string]: "var(--accent-500)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent-500)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
+                  >
+                    <span className="text-3xl font-extrabold" style={{ color: "var(--accent-500)" }}>
+                      {initials}
+                    </span>
                   </div>
                   {/* Decorative ring */}
-                  <div className="absolute inset-0 rounded-full border-2 border-dashed border-orange-500/20 group-hover:border-orange-500/50 transition scale-110" />
+                  <div
+                    className="absolute inset-0 rounded-full border-2 border-dashed transition scale-110"
+                    style={{ borderColor: "color-mix(in srgb, var(--accent-500) 20%, transparent)" }}
+                  />
                 </div>
                 <h3 className="text-white font-bold text-lg">{name}</h3>
-                <p className="text-orange-500 text-sm mt-1">{role}</p>
+                <p className="text-sm mt-1" style={{ color: "var(--accent-500)" }}>{role}</p>
               </div>
             ))}
           </div>
@@ -232,7 +272,10 @@ export function AboutPageContent() {
       {/* CTA / Appointment Banner */}
       <section className="py-20 bg-[#111111]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="bg-orange-500 rounded-2xl px-8 py-14 flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div
+            className="rounded-2xl px-8 py-14 flex flex-col lg:flex-row items-center justify-between gap-8"
+            style={{ backgroundColor: "var(--accent-500)" }}
+          >
             <div className="text-center lg:text-left">
               <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
                 <Users className="h-5 w-5 text-white/80" />
@@ -243,22 +286,25 @@ export function AboutPageContent() {
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
                 Need Help Finding the Right Part?
               </h2>
-              <p className="text-orange-100 mt-3 max-w-xl">
-                Our specialists are available 24/7. Reach out and we'll help you find exactly what
+              <p className="text-white/80 mt-3 max-w-xl">
+                Our specialists are available 24/7. Reach out and we&apos;ll help you find exactly what
                 your vehicle needs — fast.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 shrink-0">
               <Link
                 href="/#contact"
-                className="inline-flex items-center justify-center gap-2 bg-white text-orange-500 hover:bg-orange-50 font-bold px-8 py-3.5 rounded transition"
+                className="inline-flex items-center justify-center gap-2 bg-white font-bold px-8 py-3.5 rounded transition hover:bg-white/90"
+                style={{ color: "var(--accent-500)" }}
               >
                 <Phone className="h-4 w-4" />
                 Contact Us
               </Link>
               <Link
                 href="/#products"
-                className="inline-flex items-center justify-center gap-2 border-2 border-white text-white hover:bg-white hover:text-orange-500 font-bold px-8 py-3.5 rounded transition"
+                className="inline-flex items-center justify-center gap-2 border-2 border-white text-white font-bold px-8 py-3.5 rounded transition hover:bg-white"
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-500)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "white")}
               >
                 Browse Parts
                 <ArrowRight className="h-4 w-4" />

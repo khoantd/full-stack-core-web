@@ -5,7 +5,10 @@ export type CategoryProductDocument = CategoryProduct & Document;
 
 @Schema({ timestamps: true })
 export class CategoryProduct {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, index: true })
+  tenantId: string;
+
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: false })
@@ -16,3 +19,4 @@ export class CategoryProduct {
 }
 
 export const CategoryProductSchema = SchemaFactory.createForClass(CategoryProduct);
+CategoryProductSchema.index({ tenantId: 1, name: 1 }, { unique: true });

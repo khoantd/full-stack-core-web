@@ -6,11 +6,15 @@ import { User, UserSchema } from './schemas/user.schema';
 import { HttpModule } from '@nestjs/axios';
 import { FriendGateway } from './socket/friend.gateway';
 import { Role, RoleSchema } from './schemas/role.schema';
+import { Tenant, TenantSchema } from '../tenant/schemas/tenant.schema';
 
 @Module({
-
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },{ name: Role.name, schema: RoleSchema },]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Role.name, schema: RoleSchema },
+      { name: Tenant.name, schema: TenantSchema },
+    ]),
     HttpModule
   ],
   exports: [

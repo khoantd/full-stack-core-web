@@ -19,6 +19,10 @@ const sidebarNavItems = [
     title: "My Preferences",
     href: "/dashboard/settings/profile"
   },
+  {
+    title: "Organization",
+    href: "/dashboard/settings/organization"
+  },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

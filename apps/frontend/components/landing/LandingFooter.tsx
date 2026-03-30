@@ -31,7 +31,7 @@ export function LandingFooter() {
           {/* Brand */}
           <div>
             <Link href="/" className="font-extrabold text-2xl text-white mb-4 inline-block">
-              <span className="text-orange-500">Car</span>Parts
+              <span style={{ color: "var(--accent-500)" }}>Car</span>Parts
             </Link>
             <p className="text-sm leading-relaxed mt-4 mb-6">
               Your trusted source for quality auto parts. Serving customers nationwide with genuine and aftermarket components since 2009.
@@ -47,7 +47,9 @@ export function LandingFooter() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="w-8 h-8 rounded bg-white/5 flex items-center justify-center hover:bg-orange-500 hover:text-white transition"
+                  className="w-8 h-8 rounded flex items-center justify-center transition cursor-pointer bg-white/5 hover:text-white"
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-500)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -65,9 +67,9 @@ export function LandingFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm hover:text-orange-500 transition flex items-center gap-2"
+                    className="text-sm hover:text-gray-200 transition flex items-center gap-2"
                   >
-                    <span className="text-orange-500">›</span>
+                    <span style={{ color: "var(--accent-500)" }}>›</span>
                     {link.label}
                   </Link>
                 </li>
@@ -85,9 +87,9 @@ export function LandingFooter() {
                 <li key={s}>
                   <Link
                     href="/#services"
-                    className="text-sm hover:text-orange-500 transition flex items-center gap-2"
+                    className="text-sm hover:text-gray-200 transition flex items-center gap-2"
                   >
-                    <span className="text-orange-500">›</span>
+                    <span style={{ color: "var(--accent-500)" }}>›</span>
                     {s}
                   </Link>
                 </li>
@@ -102,15 +104,15 @@ export function LandingFooter() {
             </h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm">
-                <MapPin className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--accent-500)" }} />
                 123 Auto Drive, Detroit, MI 48201
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <Phone className="h-4 w-4 text-orange-500 shrink-0" />
+                <Phone className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
                 +1 543-705-8174
               </li>
               <li className="flex items-center gap-3 text-sm">
-                <Mail className="h-4 w-4 text-orange-500 shrink-0" />
+                <Mail className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
                 support@carparts.com
               </li>
             </ul>
@@ -123,8 +125,8 @@ export function LandingFooter() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
           <span>&copy; {new Date().getFullYear()} CarParts. All rights reserved.</span>
           <div className="flex gap-4">
-            <Link href="/" className="hover:text-orange-500 transition">Privacy Policy</Link>
-            <Link href="/" className="hover:text-orange-500 transition">Terms of Service</Link>
+            <Link href="/" className="hover:text-gray-300 transition">Privacy Policy</Link>
+            <Link href="/" className="hover:text-gray-300 transition">Terms of Service</Link>
           </div>
         </div>
       </div>

@@ -4,6 +4,8 @@ import { BlogController } from './blog.controller';
 import { BlogService } from './blog.service';
 import { Blog, BlogSchema } from './schemas/blog.schema';
 import { BlogVersion, BlogVersionSchema } from './schemas/blog-version.schema';
+import { TenantModule } from '../tenant/tenant.module';
+import { TenantGuard } from '../guards/tenant.guard';
 
 @Module({
   imports: [
@@ -11,9 +13,10 @@ import { BlogVersion, BlogVersionSchema } from './schemas/blog-version.schema';
       { name: Blog.name, schema: BlogSchema },
       { name: BlogVersion.name, schema: BlogVersionSchema },
     ]),
+    TenantModule,
   ],
   controllers: [BlogController],
-  providers: [BlogService],
+  providers: [BlogService, TenantGuard],
   exports: [BlogService],
 })
 export class BlogModule {}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,7 @@ import {
   ProductDetailDialog,
   DeleteProductDialog,
 } from "./components/ProductDialog";
+import { leadSparkApi } from "@/lib/api/leadspark.api";
 
 export default function ProductsPage() {
   const [page, setPage] = useState(1);
@@ -52,6 +53,7 @@ export default function ProductsPage() {
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToEdit, setProductToEdit] = useState<Product | undefined>(
@@ -87,6 +89,24 @@ export default function ProductsPage() {
   const handleCreate = () => {
     setProductToEdit(undefined);
     setFormDialogOpen(true);
+  };
+
+  const handleLeadSparkSync = async () => {
+    setIsSyncing(true);
+    try {
+      const result = await leadSparkApi.syncProducts();
+      if (result.errors.length === 0) {
+        toast.success(`Synced ${result.synced} products to LeadSpark AI`);
+      } else {
+        toast.warning(
+          `Synced ${result.synced} products. ${result.errors.length} failed.`
+        );
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "LeadSpark sync failed");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleView = (product: Product) => {
@@ -181,10 +201,16 @@ export default function ProductsPage() {
             Manage your product catalog
           </p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleLeadSparkSync} disabled={isSyncing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing..." : "Sync to LeadSpark"}
+          </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <Card>

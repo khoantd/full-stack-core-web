@@ -5,6 +5,9 @@ export type ProductDocument = Product & Document;
 
 @Schema({ timestamps: true })
 export class Product {
+  @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
+  tenantId: Types.ObjectId;
+
   @Prop({ required: true })
   name: string;
 

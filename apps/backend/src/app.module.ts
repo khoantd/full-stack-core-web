@@ -19,6 +19,9 @@ import { TelegramModule } from './telegram/telegram.module';
 import { SystemSettingsModule } from './config/system-settings.module';
 import { AuditLogModule } from './audit-log/audit-log.module';
 import { LandingModule } from './landing/landing.module';
+import { LeadSparkModule } from './leadspark/leadspark.module';
+import { ServiceModule } from './service/service.module';
+import { TenantModule } from './tenant/tenant.module';
 
 @Module({
   imports: [
@@ -52,6 +55,9 @@ import { LandingModule } from './landing/landing.module';
     SystemSettingsModule,
     AuditLogModule,
     LandingModule,
+    LeadSparkModule,
+    ServiceModule,
+    TenantModule,
   ],
   controllers: [AppController],
   providers: [AppService],

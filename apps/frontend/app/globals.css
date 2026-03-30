@@ -45,6 +45,10 @@
 
 :root {
   --radius: 0.625rem;
+  /* Landing accent — overridden by ThemeProvider */
+  --accent-500: #f97316;
+  --accent-600: #ea6c0a;
+  --accent-400: #fb923c;
   --text-sm: 0.813rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

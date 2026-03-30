@@ -56,11 +56,11 @@ export function HeroSection() {
         }}
       />
       {/* Orange accent bar */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500" />
+      <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: "var(--accent-500)" }} />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
         <div className="max-w-2xl">
-          <p className="text-orange-500 text-sm font-semibold uppercase tracking-widest mb-4">
+          <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--accent-500)" }}>
             {slide.tag}
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 whitespace-pre-line">
@@ -72,14 +72,17 @@ export function HeroSection() {
           <div className="flex flex-wrap gap-4">
             <Link
               href={slide.cta.href}
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-7 py-3 rounded transition"
+              className="inline-flex items-center gap-2 text-white font-semibold px-7 py-3 rounded transition"
+              style={{ backgroundColor: "var(--accent-500)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-600)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--accent-500)")}
             >
               {slide.cta.label}
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href={slide.ctaSecondary.href}
-              className="inline-flex items-center gap-2 border border-white/20 hover:border-orange-500 hover:text-orange-500 text-white font-semibold px-7 py-3 rounded transition"
+              className="inline-flex items-center gap-2 border border-white/20 text-white font-semibold px-7 py-3 rounded transition hover:border-white/60"
             >
               {slide.ctaSecondary.label}
             </Link>
@@ -91,7 +94,7 @@ export function HeroSection() {
       <div className="absolute bottom-8 right-8 flex items-center gap-3">
         <button
           onClick={prev}
-          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-orange-500 hover:text-orange-500 transition"
+          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/60 transition cursor-pointer"
           aria-label="Previous slide"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -101,7 +104,7 @@ export function HeroSection() {
         </span>
         <button
           onClick={next}
-          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-orange-500 hover:text-orange-500 transition"
+          className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:border-white/60 transition cursor-pointer"
           aria-label="Next slide"
         >
           <ChevronRight className="h-5 w-5" />
@@ -115,9 +118,10 @@ export function HeroSection() {
             key={i}
             onClick={() => setCurrent(i)}
             aria-label={`Go to slide ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${
-              i === current ? "w-8 bg-orange-500" : "w-3 bg-white/30"
+            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+              i === current ? "w-8" : "w-3 bg-white/30"
             }`}
+            style={i === current ? { backgroundColor: "var(--accent-500)", width: "2rem" } : {}}
           />
         ))}
       </div>

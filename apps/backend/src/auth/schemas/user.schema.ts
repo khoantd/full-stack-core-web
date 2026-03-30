@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { Role } from './role.schema';
+import { Tenant } from '../../tenant/schemas/tenant.schema';
 
 
 @Schema({ collection: 'users', timestamps: true })
@@ -17,8 +18,11 @@ export class User extends Document {
   @Prop({ unique: true, sparse: true })
   uid?: string; // UID từ Firebase
 
-  @Prop({ type: Types.ObjectId, ref: Role.name }) // ✅ thêm dòng này
+  @Prop({ type: Types.ObjectId, ref: Role.name })
   role: Role;
+
+  @Prop({ type: Types.ObjectId, ref: Tenant.name, index: true })
+  tenantId?: Types.ObjectId;
 
   @Prop({ default: false })
   securityConfirmed: boolean;

@@ -13,12 +13,12 @@ export class CategoryProductService {
     private categoryProductModel: Model<CategoryProductDocument>,
   ) {}
 
-  async create(createCategoryProductDto: CreateCategoryProductDto): Promise<CategoryProduct> {
+  async create(createCategoryProductDto: CreateCategoryProductDto, tenantId: string): Promise<CategoryProduct> {
     try {
       if (createCategoryProductDto.parent) {
         await this.validateDepth(createCategoryProductDto.parent, 1);
       }
-      const createdCategoryProduct = new this.categoryProductModel(createCategoryProductDto);
+      const createdCategoryProduct = new this.categoryProductModel({ ...createCategoryProductDto, tenantId });
       return await createdCategoryProduct.save();
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
@@ -27,9 +27,9 @@ export class CategoryProductService {
     }
   }
 
-  async findAll(queryDto: QueryCategoryProductDto) {
+  async findAll(queryDto: QueryCategoryProductDto, tenantId: string) {
     const { page = '1', limit = '10', search } = queryDto;
-    const query: any = {};
+    const query: any = { tenantId };
 
     if (search) query.name = { $regex: search, $options: 'i' };
 
@@ -51,13 +51,13 @@ export class CategoryProductService {
     return { data, pagination: { total, page: pageNum, limit: limitNum, totalPages, hasNextPage: pageNum < totalPages, hasPrevPage: pageNum > 1 } };
   }
 
-  async findOne(id: string): Promise<CategoryProduct> {
-    const categoryProduct = await this.categoryProductModel.findById(id).populate('parent', 'name').exec();
+  async findOne(id: string, tenantId: string): Promise<CategoryProduct> {
+    const categoryProduct = await this.categoryProductModel.findOne({ _id: id, tenantId }).populate('parent', 'name').exec();
     if (!categoryProduct) throw new NotFoundException(`Category with ID ${id} not found`);
     return categoryProduct;
   }
 
-  async update(id: string, updateCategoryProductDto: UpdateCategoryProductDto): Promise<CategoryProduct> {
+  async update(id: string, updateCategoryProductDto: UpdateCategoryProductDto, tenantId: string): Promise<CategoryProduct> {
     try {
       if (updateCategoryProductDto.parent) {
         if (updateCategoryProductDto.parent === id) throw new BadRequestException('Category cannot be its own parent');
@@ -65,7 +65,7 @@ export class CategoryProductService {
       }
 
       const updatedCategoryProduct = await this.categoryProductModel
-        .findByIdAndUpdate(id, updateCategoryProductDto, { new: true })
+        .findOneAndUpdate({ _id: id, tenantId }, updateCategoryProductDto, { new: true })
         .populate('parent', 'name')
         .exec();
 
@@ -78,8 +78,8 @@ export class CategoryProductService {
     }
   }
 
-  async remove(id: string): Promise<void> {
-    const categoryProduct = await this.categoryProductModel.findById(id).exec();
+  async remove(id: string, tenantId: string): Promise<void> {
+    const categoryProduct = await this.categoryProductModel.findOne({ _id: id, tenantId }).exec();
     if (!categoryProduct) throw new NotFoundException(`Category with ID ${id} not found`);
 
     const Product = this.categoryProductModel.db.model('Product');

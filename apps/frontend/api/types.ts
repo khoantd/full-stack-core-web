@@ -53,6 +53,8 @@ export interface CreateUserRequest {
   uid?: string; // Firebase UID (if provided, password not required)
   role?: string; // ObjectId of Role
   securityConfirmed?: boolean;
+  organizationName?: string;
+  organizationSlug?: string;
 }
 
 // Request payload for updating a user

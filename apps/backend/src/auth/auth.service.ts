@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import axios from "axios";
 import { FriendGateway } from './socket/friend.gateway';
 import { Role } from './schemas/role.schema';
+import { Tenant, TenantDocument } from '../tenant/schemas/tenant.schema';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
@@ -15,30 +16,32 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Role.name) private roleModel: Model<Role>,
+    @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     private readonly friendGateway: FriendGateway,
     private jwtService: JwtService,) { }
   async createUserWithFirebase(data: { uid: string; email: string; name: string }) {
-    // Kiểm tra xem user đã tồn tại trong MongoDB
-
     let user = await this.userModel.findOne({ uid: data.uid }).populate('role', 'name');
     if (!user) {
       const defaultRole = await this.roleModel.findOne({ name: 'user' });
-      // Nếu chưa tồn tại, tạo user mới
+      // Find or create a default tenant
+      let tenant = await this.tenantModel.findOne();
+      if (!tenant) {
+        const slug = data.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
+        tenant = await this.tenantModel.create({ name: 'Default Organization', slug });
+      }
       user = new this.userModel({
         uid: data.uid,
         email: data.email,
         name: data.name,
         role: defaultRole?._id,
+        tenantId: tenant._id,
       });
-
-      // Lưu user mới vào database
       await user.save();
-      
-      // Populate role sau khi save
       user = await this.userModel.findById(user._id).populate('role', 'name').exec();
     }
 
-    const payload = { uid: user.uid, email: user.email };
+    const roleName = user.role && (user.role as any).name ? (user.role as any).name : user.role;
+    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: user.tenantId?.toString() };
     const tokens = await this.generateUserTokens(payload);
     user.refreshToken = tokens.refreshToken;
     await user.save();
@@ -72,7 +75,7 @@ export class AuthService {
 
       // Extract role name if populated
       const roleName = user.role && (user.role as any).name ? (user.role as any).name : user.role;
-      const payload = { uid: user.uid, email: user.email, role: roleName };
+      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
       const tokens = await this.generateUserTokens(payload);
       
       user.refreshToken = tokens.refreshToken;
@@ -87,7 +90,14 @@ export class AuthService {
     }
   }
 
-  async createUserWithForm(data: { name: string; email: string; password: string; securityConfirmed?: boolean }) {
+  async createUserWithForm(data: {
+    name: string;
+    email: string;
+    password: string;
+    securityConfirmed?: boolean;
+    organizationName?: string;
+    organizationSlug?: string;
+  }) {
     const existingUser = await this.userModel.findOne({ email: data.email });
     if (existingUser) {
       throw new UnauthorizedException('Email already in use');
@@ -96,10 +106,25 @@ export class AuthService {
       throw new UnauthorizedException('not securityConfirmed');
     }
 
-    const userCount = await this.userModel.countDocuments();
-    const roleName = userCount === 0 ? 'admin' : 'user';
-    const role = await this.roleModel.findOne({ name: roleName });
+    // Each signup creates a new tenant; the registering user becomes its admin
+    const orgName = data.organizationName?.trim() || `${data.name}'s Organization`;
+    const baseSlug = (data.organizationSlug || orgName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 30);
 
+    // Ensure slug uniqueness by appending a suffix if needed
+    let slug = baseSlug;
+    let suffix = 1;
+    while (await this.tenantModel.findOne({ slug })) {
+      slug = `${baseSlug}-${suffix++}`;
+    }
+
+    const tenant = await this.tenantModel.create({ name: orgName, slug });
+
+    const role = await this.roleModel.findOne({ name: 'admin' });
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const newUser = new this.userModel({
@@ -108,6 +133,7 @@ export class AuthService {
       password: hashedPassword,
       securityConfirmed: data.securityConfirmed,
       role: role?._id,
+      tenantId: tenant._id,
     });
     return newUser.save();
   }
@@ -124,17 +150,17 @@ export class AuthService {
 
   async refreshToken(token: string) {
     try {
-      // Verify signature 
       const decoded: any = this.jwtService.verify(token);
-      
       const payload = decoded.payload;
       const user = await this.userModel.findOne({ email: payload.email });
       if (!user || user.refreshToken !== token) {
         throw new UnauthorizedException('Invalid refresh token');
       }
 
-      // Generate new tokens
-      const tokens = await this.generateUserTokens(payload);
+      // Re-build payload with latest tenantId
+      const roleName = user.role && (user.role as any).name ? (user.role as any).name : payload.role;
+      const freshPayload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
+      const tokens = await this.generateUserTokens(freshPayload);
       user.refreshToken = tokens.refreshToken;
       await user.save();
 

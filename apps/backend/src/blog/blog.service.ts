@@ -30,13 +30,13 @@ export class BlogService {
     @InjectModel(BlogVersion.name) private readonly blogVersionModel: Model<BlogVersion>,
   ) {}
 
-  async findAll(query: QueryBlogDto): Promise<PaginationResult> {
+  async findAll(query: QueryBlogDto, tenantId: string): Promise<PaginationResult> {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page) || 1;
     const limit = isGetAll ? Number.MAX_SAFE_INTEGER : parseInt(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const filter: Record<string, any> = {};
+    const filter: Record<string, any> = { tenantId };
 
     if (query.search && query.search.trim()) {
       filter.title = { $regex: query.search.trim(), $options: 'i' };
@@ -65,9 +65,9 @@ export class BlogService {
     };
   }
 
-  async findById(id: string): Promise<Blog> {
+  async findById(id: string, tenantId: string): Promise<Blog> {
     try {
-      const blog = await this.blogModel.findById(id).exec();
+      const blog = await this.blogModel.findOne({ _id: id, tenantId }).exec();
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
       return blog;
     } catch (error) {
@@ -77,9 +77,9 @@ export class BlogService {
     }
   }
 
-  async create(createBlogDto: CreateBlogDto): Promise<Blog> {
+  async create(createBlogDto: CreateBlogDto, tenantId: string): Promise<Blog> {
     try {
-      const data: any = { ...createBlogDto };
+      const data: any = { ...createBlogDto, tenantId };
       if (data.status === BlogStatus.PUBLISHED && !data.publishedAt) {
         data.publishedAt = new Date();
       }
@@ -92,9 +92,9 @@ export class BlogService {
     }
   }
 
-  async update(id: string, updateBlogDto: UpdateBlogDto): Promise<Blog> {
+  async update(id: string, updateBlogDto: UpdateBlogDto, tenantId: string): Promise<Blog> {
     try {
-      const blog = await this.blogModel.findById(id);
+      const blog = await this.blogModel.findOne({ _id: id, tenantId });
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
 
       Object.assign(blog, updateBlogDto);
@@ -113,11 +113,10 @@ export class BlogService {
     }
   }
 
-  async delete(id: string): Promise<{ message: string; id: string }> {
+  async delete(id: string, tenantId: string): Promise<{ message: string; id: string }> {
     try {
-      const blog = await this.blogModel.findById(id);
+      const blog = await this.blogModel.findOneAndDelete({ _id: id, tenantId });
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
-      await this.blogModel.findByIdAndDelete(id);
       await this.blogVersionModel.deleteMany({ blogId: id });
       return { message: 'Blog deleted successfully', id };
     } catch (error) {
@@ -127,16 +126,18 @@ export class BlogService {
     }
   }
 
-  async getVersions(blogId: string): Promise<BlogVersion[]> {
+  async getVersions(blogId: string, tenantId: string): Promise<BlogVersion[]> {
+    const blog = await this.blogModel.findOne({ _id: blogId, tenantId }).exec();
+    if (!blog) throw new NotFoundException(`Blog with ID "${blogId}" not found`);
     return this.blogVersionModel.find({ blogId }).sort({ versionNumber: -1 }).exec();
   }
 
-  async restoreVersion(blogId: string, versionId: string): Promise<Blog> {
+  async restoreVersion(blogId: string, versionId: string, tenantId: string): Promise<Blog> {
+    const blog = await this.blogModel.findOne({ _id: blogId, tenantId });
+    if (!blog) throw new NotFoundException('Blog not found');
+
     const version = await this.blogVersionModel.findById(versionId).exec();
     if (!version) throw new NotFoundException('Version not found');
-
-    const blog = await this.blogModel.findById(blogId);
-    if (!blog) throw new NotFoundException('Blog not found');
 
     blog.title = version.title;
     blog.description = version.description;
