@@ -1,3 +1,15 @@
+export const ALL_FEATURES = [
+  'categories',
+  'products',
+  'automakers',
+  'events',
+  'services',
+  'blogs',
+  'payments',
+] as const;
+
+export type FeatureKey = typeof ALL_FEATURES[number];
+
 export interface Tenant {
   _id: string;
   name: string;
@@ -6,6 +18,7 @@ export interface Tenant {
   domain?: string;
   status: string;
   plan?: string;
+  enabledFeatures: FeatureKey[];
   createdAt: string;
   updatedAt: string;
 }
@@ -16,6 +29,7 @@ export interface CreateTenantRequest {
   logo?: string;
   domain?: string;
   plan?: string;
+  enabledFeatures?: FeatureKey[];
 }
 
 export interface UpdateTenantRequest {
@@ -24,4 +38,5 @@ export interface UpdateTenantRequest {
   logo?: string;
   domain?: string;
   plan?: string;
+  enabledFeatures?: FeatureKey[];
 }

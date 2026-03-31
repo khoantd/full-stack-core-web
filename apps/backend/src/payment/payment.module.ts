@@ -5,6 +5,8 @@ import { PaymentService } from './payment.service';
 import { Payment, PaymentSchema } from './schemas/payment.schema';
 import { Event, EventSchema } from '../event/schemas/event.schema';
 import { TelegramModule } from '../telegram/telegram.module';
+import { VietQRModule } from '../vietqr/vietqr.module';
+import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { TelegramModule } from '../telegram/telegram.module';
       { name: Event.name, schema: EventSchema },
     ]),
     forwardRef(() => TelegramModule),
+    VietQRModule,
+    TenantModule,
   ],
   controllers: [PaymentController],
   providers: [PaymentService],

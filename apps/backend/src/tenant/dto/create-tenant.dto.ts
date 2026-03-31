@@ -1,5 +1,6 @@
-import { IsString, IsOptional, MinLength, Matches } from 'class-validator';
+import { IsString, IsOptional, MinLength, Matches, IsArray, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ALL_FEATURES, FeatureKey } from '../schemas/tenant.schema';
 
 export class CreateTenantDto {
   @IsString()
@@ -23,4 +24,9 @@ export class CreateTenantDto {
   @IsOptional()
   @IsString()
   plan?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsIn([...ALL_FEATURES], { each: true })
+  enabledFeatures?: FeatureKey[];
 }

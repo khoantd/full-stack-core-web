@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tenantService } from "@/services/tenant.service";
-import type { CreateTenantRequest, UpdateTenantRequest } from "@/types/tenant.type";
+import type { CreateTenantRequest, UpdateTenantRequest, FeatureKey } from "@/types/tenant.type";
 
 export const TENANT_QUERY_KEY = ["tenants"];
 
@@ -32,6 +32,15 @@ export function useUpdateTenant() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTenantRequest }) =>
       tenantService.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: TENANT_QUERY_KEY }),
+  });
+}
+
+export function useUpdateTenantFeatures() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabledFeatures: FeatureKey[]) =>
+      tenantService.updateFeatures(enabledFeatures),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: TENANT_QUERY_KEY }),
   });
 }

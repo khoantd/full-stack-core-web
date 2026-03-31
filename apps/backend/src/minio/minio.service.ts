@@ -68,15 +68,23 @@ export class MinioService {
     }
   }
 
-  async listFiles(bucketName: string, prefix?: string): Promise<FileItem[]> {
+  async listFiles(
+    bucketName: string,
+    options: {
+      prefix?: string;
+      maxKeys?: number;
+      continuationToken?: string;
+    } = {},
+  ): Promise<{ items: FileItem[]; nextContinuationToken?: string; isTruncated: boolean }> {
     try {
       const params: AWS.S3.ListObjectsV2Request = {
         Bucket: bucketName,
-        Prefix: prefix,
-        MaxKeys: 200,
+        Prefix: options.prefix,
+        MaxKeys: options.maxKeys ?? 20,
+        ContinuationToken: options.continuationToken,
       };
       const result = await this.s3.listObjectsV2(params).promise();
-      return (result.Contents || [])
+      const items = (result.Contents || [])
         .filter(obj => !obj.Key?.startsWith('thumbnails/'))
         .map(obj => ({
           key: obj.Key!,
@@ -85,6 +93,11 @@ export class MinioService {
           lastModified: obj.LastModified ?? new Date(),
           contentType: this.guessContentType(obj.Key!),
         }));
+      return {
+        items,
+        nextContinuationToken: result.NextContinuationToken,
+        isTruncated: result.IsTruncated ?? false,
+      };
     } catch (err) {
       this.logger.error(`List files failed: ${err.message}`);
       throw new Error(`List files failed: ${err.message}`);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircledIcon } from "@radix-ui/react-icons";
 import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
 import UsersDataTable from "./data-table";
 import type { User } from "./data-table";
@@ -21,12 +22,23 @@ const ALLOWED_ROLES = ["admin", "superadmin", "manager"];
 function UsersPageContent() {
   const [page, setPage] = useState(1);
   const limit = 10;
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Check role from JWT before fetching
   const token = getStoredToken();
@@ -35,7 +47,7 @@ function UsersPageContent() {
   const canAccess = ALLOWED_ROLES.includes(userRole);
 
   const { data, isLoading, isError, error, refetch } = useUsers(
-    canAccess ? { page, limit } : { enabled: false }
+    canAccess ? { page, limit, search: debouncedSearch || undefined } : { enabled: false }
   );
 
   const toApiUser = (user: User | null): ApiUser | null => {
@@ -142,6 +154,7 @@ function UsersPageContent() {
   }
 
   const rawUsers = (Array.isArray(data) ? data : (data?.data ?? [])) as Record<string, unknown>[];
+  const pagination = Array.isArray(data) ? undefined : data?.pagination;
 
   const users: User[] = rawUsers.map((u) => {
     const first = (u.firstName as string) || "";
@@ -184,7 +197,29 @@ function UsersPageContent() {
       </div>
       <Card>
         <CardContent>
-          <UsersDataTable data={users} actions={tableActions} />
+          <UsersDataTable
+            data={users}
+            actions={tableActions}
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+          />
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4 mt-2">
+              <div className="text-sm text-muted-foreground">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} users
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={!pagination.hasPrevPage}>
+                  <ChevronLeft className="h-4 w-4 mr-1" />Previous
+                </Button>
+                <span className="text-sm text-muted-foreground px-2">Page {pagination.page} of {pagination.totalPages}</span>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={!pagination.hasNextPage}>
+                  Next<ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -8,4 +8,12 @@ export interface MediaFile {
 
 export interface MediaFilesResponse {
   data: MediaFile[];
+  nextContinuationToken: string | null;
+  isTruncated: boolean;
+}
+
+export interface MediaFilesParams {
+  type?: string;
+  limit?: number;
+  continuationToken?: string;
 }

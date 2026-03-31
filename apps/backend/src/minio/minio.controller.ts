@@ -18,16 +18,31 @@ export class MinioController {
   }
 
   @Get('files')
-  async listFiles(@Query('type') type?: string) {
-    const files = await this.minioService.listFiles(BUCKET);
-    if (!type || type === 'all') return { data: files };
-    const filtered = files.filter(f => {
-      if (type === 'image') return f.contentType.startsWith('image/');
-      if (type === 'video') return f.contentType.startsWith('video/');
-      if (type === 'document') return f.contentType.startsWith('application/') || f.contentType === 'text/plain';
-      return true;
+  async listFiles(
+    @Query('type') type?: string,
+    @Query('limit') limit?: string,
+    @Query('continuationToken') continuationToken?: string,
+  ) {
+    const maxKeys = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
+    const result = await this.minioService.listFiles(BUCKET, {
+      maxKeys,
+      continuationToken: continuationToken || undefined,
     });
-    return { data: filtered };
+
+    const filtered = type && type !== 'all'
+      ? result.items.filter(f => {
+          if (type === 'image') return f.contentType.startsWith('image/');
+          if (type === 'video') return f.contentType.startsWith('video/');
+          if (type === 'document') return f.contentType.startsWith('application/') || f.contentType === 'text/plain';
+          return true;
+        })
+      : result.items;
+
+    return {
+      data: filtered,
+      nextContinuationToken: result.nextContinuationToken ?? null,
+      isTruncated: result.isTruncated,
+    };
   }
 
   @Delete('files/:key')

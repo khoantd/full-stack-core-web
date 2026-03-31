@@ -9,7 +9,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
@@ -252,9 +251,11 @@ export const columns = createColumns();
 interface UsersDataTableProps {
   data: User[];
   actions?: UserTableActions;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
 }
 
-export default function UsersDataTable({ data, actions }: UsersDataTableProps) {
+export default function UsersDataTable({ data, actions, searchValue, onSearchChange }: UsersDataTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -269,7 +270,6 @@ export default function UsersDataTable({ data, actions }: UsersDataTableProps) {
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -327,8 +327,8 @@ export default function UsersDataTable({ data, actions }: UsersDataTableProps) {
         <div className="flex gap-2">
           <Input
             placeholder="Search users..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+            value={searchValue ?? (table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) => onSearchChange ? onSearchChange(event.target.value) : table.getColumn("name")?.setFilterValue(event.target.value)}
             className="max-w-sm"
           />
           <Popover>
@@ -500,26 +500,10 @@ export default function UsersDataTable({ data, actions }: UsersDataTableProps) {
             )}
           </TableBody>
         </Table>
-      <div className="flex items-center justify-end space-x-2 pt-4">
+      <div className="flex items-center pt-4">
         <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}>
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}>
-            Next
-          </Button>
         </div>
       </div>
     </div>

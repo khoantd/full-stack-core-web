@@ -1,5 +1,5 @@
 import axiosClient from "@/api/axiosClient";
-import { MediaFilesResponse } from "@/types/media.type";
+import { MediaFilesParams, MediaFilesResponse } from "@/types/media.type";
 
 const MINIO_BASE_URL = "https://seyeuthuong.org";
 
@@ -10,9 +10,14 @@ export function buildFullUrl(relativePath: string): string {
 }
 
 export const mediaApi = {
-  listFiles: async (type?: string): Promise<MediaFilesResponse> => {
+  listFiles: async (params: MediaFilesParams = {}): Promise<MediaFilesResponse> => {
+    const { type, limit = 20, continuationToken } = params;
     const response = await axiosClient.get<MediaFilesResponse>("/minio/files", {
-      params: type && type !== "all" ? { type } : undefined,
+      params: {
+        ...(type && type !== "all" ? { type } : {}),
+        limit,
+        ...(continuationToken ? { continuationToken } : {}),
+      },
     });
     return response.data;
   },

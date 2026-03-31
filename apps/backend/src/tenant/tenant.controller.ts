@@ -1,9 +1,10 @@
 import {
-  Body, Controller, Delete, Get, Param, Post, Put,
-  UseGuards, UsePipes, ValidationPipe,
+  Body, Controller, Delete, Get, Param, Post, Put, Patch,
+  UseGuards, UsePipes, ValidationPipe, Req,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
+import { UpdateFeaturesDto } from './dto/update-features.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/guards/roles.decorator';
@@ -35,6 +36,14 @@ export class TenantController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   update(@Param('id') id: string, @Body() dto: Partial<CreateTenantDto>) {
     return this.tenantService.update(id, dto);
+  }
+
+  // Uses tenantId from JWT — no URL param needed, avoids ID mismatch
+  @Patch('my/features')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  updateMyFeatures(@Req() req: any, @Body() dto: UpdateFeaturesDto) {
+    const tenantId = req.user?.tenantId;
+    return this.tenantService.update(tenantId, { enabledFeatures: dto.enabledFeatures });
   }
 
   @Delete(':id')

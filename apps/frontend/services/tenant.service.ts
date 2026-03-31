@@ -1,5 +1,5 @@
 import axiosClient from "@/api/axiosClient";
-import type { Tenant, CreateTenantRequest, UpdateTenantRequest } from "@/types/tenant.type";
+import type { Tenant, CreateTenantRequest, UpdateTenantRequest, FeatureKey } from "@/types/tenant.type";
 
 export const tenantService = {
   getAll: async (): Promise<Tenant[]> => {
@@ -19,6 +19,11 @@ export const tenantService = {
 
   update: async (id: string, data: UpdateTenantRequest): Promise<Tenant> => {
     const res = await axiosClient.put<Tenant>(`/tenants/${id}`, data);
+    return res.data;
+  },
+
+  updateFeatures: async (enabledFeatures: FeatureKey[]): Promise<Tenant> => {
+    const res = await axiosClient.patch<Tenant>(`/tenants/my/features`, { enabledFeatures });
     return res.data;
   },
 

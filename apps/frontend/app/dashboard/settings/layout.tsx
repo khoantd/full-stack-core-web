@@ -24,6 +24,10 @@ const sidebarNavItems = [
     href: "/dashboard/settings/organization"
   },
   {
+    title: "Features",
+    href: "/dashboard/settings/features"
+  },
+  {
     title: "Bank Accounts",
     href: "/dashboard/settings/bank-accounts"
   },

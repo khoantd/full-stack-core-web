@@ -22,6 +22,7 @@ import { LandingModule } from './landing/landing.module';
 import { LeadSparkModule } from './leadspark/leadspark.module';
 import { ServiceModule } from './service/service.module';
 import { TenantModule } from './tenant/tenant.module';
+import { VietQRModule } from './vietqr/vietqr.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { TenantModule } from './tenant/tenant.module';
     LeadSparkModule,
     ServiceModule,
     TenantModule,
+    VietQRModule,
   ],
   controllers: [AppController],
   providers: [AppService],

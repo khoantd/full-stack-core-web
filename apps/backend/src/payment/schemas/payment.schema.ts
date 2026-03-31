@@ -8,6 +8,7 @@ export enum PaymentMethod {
   CASH = 'CASH',
   BANK_TRANSFER = 'BANK_TRANSFER',
   MOMO = 'MOMO',
+  VIET_QR = 'VIET_QR',
 }
 
 export enum PaymentStatus {
@@ -16,8 +17,21 @@ export enum PaymentStatus {
   FAILED = 'FAILED',
 }
 
+export interface VietQRSnapshot {
+  bankCode: string;
+  accountNumber: string;
+  accountName?: string;
+  amount?: number;
+  description?: string;
+  qrString: string;
+}
+
 @Schema({ timestamps: true })
 export class Payment {
+  /** Tenant scoping — every payment belongs to a tenant */
+  @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
+  tenantId?: Types.ObjectId;
+
   @Prop({ type: Types.ObjectId, ref: 'Event', required: true })
   event: Types.ObjectId;
 
@@ -41,6 +55,10 @@ export class Payment {
 
   @Prop({ required: false })
   paidAt?: Date;
+
+  /** Snapshot of VietQR data at time of payment creation */
+  @Prop({ type: Object, required: false })
+  vietQR?: VietQRSnapshot;
 }
 
 export const PaymentSchema = SchemaFactory.createForClass(Payment);

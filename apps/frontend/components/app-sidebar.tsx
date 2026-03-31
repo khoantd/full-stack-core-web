@@ -5,23 +5,17 @@ import {
   IconBox,
   IconBuilding,
   IconCalendar,
-  IconCamera,
   IconCategory,
   IconChartBar,
-  IconCircle,
+  IconClipboardList,
   IconCreditCard,
   IconDashboard,
-  IconFileAi,
-  IconFileDescription,
-  IconFolder,
   IconListDetails,
   IconNews,
-  IconUsers,
-  IconCar,
   IconPhoto,
-  IconClipboardList,
   IconBriefcase,
   IconChevronDown,
+  IconCar,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -47,21 +41,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
+import type { FeatureKey } from "@/types/tenant.type"
 
-const navMain = [
-  { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-  { title: "Users", url: "/dashboard/users", icon: IconListDetails },
-  { title: "Blogs", url: "/dashboard/blogs", icon: IconNews },
-  { title: "Services", url: "/dashboard/services", icon: IconBriefcase },
-  { title: "Category Products", url: "/dashboard/category-products", icon: IconCategory },
-  { title: "Products", url: "/dashboard/products", icon: IconBox },
-  { title: "Events", url: "/dashboard/events", icon: IconCalendar },
-  { title: "Payments", url: "/dashboard/payments", icon: IconCreditCard },
-  { title: "Automakers", url: "/dashboard/automakers", icon: IconCar },
-  { title: "Media Library", url: "/dashboard/media", icon: IconPhoto },
-  { title: "Audit Log", url: "/dashboard/audit-logs", icon: IconClipboardList },
-  { title: "Settings", url: "/dashboard/settings", icon: IconChartBar },
-];
+// Map feature keys to their nav items
+const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: React.ElementType }> = {
+  blogs: { title: "Blogs", url: "/dashboard/blogs", icon: IconNews },
+  services: { title: "Services", url: "/dashboard/services", icon: IconBriefcase },
+  events: { title: "Events", url: "/dashboard/events", icon: IconCalendar },
+  categories: { title: "Categories", url: "/dashboard/category-products", icon: IconCategory },
+  products: { title: "Products", url: "/dashboard/products", icon: IconBox },
+  automakers: { title: "Automakers", url: "/dashboard/automakers", icon: IconCar },
+  payments: { title: "Payments", url: "/dashboard/payments", icon: IconCreditCard },
+};
 
 function useCurrentUser() {
   const [user, setUser] = React.useState({ name: "User", email: "", avatar: "" });
@@ -132,6 +123,60 @@ function TenantSwitcher() {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentUser = useCurrentUser();
+  const { data: tenants } = useTenants();
+  const [currentTenantId, setCurrentTenantId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const token = getStoredToken();
+    if (token) setCurrentTenantId(getTenantIdFromToken(token));
+  }, []);
+
+  const enabledFeatures = React.useMemo(() => {
+    const tenant = tenants?.find((t) => t._id === currentTenantId);
+    const features = tenant?.enabledFeatures;
+    // Fall back to all features if not set (existing tenants before migration)
+    return new Set<FeatureKey>(features?.length ? features : Object.keys(FEATURE_NAV_MAP) as FeatureKey[]);
+  }, [tenants, currentTenantId]);
+
+  const navSections = React.useMemo(() => [
+    {
+      label: "Overview",
+      items: [
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Users", url: "/dashboard/users", icon: IconListDetails },
+      ],
+    },
+    {
+      label: "Content",
+      items: [
+        ...(enabledFeatures.has("blogs") ? [FEATURE_NAV_MAP.blogs] : []),
+        ...(enabledFeatures.has("services") ? [FEATURE_NAV_MAP.services] : []),
+        ...(enabledFeatures.has("events") ? [FEATURE_NAV_MAP.events] : []),
+        { title: "Media Library", url: "/dashboard/media", icon: IconPhoto },
+      ],
+    },
+    {
+      label: "Catalog",
+      items: [
+        ...(enabledFeatures.has("categories") ? [FEATURE_NAV_MAP.categories] : []),
+        ...(enabledFeatures.has("products") ? [FEATURE_NAV_MAP.products] : []),
+        ...(enabledFeatures.has("automakers") ? [FEATURE_NAV_MAP.automakers] : []),
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        ...(enabledFeatures.has("payments") ? [FEATURE_NAV_MAP.payments] : []),
+      ],
+    },
+    {
+      label: "System",
+      items: [
+        { title: "Audit Log", url: "/dashboard/audit-logs", icon: IconClipboardList },
+        { title: "Settings", url: "/dashboard/settings", icon: IconChartBar },
+      ],
+    },
+  ].filter((section) => section.items.length > 0), [enabledFeatures]);
 
   return (
     <Sidebar collapsible="icon" forceDesktop {...props}>
@@ -143,7 +188,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} />
+        <NavMain sections={navSections} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={currentUser} />
