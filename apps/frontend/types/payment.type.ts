@@ -2,12 +2,22 @@ export enum PaymentMethod {
   CASH = 'CASH',
   BANK_TRANSFER = 'BANK_TRANSFER',
   MOMO = 'MOMO',
+  VIET_QR = 'VIET_QR',
 }
 
 export enum PaymentStatus {
   PENDING = 'PENDING',
   SUCCESS = 'SUCCESS',
   FAILED = 'FAILED',
+}
+
+export interface VietQRSnapshot {
+  bankCode: string;
+  accountNumber: string;
+  accountName?: string;
+  amount?: number;
+  description?: string;
+  qrString: string;
 }
 
 export interface PaymentEvent {
@@ -18,6 +28,7 @@ export interface PaymentEvent {
 
 export interface Payment {
   _id: string;
+  tenantId?: string;
   event: PaymentEvent | string;
   userName: string;
   userEmail: string;
@@ -26,6 +37,7 @@ export interface Payment {
   status: PaymentStatus;
   transactionId?: string;
   paidAt?: string;
+  vietQR?: VietQRSnapshot;
   createdAt: string;
   updatedAt: string;
 }

@@ -22,7 +22,7 @@ const paymentSchema = z.object({
   userName: z.string().min(1, "User name is required"),
   userEmail: z.string().email("Invalid email"),
   amount: z.coerce.number().min(0, "Amount must be >= 0"),
-  paymentMethod: z.enum(["CASH", "BANK_TRANSFER", "MOMO"]),
+  paymentMethod: z.enum(["CASH", "BANK_TRANSFER", "MOMO", "VIET_QR"]),
   status: z.enum(["PENDING", "SUCCESS", "FAILED"]).optional(),
   transactionId: z.string().optional(),
 });
@@ -164,6 +164,7 @@ export function PaymentForm({
             <SelectItem value={PaymentMethod.CASH}>Cash</SelectItem>
             <SelectItem value={PaymentMethod.BANK_TRANSFER}>Bank Transfer</SelectItem>
             <SelectItem value={PaymentMethod.MOMO}>MoMo</SelectItem>
+            <SelectItem value={PaymentMethod.VIET_QR}>VietQR</SelectItem>
           </SelectContent>
         </Select>
         {errors.paymentMethod && (

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { PaymentForm } from "./PaymentForm";
 import { Payment, PaymentStatus, PaymentMethod, PaymentEvent } from "@/types/payment.type";
 import { Event } from "@/types/event.type";
+import { VietQRDisplay } from "@/components/VietQRDisplay";
 
 interface PaymentDialogProps {
   open: boolean;
@@ -103,6 +104,8 @@ export function PaymentDetailDialog({
         return <Badge variant="outline">Bank Transfer</Badge>;
       case PaymentMethod.MOMO:
         return <Badge variant="outline">MoMo</Badge>;
+      case PaymentMethod.VIET_QR:
+        return <Badge variant="outline" className="border-blue-500 text-blue-600">VietQR</Badge>;
       default:
         return <Badge variant="outline">{method}</Badge>;
     }
@@ -215,6 +218,16 @@ export function PaymentDetailDialog({
                 </div>
               </div>
             </div>
+
+            {/* VietQR section */}
+            {payment.vietQR && (
+              <div className="pt-4 border-t">
+                <h3 className="text-sm font-medium text-muted-foreground mb-3">VietQR Payment Code</h3>
+                <div className="flex justify-center">
+                  <VietQRDisplay vietQR={payment.vietQR} size={220} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

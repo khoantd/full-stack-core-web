@@ -23,6 +23,10 @@ const sidebarNavItems = [
     title: "Organization",
     href: "/dashboard/settings/organization"
   },
+  {
+    title: "Bank Accounts",
+    href: "/dashboard/settings/bank-accounts"
+  },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
