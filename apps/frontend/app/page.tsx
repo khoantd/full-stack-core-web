@@ -10,6 +10,7 @@ import { ContactSection } from "@/components/landing/ContactSection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { getLandingData } from "@/services/landing.service";
 import { LandingThemeProvider } from "@/context/ThemeContext";
+import { THEMES, DEFAULT_THEME } from "@/lib/themes";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -19,24 +20,32 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { products, categories } = await getLandingData();
+  const { products, categories, config = {} } = await getLandingData();
+
+  // Resolve theme vars server-side to avoid FOUC
+  const themeKey = config.theme ?? DEFAULT_THEME;
+  const themeVars = THEMES.find((t) => t.key === themeKey)?.vars ?? THEMES[0].vars;
+  const inlineCss = `:root{${Object.entries(themeVars).map(([k, v]) => `${k}:${v}`).join(';')}}`;
 
   return (
-    <LandingThemeProvider>
-      <div className="min-h-screen bg-[#0d0d0d]">
-        <LandingNav />
-        <main>
-          <HeroSection />
-          <ProductCategories categories={categories} />
-          <StatsSection />
-          <AboutSection />
-          <FeaturedProducts products={products} />
-          <TestimonialsSection />
-          <BlogSection />
-          <ContactSection />
-          <LandingFooter />
-        </main>
-      </div>
-    </LandingThemeProvider>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: inlineCss }} />
+      <LandingThemeProvider initialTheme={themeKey}>
+        <div className="min-h-screen bg-[#0d0d0d]">
+          <LandingNav config={config} />
+          <main>
+            {config.heroEnabled !== false && <HeroSection config={config} />}
+            {config.categoriesEnabled !== false && <ProductCategories categories={categories} />}
+            {config.statsEnabled !== false && <StatsSection />}
+            {config.aboutEnabled !== false && <AboutSection config={config} />}
+            {config.productsEnabled !== false && <FeaturedProducts products={products} />}
+            {config.testimonialsEnabled !== false && <TestimonialsSection />}
+            {config.blogsEnabled !== false && <BlogSection />}
+            {config.contactEnabled !== false && <ContactSection config={config} />}
+          </main>
+          <LandingFooter config={config} />
+        </div>
+      </LandingThemeProvider>
+    </>
   );
 }

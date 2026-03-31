@@ -5,6 +5,7 @@ import {
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateFeaturesDto } from './dto/update-features.dto';
+import { UpdateLandingConfigDto } from './dto/update-landing-config.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/guards/roles.decorator';
@@ -44,6 +45,13 @@ export class TenantController {
   updateMyFeatures(@Req() req: any, @Body() dto: UpdateFeaturesDto) {
     const tenantId = req.user?.tenantId;
     return this.tenantService.update(tenantId, { enabledFeatures: dto.enabledFeatures });
+  }
+
+  @Patch('my/landing')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  updateMyLanding(@Req() req: any, @Body() dto: UpdateLandingConfigDto) {
+    const tenantId = req.user?.tenantId;
+    return this.tenantService.updateLandingConfig(tenantId, dto);
   }
 
   @Delete(':id')

@@ -22,11 +22,15 @@ export class RolesGuard implements CanActivate {
     if (!user || !user.role) {
       throw new ForbiddenException('Bạn không có quyền truy cập !');
     }
-    
-    // Check if user has required role
-    const hasRole = requiredRoles.includes(user.role);
-    if (!hasRole) {
-         throw new ForbiddenException('Bạn không có quyền truy cập !');
+
+    // user.role may be a plain string (from JWT) or a populated object { name: string }
+    const roleName: string =
+      typeof user.role === 'object' && user.role !== null
+        ? (user.role as { name?: string }).name ?? ''
+        : String(user.role);
+
+    if (!requiredRoles.includes(roleName)) {
+      throw new ForbiddenException('Bạn không có quyền truy cập !');
     }
     
     return true;

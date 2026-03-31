@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Youtube } from "lucide-react";
+import type { LandingConfig } from "@/services/landing.service";
 
 const QUICK_LINKS = [
   { label: "Home", href: "/" },
@@ -22,7 +23,22 @@ const SERVICES = [
   "Accessories",
 ];
 
-export function LandingFooter() {
+interface Props {
+  config?: LandingConfig;
+}
+
+export function LandingFooter({ config }: Props) {
+  const phone = config?.phone || "+1 543-705-8174";
+  const email = config?.email || "support@carparts.com";
+  const address = config?.address || "123 Auto Drive, Detroit, MI 48201";
+  const siteName = config?.siteName || "CarParts";
+
+  const socials = [
+    { Icon: Facebook, href: config?.facebook || "https://facebook.com", label: "Facebook" },
+    { Icon: Twitter, href: config?.twitter || "https://twitter.com", label: "Twitter" },
+    { Icon: Linkedin, href: config?.linkedin || "https://linkedin.com", label: "LinkedIn" },
+    { Icon: Youtube, href: config?.youtube || "https://youtube.com", label: "YouTube" },
+  ];
   return (
     <footer className="bg-[#0a0a0a] text-gray-400">
       {/* Main footer */}
@@ -31,18 +47,13 @@ export function LandingFooter() {
           {/* Brand */}
           <div>
             <Link href="/" className="font-extrabold text-2xl text-white mb-4 inline-block">
-              <span style={{ color: "var(--accent-500)" }}>Car</span>Parts
+              {siteName}
             </Link>
             <p className="text-sm leading-relaxed mt-4 mb-6">
               Your trusted source for quality auto parts. Serving customers nationwide with genuine and aftermarket components since 2009.
             </p>
             <div className="flex items-center gap-3">
-              {[
-                { Icon: Facebook, href: "https://facebook.com", label: "Facebook" },
-                { Icon: Twitter, href: "https://twitter.com", label: "Twitter" },
-                { Icon: Linkedin, href: "https://linkedin.com", label: "LinkedIn" },
-                { Icon: Youtube, href: "https://youtube.com", label: "YouTube" },
-              ].map(({ Icon, href, label }) => (
+              {socials.map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
@@ -105,15 +116,15 @@ export function LandingFooter() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3 text-sm">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "var(--accent-500)" }} />
-                123 Auto Drive, Detroit, MI 48201
+                {address}
               </li>
               <li className="flex items-center gap-3 text-sm">
                 <Phone className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
-                +1 543-705-8174
+                {phone}
               </li>
               <li className="flex items-center gap-3 text-sm">
                 <Mail className="h-4 w-4 shrink-0" style={{ color: "var(--accent-500)" }} />
-                support@carparts.com
+                {email}
               </li>
             </ul>
           </div>
@@ -123,7 +134,7 @@ export function LandingFooter() {
       {/* Bottom bar */}
       <div className="border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-600">
-          <span>&copy; {new Date().getFullYear()} CarParts. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} {siteName}. All rights reserved.</span>
           <div className="flex gap-4">
             <Link href="/" className="hover:text-gray-300 transition">Privacy Policy</Link>
             <Link href="/" className="hover:text-gray-300 transition">Terms of Service</Link>

@@ -31,6 +31,14 @@ const sidebarNavItems = [
     title: "Bank Accounts",
     href: "/dashboard/settings/bank-accounts"
   },
+  {
+    title: "Landing Page",
+    href: "/dashboard/settings/landing"
+  },
+  {
+    title: "API Keys",
+    href: "/dashboard/settings/api-keys"
+  },
 ];
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {

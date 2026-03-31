@@ -1,15 +1,19 @@
 "use client";
 
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import type { LandingConfig } from "@/services/landing.service";
 
-const CONTACT_INFO = [
-  { icon: Phone, label: "Phone", value: "+1 543-705-8174" },
-  { icon: Mail, label: "Email", value: "support@carparts.com" },
-  { icon: MapPin, label: "Address", value: "123 Auto Drive, Detroit, MI 48201" },
-  { icon: Clock, label: "Hours", value: "Mon–Sat: 8am – 6pm" },
-];
+interface Props {
+  config?: LandingConfig;
+}
 
-export function ContactSection() {
+export function ContactSection({ config }: Props) {
+  const contactInfo = [
+    { icon: Phone, label: "Phone", value: config?.phone || "+1 543-705-8174" },
+    { icon: Mail, label: "Email", value: config?.email || "support@carparts.com" },
+    { icon: MapPin, label: "Address", value: config?.address || "123 Auto Drive, Detroit, MI 48201" },
+    { icon: Clock, label: "Hours", value: config?.hours || "Mon–Sat: 8am – 6pm" },
+  ];
   return (
     <section id="contact" className="py-20 bg-[#111111]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -26,7 +30,7 @@ export function ContactSection() {
               Have a question about a part or need help with your order? Our team is ready to assist you.
             </p>
             <div className="space-y-6">
-              {CONTACT_INFO.map(({ icon: Icon, label, value }) => (
+              {contactInfo.map(({ icon: Icon, label, value }) => (
                 <div key={label} className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded flex items-center justify-center shrink-0" style={{ backgroundColor: "color-mix(in srgb, var(--accent-500) 10%, transparent)" }}>
                     <Icon className="h-5 w-5" style={{ color: "var(--accent-500)" }} />

@@ -23,6 +23,8 @@ import { LeadSparkModule } from './leadspark/leadspark.module';
 import { ServiceModule } from './service/service.module';
 import { TenantModule } from './tenant/tenant.module';
 import { VietQRModule } from './vietqr/vietqr.module';
+import { ApiKeyModule } from './api-key/api-key.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -33,7 +35,13 @@ import { VietQRModule } from './vietqr/vietqr.module';
       cache: true,
       load: [config]
     }),
-    MongooseModule.forRoot('mongodb://admin:admin123@72.61.125.140:27017/core-web-cms?authSource=admin'),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGO_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (config) => ({
@@ -60,6 +68,8 @@ import { VietQRModule } from './vietqr/vietqr.module';
     ServiceModule,
     TenantModule,
     VietQRModule,
+    ApiKeyModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

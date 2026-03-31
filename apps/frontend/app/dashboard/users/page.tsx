@@ -40,14 +40,22 @@ function UsersPageContent() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Check role from JWT before fetching
-  const token = getStoredToken();
-  const currentUser = token ? getUserFromToken(token) : null;
-  const userRole: string = currentUser?.role ?? "";
-  const canAccess = ALLOWED_ROLES.includes(userRole);
+  // Check role from JWT before fetching — null = not yet hydrated
+  const [canAccess, setCanAccess] = useState<boolean | null>(null);
+  useEffect(() => {
+    const token = getStoredToken();
+    const currentUser = token ? getUserFromToken(token) : null;
+    // role may be a string or an object { name: string }
+    const rawRole = currentUser?.role;
+    const userRole: string =
+      rawRole && typeof rawRole === "object"
+        ? (rawRole as { name?: string }).name ?? ""
+        : String(rawRole ?? "");
+    setCanAccess(ALLOWED_ROLES.includes(userRole.toLowerCase()));
+  }, []);
 
   const { data, isLoading, isError, error, refetch } = useUsers(
-    canAccess ? { page, limit, search: debouncedSearch || undefined } : { enabled: false }
+    canAccess === true ? { page, limit, search: debouncedSearch || undefined } : { enabled: false }
   );
 
   const toApiUser = (user: User | null): ApiUser | null => {
@@ -98,6 +106,10 @@ function UsersPageContent() {
     onEdit: handleEdit,
     onDelete: handleDelete,
   };
+
+  if (canAccess === null) {
+    return null; // still hydrating — avoid flash of error
+  }
 
   if (!canAccess) {
     return (

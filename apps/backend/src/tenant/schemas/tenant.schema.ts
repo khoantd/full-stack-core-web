@@ -15,6 +15,28 @@ export const ALL_FEATURES = [
 
 export type FeatureKey = typeof ALL_FEATURES[number];
 
+export class LandingConfig {
+  siteName?: string;
+  tagline?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  hours?: string;
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  theme?: string;
+  heroEnabled?: boolean;
+  categoriesEnabled?: boolean;
+  statsEnabled?: boolean;
+  aboutEnabled?: boolean;
+  productsEnabled?: boolean;
+  testimonialsEnabled?: boolean;
+  blogsEnabled?: boolean;
+  contactEnabled?: boolean;
+}
+
 @Schema({ collection: 'tenants', timestamps: true })
 export class Tenant extends Document {
   @Prop({ required: true })
@@ -37,6 +59,9 @@ export class Tenant extends Document {
 
   @Prop({ type: [String], default: [...ALL_FEATURES] })
   enabledFeatures: FeatureKey[];
+
+  @Prop({ type: Object, default: {} })
+  landingConfig: LandingConfig;
 
   createdAt: Date;
   updatedAt: Date;

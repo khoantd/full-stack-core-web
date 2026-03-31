@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import type { LandingConfig } from "@/services/landing.service";
 
 const SLIDES = [
   {
@@ -31,7 +32,11 @@ const SLIDES = [
   },
 ];
 
-export function HeroSection() {
+interface Props {
+  config?: LandingConfig;
+}
+
+export function HeroSection({ config }: Props) {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -45,6 +50,8 @@ export function HeroSection() {
   const next = () => setCurrent((c) => (c + 1) % SLIDES.length);
 
   const slide = SLIDES[current];
+  // Override first slide tag with CMS tagline if set
+  const tag = current === 0 && config?.tagline ? config.tagline : slide.tag;
 
   return (
     <section className="relative bg-[#0d0d0d] text-white overflow-hidden min-h-[600px] flex items-center">
@@ -61,7 +68,7 @@ export function HeroSection() {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
         <div className="max-w-2xl">
           <p className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--accent-500)" }}>
-            {slide.tag}
+            {tag}
           </p>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 whitespace-pre-line">
             {slide.title}

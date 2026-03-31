@@ -15,19 +15,41 @@ export interface LandingProduct {
   category?: { _id: string; name: string } | null;
 }
 
+export interface LandingConfig {
+  siteName?: string;
+  tagline?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  hours?: string;
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  theme?: string;
+  heroEnabled?: boolean;
+  categoriesEnabled?: boolean;
+  statsEnabled?: boolean;
+  aboutEnabled?: boolean;
+  productsEnabled?: boolean;
+  testimonialsEnabled?: boolean;
+  blogsEnabled?: boolean;
+  contactEnabled?: boolean;
+}
+
 export interface LandingData {
   products: LandingProduct[];
   categories: LandingCategory[];
+  config: LandingConfig;
 }
 
 export async function getLandingData(): Promise<LandingData> {
   const res = await fetch(`${API_URL}/landing`, {
-    next: { revalidate: 60 }, // ISR: revalidate every 60s
+    next: { revalidate: 10 }, // ISR: revalidate every 10s as fallback
   });
 
   if (!res.ok) {
-    // Fallback to empty arrays on error — components handle empty state
-    return { products: [], categories: [] };
+    return { products: [], categories: [], config: {} };
   }
 
   return res.json();

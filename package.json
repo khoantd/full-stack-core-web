@@ -9,10 +9,6 @@
     "build:backend": "pnpm --dir apps/backend build",
     "build": "pnpm build:frontend && pnpm build:backend"
   },
-  "dependencies": {
-    "@nestjs/platform-socket.io": "^10.4.22",
-    "@nestjs/websockets": "^10.4.22"
-  },
   "devDependencies": {
     "concurrently": "^9.2.1"
   }

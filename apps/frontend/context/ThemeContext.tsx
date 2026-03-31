@@ -13,10 +13,15 @@ const ThemeContext = createContext<ThemeContextValue>({
   setTheme: () => {},
 });
 
-export function LandingThemeProvider({ children }: { children: React.ReactNode }) {
+export function LandingThemeProvider({
+  children,
+  initialTheme,
+}: {
+  children: React.ReactNode;
+  initialTheme?: string;
+}) {
   const [theme, setThemeState] = useState<ThemeKey>(DEFAULT_THEME);
 
-  // Apply CSS vars to :root
   function applyTheme(key: ThemeKey) {
     const found = THEMES.find((t) => t.key === key);
     if (!found) return;
@@ -26,13 +31,19 @@ export function LandingThemeProvider({ children }: { children: React.ReactNode }
     });
   }
 
-  // Load from localStorage on mount
   useEffect(() => {
-    const stored = localStorage.getItem("landing-theme") as ThemeKey | null;
-    const initial = stored && THEMES.find((t) => t.key === stored) ? stored : DEFAULT_THEME;
+    // Server-provided theme always wins; localStorage is only a fallback when no server theme is set
+    const serverTheme = initialTheme && THEMES.find((t) => t.key === initialTheme)
+      ? (initialTheme as ThemeKey)
+      : null;
+    const stored = !serverTheme
+      ? (localStorage.getItem("landing-theme") as ThemeKey | null)
+      : null;
+    const initial = serverTheme ?? (stored && THEMES.find((t) => t.key === stored) ? stored : DEFAULT_THEME);
     setThemeState(initial);
     applyTheme(initial);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTheme]);
 
   function setTheme(key: ThemeKey) {
     setThemeState(key);

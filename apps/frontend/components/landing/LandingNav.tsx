@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Menu, X, LayoutDashboard, Phone, Mail, Facebook, Twitter, Linkedin, Youtube } from "lucide-react";
 import { LoginModal } from "@/components/LoginModal";
 import { getStoredToken } from "@/api/axiosClient";
-import { ThemeSettingsPanel } from "@/components/landing/ThemeSettingsPanel";
+import type { LandingConfig } from "@/services/landing.service";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -17,11 +17,19 @@ const NAV_LINKS = [
   { label: "Contact", href: "/#contact" },
 ];
 
-export function LandingNav() {
+interface Props {
+  config?: LandingConfig;
+}
+
+export function LandingNav({ config }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [hasToken, setHasToken] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const phone = config?.phone || "+1 543-705-8174";
+  const email = config?.email || "support@carparts.com";
+  const siteName = config?.siteName || "CarParts";
 
   useEffect(() => {
     setHasToken(!!getStoredToken());
@@ -38,27 +46,27 @@ export function LandingNav() {
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-1.5">
               <Phone className="h-3.5 w-3.5" style={{ color: "var(--accent-500)" }} />
-              +1 543-705-8174
+              {phone}
             </span>
             <span className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5" style={{ color: "var(--accent-500)" }} />
-              support@carparts.com
+              {email}
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="https://facebook.com" aria-label="Facebook" className="hover:text-white transition cursor-pointer" style={{ color: undefined }}
+            <a href={config?.facebook || "https://facebook.com"} aria-label="Facebook" className="hover:text-white transition cursor-pointer" style={{ color: undefined }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-500)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "")}
             ><Facebook className="h-3.5 w-3.5" /></a>
-            <a href="https://twitter.com" aria-label="Twitter" className="hover:text-white transition cursor-pointer"
+            <a href={config?.twitter || "https://twitter.com"} aria-label="Twitter" className="hover:text-white transition cursor-pointer"
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-500)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "")}
             ><Twitter className="h-3.5 w-3.5" /></a>
-            <a href="https://linkedin.com" aria-label="LinkedIn" className="hover:text-white transition cursor-pointer"
+            <a href={config?.linkedin || "https://linkedin.com"} aria-label="LinkedIn" className="hover:text-white transition cursor-pointer"
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-500)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "")}
             ><Linkedin className="h-3.5 w-3.5" /></a>
-            <a href="https://youtube.com" aria-label="YouTube" className="hover:text-white transition cursor-pointer"
+            <a href={config?.youtube || "https://youtube.com"} aria-label="YouTube" className="hover:text-white transition cursor-pointer"
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-500)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "")}
             ><Youtube className="h-3.5 w-3.5" /></a>
@@ -76,7 +84,7 @@ export function LandingNav() {
       >
         <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl text-white">
-            <span style={{ color: "var(--accent-500)" }}>Car</span>Parts
+            {siteName}
           </Link>
 
           {/* Desktop nav */}
@@ -95,7 +103,6 @@ export function LandingNav() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <ThemeSettingsPanel />
             {hasToken ? (
               <Link
                 href="/dashboard"

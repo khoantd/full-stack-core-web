@@ -54,7 +54,7 @@ export class UserService {
     const filter: any = {};
 
     // Scope to tenant
-    if (query.tenantId) {
+    if (query.tenantId && query.tenantId !== 'undefined' && Types.ObjectId.isValid(query.tenantId)) {
       filter.tenantId = new Types.ObjectId(query.tenantId);
     }
 

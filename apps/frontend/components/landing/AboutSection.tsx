@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { CheckCircle, ArrowRight } from "lucide-react";
+import type { LandingConfig } from "@/services/landing.service";
 
 const FEATURES = [
   "Genuine OEM and aftermarket parts",
@@ -12,7 +13,12 @@ const FEATURES = [
   "Trusted by 50,000+ customers",
 ];
 
-export function AboutSection() {
+interface Props {
+  config?: LandingConfig;
+}
+
+export function AboutSection({ config }: Props) {
+  const siteName = config?.siteName || "Car Parts";
   return (
     <section id="about" className="py-20 bg-[#0d0d0d]">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -41,7 +47,7 @@ export function AboutSection() {
               Your Trusted Source for Quality Auto Parts
             </h2>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              With over 15 years in the industry, Car Parts has built a reputation for delivering
+              With over 15 years in the industry, {siteName} has built a reputation for delivering
               genuine and high-quality aftermarket components. We serve individual car owners,
               mechanics, and fleet managers across the country.
             </p>

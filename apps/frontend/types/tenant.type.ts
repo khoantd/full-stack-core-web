@@ -10,6 +10,28 @@ export const ALL_FEATURES = [
 
 export type FeatureKey = typeof ALL_FEATURES[number];
 
+export interface LandingConfig {
+  siteName?: string;
+  tagline?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  hours?: string;
+  facebook?: string;
+  twitter?: string;
+  linkedin?: string;
+  youtube?: string;
+  theme?: string;
+  heroEnabled?: boolean;
+  categoriesEnabled?: boolean;
+  statsEnabled?: boolean;
+  aboutEnabled?: boolean;
+  productsEnabled?: boolean;
+  testimonialsEnabled?: boolean;
+  blogsEnabled?: boolean;
+  contactEnabled?: boolean;
+}
+
 export interface Tenant {
   _id: string;
   name: string;
@@ -19,6 +41,7 @@ export interface Tenant {
   status: string;
   plan?: string;
   enabledFeatures: FeatureKey[];
+  landingConfig: LandingConfig;
   createdAt: string;
   updatedAt: string;
 }

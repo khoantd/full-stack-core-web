@@ -4,6 +4,7 @@ import { LandingController } from './landing.controller';
 import { LandingService } from './landing.service';
 import { Product, ProductSchema } from '../product/schemas/product.schema';
 import { CategoryProduct, CategoryProductSchema } from '../category-product/schemas/category-product.schema';
+import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { CategoryProduct, CategoryProductSchema } from '../category-product/sche
       { name: Product.name, schema: ProductSchema },
       { name: CategoryProduct.name, schema: CategoryProductSchema },
     ]),
+    TenantModule,
   ],
   controllers: [LandingController],
   providers: [LandingService],
