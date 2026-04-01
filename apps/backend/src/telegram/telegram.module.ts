@@ -8,6 +8,10 @@ import { PaymentModule } from '../payment/payment.module';
 import { TelegramService } from './telegram.service';
 import { TelegramUpdate } from './telegram.update';
 
+/** Valid-shaped placeholder so Telegraf can be constructed when no token is set (no network calls if launch is disabled). */
+const TELEGRAM_DISABLED_PLACEHOLDER_TOKEN =
+  '000000000:AA00000000000000000000000000000000';
+
 @Module({
   imports: [
     AutomakerModule,
@@ -16,15 +20,26 @@ import { TelegramUpdate } from './telegram.update';
     forwardRef(() => PaymentModule),
     TelegrafModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        token:
-          configService.get<string>('TELEGRAM_BOT_TOKEN') ||
-          '8602829705:AAHemfHptO9ivMlXYNVfxm4U5tO7CJeMp4A',
-        launchOptions: configService.get<string>('TELEGRAM_WEBHOOK_URL')
-          ? undefined
-          : { dropPendingUpdates: true },
-        include: [TelegramModule],
-      }),
+      useFactory: (configService: ConfigService) => {
+        const token = (configService.get<string>('TELEGRAM_BOT_TOKEN') ?? '').trim();
+        const skipLaunch =
+          configService.get<string>('TELEGRAM_SKIP_LAUNCH') === 'true' ||
+          configService.get<string>('TELEGRAM_SKIP_LAUNCH') === '1';
+
+        // bot.launch() always calls getMe(); skip when offline / no token to avoid ETIMEDOUT crashing the process.
+        const launchOptions =
+          !token || skipLaunch
+            ? false
+            : configService.get<string>('TELEGRAM_WEBHOOK_URL')
+              ? undefined
+              : { dropPendingUpdates: true };
+
+        return {
+          token: token || TELEGRAM_DISABLED_PLACEHOLDER_TOKEN,
+          launchOptions,
+          include: [TelegramModule],
+        };
+      },
       inject: [ConfigService],
     }),
   ],

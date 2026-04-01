@@ -1,15 +1,19 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { User } from '../auth/schemas/user.schema';
 import { Tenant, TenantDocument, FeatureKey, LandingConfig } from './schemas/tenant.schema';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 
 type UpdateTenantPayload = Partial<CreateTenantDto> & { enabledFeatures?: FeatureKey[] };
 
+export type ResolvedTenantContext = { tenant: TenantDocument; effectiveTenantId: string };
+
 @Injectable()
 export class TenantService {
   constructor(
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async create(dto: CreateTenantDto): Promise<Tenant> {
@@ -29,6 +33,49 @@ export class TenantService {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Resolves the tenant for an authenticated request: JWT tenantId first, then the user's
+   * stored tenantId, then assigns the oldest tenant (same repair strategy as login) when both are stale.
+   */
+  async resolveActiveTenantForRequest(
+    jwtTenantId: string | undefined,
+    userEmail: string | undefined,
+  ): Promise<ResolvedTenantContext | null> {
+    const tryJwt =
+      jwtTenantId &&
+      jwtTenantId !== 'undefined' &&
+      Types.ObjectId.isValid(jwtTenantId);
+    if (tryJwt) {
+      const fromJwt = await this.tenantModel.findById(jwtTenantId).exec();
+      if (fromJwt) {
+        return { tenant: fromJwt, effectiveTenantId: (fromJwt._id as Types.ObjectId).toString() };
+      }
+    }
+
+    if (!userEmail) return null;
+
+    const userDoc = await this.userModel.findOne({ email: userEmail }).exec();
+    if (!userDoc) return null;
+
+    const dbTid = userDoc.tenantId ? (userDoc.tenantId as Types.ObjectId).toString() : null;
+    if (dbTid && Types.ObjectId.isValid(dbTid)) {
+      const fromUser = await this.tenantModel.findById(dbTid).exec();
+      if (fromUser) {
+        return { tenant: fromUser, effectiveTenantId: dbTid };
+      }
+    }
+
+    const defaultTenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
+    if (!defaultTenant) return null;
+
+    userDoc.tenantId = defaultTenant._id as Types.ObjectId;
+    await userDoc.save();
+    return {
+      tenant: defaultTenant,
+      effectiveTenantId: (defaultTenant._id as Types.ObjectId).toString(),
+    };
   }
 
   async findBySlug(slug: string): Promise<Tenant | null> {
@@ -53,13 +100,35 @@ export class TenantService {
     return { message: 'Tenant deleted successfully' };
   }
 
-  async updateLandingConfig(id: string, config: LandingConfig): Promise<Tenant> {
-    const tenant = await this.tenantModel.findByIdAndUpdate(
-      id,
-      { $set: { landingConfig: config } },
-      { new: true },
-    ).exec();
-    if (!tenant) throw new NotFoundException(`Tenant not found`);
+  /**
+   * Merges into existing landingConfig so PATCH bodies that omit keys (e.g. partial forms)
+   * do not wipe the rest of the stored config.
+   */
+  async updateLandingConfig(id: string, config: Partial<LandingConfig>): Promise<Tenant> {
+    if (!id || id === 'undefined' || !Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Missing or invalid tenant');
+    }
+    const tenant = await this.tenantModel.findById(id).exec();
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const prev: Record<string, unknown> =
+      tenant.landingConfig &&
+      typeof tenant.landingConfig === 'object' &&
+      !Array.isArray(tenant.landingConfig)
+        ? { ...(tenant.landingConfig as Record<string, unknown>) }
+        : {};
+
+    const incoming = config as Record<string, unknown>;
+    const merged: Record<string, unknown> = { ...prev };
+    for (const [key, val] of Object.entries(incoming)) {
+      if (val !== undefined) {
+        merged[key] = val;
+      }
+    }
+
+    tenant.landingConfig = merged as unknown as LandingConfig;
+    tenant.markModified('landingConfig');
+    await tenant.save();
     return tenant;
   }
 }

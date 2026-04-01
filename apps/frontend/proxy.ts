@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
+import { tenantSlugFromRequest } from '@/lib/tenant-slug-from-host';
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ['/dashboard'];
@@ -10,30 +9,8 @@ const PROTECTED_PREFIXES = ['/dashboard'];
 const GUEST_ONLY = ['/login', '/register'];
 
 function extractSubdomain(request: NextRequest): string | null {
-  const url = request.url;
   const host = request.headers.get('host') || '';
-  const hostname = host.split(':')[0];
-
-  if (url.includes('localhost') || url.includes('127.0.0.1')) {
-    const match = url.match(/http:\/\/([^.]+)\.localhost/);
-    if (match?.[1]) return match[1];
-    if (hostname.includes('.localhost')) return hostname.split('.')[0];
-    return null;
-  }
-
-  const rootHostname = ROOT_DOMAIN.split(':')[0];
-
-  if (hostname.includes('---') && hostname.endsWith('.vercel.app')) {
-    const parts = hostname.split('---');
-    return parts.length > 0 ? parts[0] : null;
-  }
-
-  const isSubdomain =
-    hostname !== rootHostname &&
-    hostname !== `www.${rootHostname}` &&
-    hostname.endsWith(`.${rootHostname}`);
-
-  return isSubdomain ? hostname.replace(`.${rootHostname}`, '') : null;
+  return tenantSlugFromRequest(host, request.url);
 }
 
 export function proxy(request: NextRequest) {

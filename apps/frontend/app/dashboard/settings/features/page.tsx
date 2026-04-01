@@ -33,7 +33,7 @@ const FEATURE_META: Record<FeatureKey, { label: string; description: string; ico
 };
 
 export default function FeaturesPage() {
-  const { data: tenants, isLoading } = useTenants();
+  const { data: tenants, isLoading, isError, error } = useTenants();
   const updateFeatures = useUpdateTenantFeatures();
   const [enabled, setEnabled] = useState<Set<FeatureKey> | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -44,12 +44,17 @@ export default function FeaturesPage() {
     ? getTenantIdFromToken(getStoredToken() ?? "")
     : null;
 
-  // Sync from server once on load (and after save resets dirty)
+  // Sync from server once on load (and after save resets dirty).
+  // If the current org is not in GET /tenants (e.g. ID format mismatch), still initialize
+  // from defaults so the page is usable; PATCH /tenants/my/features uses JWT tenantId.
   useEffect(() => {
-    if (!tenants || !tenantId || dirty) return;
-    const tenant = tenants.find((t) => t._id === tenantId);
-    if (!tenant) return;
-    const features = tenant.enabledFeatures?.length
+    if (tenants === undefined || dirty) return;
+    if (!tenantId) {
+      setEnabled(null);
+      return;
+    }
+    const tenant = tenants.find((t) => String(t._id) === String(tenantId));
+    const features = tenant?.enabledFeatures?.length
       ? tenant.enabledFeatures
       : [...ALL_FEATURES];
     setEnabled(new Set(features));
@@ -109,6 +114,25 @@ export default function FeaturesPage() {
         toast.error(err?.response?.data?.message ?? "Update failed"),
     });
   };
+
+  if (isError) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Could not load tenants.";
+    return (
+      <p className="text-sm text-destructive" role="alert">
+        {message}
+      </p>
+    );
+  }
+
+  if (!tenantId) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No organization ID in your session. Sign out and sign in again so your account is linked to a tenant.
+      </p>
+    );
+  }
 
   if (isLoading || enabled === null) {
     return (

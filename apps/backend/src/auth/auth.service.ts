@@ -19,6 +19,14 @@ export class AuthService {
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     private readonly friendGateway: FriendGateway,
     private jwtService: JwtService,) { }
+
+  /** Slug for the user's active organization (for public landing X-Tenant-Slug). */
+  private async resolvePayloadTenantSlug(tenantId: string | undefined): Promise<string | undefined> {
+    if (!tenantId || !Types.ObjectId.isValid(tenantId)) return undefined;
+    const doc = await this.tenantModel.findById(tenantId).select('slug').lean().exec();
+    return doc?.slug ?? undefined;
+  }
+
   async login(email: string, password: string) {
     try {
       const user = await this.userModel.findOne({ email }).populate('role', 'name');
@@ -61,11 +69,13 @@ export class AuthService {
 
       // Repair missing tenantId for legacy accounts
       let tenantId = (user as any).tenantId?.toString();
+      let tenantSlug: string | undefined;
       if (!tenantId) {
         const defaultTenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
         if (defaultTenant) {
           (user as any).tenantId = defaultTenant._id;
           tenantId = (defaultTenant._id as any).toString();
+          tenantSlug = defaultTenant.slug;
           await user.save();
         }
       }
@@ -74,7 +84,11 @@ export class AuthService {
         throw new NotFoundException('No tenant found for this account. Please contact support.');
       }
 
-      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId };
+      if (tenantSlug === undefined) {
+        tenantSlug = await this.resolvePayloadTenantSlug(tenantId);
+      }
+
+      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId, tenantSlug };
       const tokens = await this.generateUserTokens(payload);
       
       user.refreshToken = tokens.refreshToken;
@@ -143,6 +157,7 @@ export class AuthService {
       email: savedUser.email,
       role: roleName,
       tenantId: tenant._id.toString(),
+      tenantSlug: tenant.slug,
     };
     const tokens = await this.generateUserTokens(payload);
     savedUser.refreshToken = tokens.refreshToken;
@@ -181,7 +196,9 @@ export class AuthService {
           roleName = defaultRole.name;
         }
       }
-      const freshPayload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
+      const tid = (user as any).tenantId?.toString();
+      const tenantSlug = await this.resolvePayloadTenantSlug(tid);
+      const freshPayload = { uid: user.uid, email: user.email, role: roleName, tenantId: tid, tenantSlug };
       const tokens = await this.generateUserTokens(freshPayload);
       user.refreshToken = tokens.refreshToken;
       await user.save();
@@ -287,7 +304,9 @@ export class AuthService {
       }
     }
 
-    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
+    const tid = (user as any).tenantId?.toString();
+    const tenantSlug = await this.resolvePayloadTenantSlug(tid);
+    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: tid, tenantSlug };
     const tokens = await this.generateUserTokens(payload);
     user.refreshToken = tokens.refreshToken;
     await user.save();

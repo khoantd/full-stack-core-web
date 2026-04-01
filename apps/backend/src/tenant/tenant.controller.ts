@@ -1,7 +1,8 @@
 import {
   Body, Controller, Delete, Get, Param, Post, Put, Patch,
-  UseGuards, UsePipes, ValidationPipe, Req, NotFoundException,
+  UseGuards, UsePipes, ValidationPipe, Req, NotFoundException, BadRequestException,
 } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateFeaturesDto } from './dto/update-features.dto';
@@ -18,6 +19,39 @@ export class TenantController {
   @Get()
   findAll() {
     return this.tenantService.findAll();
+  }
+
+  // Static path segments before :id so "my" is never treated as an ObjectId route param.
+  @Patch('my/features')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  )
+  updateMyFeatures(@Req() req: any, @Body() dto: UpdateFeaturesDto) {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId || !Types.ObjectId.isValid(String(tenantId))) {
+      throw new BadRequestException('Missing or invalid tenant');
+    }
+    return this.tenantService.update(String(tenantId), { enabledFeatures: dto.enabledFeatures });
+  }
+
+  @Patch('my/landing')
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  )
+  updateMyLanding(@Req() req: any, @Body() dto: UpdateLandingConfigDto) {
+    const tenantId = req.user?.tenantId;
+    if (!tenantId || !Types.ObjectId.isValid(String(tenantId))) {
+      throw new BadRequestException('Missing or invalid tenant');
+    }
+    return this.tenantService.updateLandingConfig(String(tenantId), dto);
   }
 
   @Get(':id')
@@ -39,21 +73,6 @@ export class TenantController {
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   update(@Param('id') id: string, @Body() dto: Partial<CreateTenantDto>) {
     return this.tenantService.update(id, dto);
-  }
-
-  // Uses tenantId from JWT — no URL param needed, avoids ID mismatch
-  @Patch('my/features')
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  updateMyFeatures(@Req() req: any, @Body() dto: UpdateFeaturesDto) {
-    const tenantId = req.user?.tenantId;
-    return this.tenantService.update(tenantId, { enabledFeatures: dto.enabledFeatures });
-  }
-
-  @Patch('my/landing')
-  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  updateMyLanding(@Req() req: any, @Body() dto: UpdateLandingConfigDto) {
-    const tenantId = req.user?.tenantId;
-    return this.tenantService.updateLandingConfig(tenantId, dto);
   }
 
   @Delete(':id')

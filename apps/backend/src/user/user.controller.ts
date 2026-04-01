@@ -14,7 +14,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/guards/roles.decorator';
-import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentTenant, SkipTenantGuard } from 'src/guards/tenant.decorator';
 import { UserService } from './user.service';
 
 @UseGuards(AuthGuard, TenantGuard, RolesGuard)
@@ -74,6 +74,7 @@ export class UserController {
   }
 
   @Get('stats/dashboard')
+  @SkipTenantGuard()
   async getDashboardStats(@CurrentTenant() tenantId: string) {
     return this.userService.getDashboardStats(tenantId);
   }

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { products, categories, config = {} } = await getLandingData();
+  const { products, categories, config = {}, blogs = [] } = await getLandingData();
 
   // Resolve theme vars server-side to avoid FOUC
   const themeKey = config.theme ?? DEFAULT_THEME;
@@ -42,7 +42,7 @@ export default async function HomePage() {
             {config.aboutEnabled !== false && <AboutSection config={config} />}
             {config.productsEnabled !== false && <FeaturedProducts products={products} />}
             {config.testimonialsEnabled !== false && <TestimonialsSection />}
-            {config.blogsEnabled !== false && <BlogSection />}
+            {config.blogsEnabled !== false && <BlogSection posts={blogs} />}
             {config.contactEnabled !== false && <ContactSection config={config} />}
           </main>
           <LandingFooter config={config} />

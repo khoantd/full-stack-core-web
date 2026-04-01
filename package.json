@@ -2,7 +2,7 @@
   "name": "full-stack-core-web",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --dir apps/frontend dev\" \"pnpm --dir apps/backend start:dev\"",
+    "dev": "concurrently \"pnpm --dir apps/backend start:dev\" \"wait-on -t 60000 tcp:3001 && pnpm --dir apps/frontend dev\"",
     "dev:frontend": "pnpm --dir apps/frontend dev",
     "dev:backend": "pnpm --dir apps/backend start:dev",
     "build:frontend": "pnpm --dir apps/frontend build",
@@ -10,7 +10,8 @@
     "build": "pnpm build:frontend && pnpm build:backend"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "wait-on": "^9.0.4"
   },
   "dependencies": {
     "eslint-config-next": "^16.2.2",

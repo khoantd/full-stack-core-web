@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "sonner";
 import { IconLoader2, IconExternalLink } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -10,13 +10,30 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTenants, useUpdateLandingConfig } from "@/hooks/useTenant";
+import { useTenant, useUpdateLandingConfig } from "@/hooks/useTenant";
 import { getStoredToken } from "@/api/axiosClient";
 import { getTenantIdFromToken } from "@/lib/jwt";
-import { THEMES } from "@/lib/themes";
+import { THEMES, DEFAULT_THEME, type ThemeKey } from "@/lib/themes";
 import type { LandingConfig } from "@/types/tenant.type";
 
-const SECTION_TOGGLES: { key: keyof LandingConfig; label: string }[] = [
+/** Radix Select shows a blank label when value does not match any SelectItem. */
+function resolveThemeKey(raw: string | undefined): ThemeKey {
+  if (!raw || typeof raw !== "string") return DEFAULT_THEME;
+  const normalized = raw.trim().toLowerCase();
+  return THEMES.some((t) => t.key === normalized) ? (normalized as ThemeKey) : DEFAULT_THEME;
+}
+
+type LandingSectionToggleKey =
+  | "heroEnabled"
+  | "categoriesEnabled"
+  | "statsEnabled"
+  | "aboutEnabled"
+  | "productsEnabled"
+  | "testimonialsEnabled"
+  | "blogsEnabled"
+  | "contactEnabled";
+
+const SECTION_TOGGLES: { key: LandingSectionToggleKey; label: string }[] = [
   { key: "heroEnabled", label: "Hero / Slider" },
   { key: "categoriesEnabled", label: "Product Categories" },
   { key: "statsEnabled", label: "Stats Bar" },
@@ -28,22 +45,21 @@ const SECTION_TOGGLES: { key: keyof LandingConfig; label: string }[] = [
 ];
 
 export default function LandingSettingsPage() {
-  const { data: tenants, isLoading } = useTenants();
   const updateLanding = useUpdateLandingConfig();
+  const [mounted, setMounted] = useState(false);
 
-  const tenantId =
-    typeof window !== "undefined"
-      ? getTenantIdFromToken(getStoredToken() ?? "")
-      : null;
+  useEffect(() => setMounted(true), []);
 
-  const tenant = tenants?.find((t) => t._id === tenantId);
+  const tenantId = mounted ? getTenantIdFromToken(getStoredToken() ?? "") : null;
+
+  const { data: tenant, isLoading, isError, error } = useTenant(tenantId ?? "");
   const cfg = tenant?.landingConfig ?? {};
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { isDirty } } = useForm<LandingConfig>({
+  const { register, handleSubmit, reset, control, formState: { isDirty } } = useForm<LandingConfig>({
     defaultValues: {
       siteName: "", tagline: "", phone: "", email: "",
       address: "", hours: "", facebook: "", twitter: "",
-      linkedin: "", youtube: "", theme: "orange",
+      linkedin: "", youtube: "", theme: DEFAULT_THEME,
       heroEnabled: true, categoriesEnabled: true, statsEnabled: true,
       aboutEnabled: true, productsEnabled: true, testimonialsEnabled: true,
       blogsEnabled: true, contactEnabled: true,
@@ -63,7 +79,7 @@ export default function LandingSettingsPage() {
       twitter: cfg.twitter ?? "",
       linkedin: cfg.linkedin ?? "",
       youtube: cfg.youtube ?? "",
-      theme: cfg.theme ?? "orange",
+      theme: resolveThemeKey(cfg.theme),
       heroEnabled: cfg.heroEnabled ?? true,
       categoriesEnabled: cfg.categoriesEnabled ?? true,
       statsEnabled: cfg.statsEnabled ?? true,
@@ -73,8 +89,10 @@ export default function LandingSettingsPage() {
       blogsEnabled: cfg.blogsEnabled ?? true,
       contactEnabled: cfg.contactEnabled ?? true,
     });
+  // Re-sync when tenant loads or landing config changes on the server (e.g. after save + refetch).
+  // _id alone misses refetches where only updatedAt/landingConfig change.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenant?._id]);
+  }, [tenant?._id, tenant?.updatedAt]);
 
   const onSubmit = (data: LandingConfig) => {
     updateLanding.mutate(data, {
@@ -86,6 +104,33 @@ export default function LandingSettingsPage() {
         toast.error(err?.response?.data?.message ?? "Save failed"),
     });
   };
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <IconLoader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!tenantId) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No organization ID in your session. Sign out and sign in again so your account is linked to a tenant.
+      </p>
+    );
+  }
+
+  if (isError) {
+    const message =
+      (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Could not load tenant settings.";
+    return (
+      <p className="text-sm text-destructive" role="alert">
+        {message}
+      </p>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -131,21 +176,27 @@ export default function LandingSettingsPage() {
         </div>
         <div className="space-y-1.5">
           <Label>Accent Theme</Label>
-          <Select value={watch("theme") ?? "orange"} onValueChange={(v) => setValue("theme", v, { shouldDirty: true })}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {THEMES.map((t) => (
-                <SelectItem key={t.key} value={t.key}>
-                  <span className="flex items-center gap-2">
-                    <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: t.accent }} />
-                    {t.label}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="theme"
+            control={control}
+            render={({ field }) => (
+              <Select value={resolveThemeKey(field.value)} onValueChange={field.onChange}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {THEMES.map((t) => (
+                    <SelectItem key={t.key} value={t.key}>
+                      <span className="flex items-center gap-2">
+                        <span className="inline-block w-3 h-3 rounded-full" style={{ backgroundColor: t.accent }} />
+                        {t.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       </section>
 
@@ -201,10 +252,16 @@ export default function LandingSettingsPage() {
           {SECTION_TOGGLES.map(({ key, label }) => (
             <div key={key} className="flex items-center justify-between rounded-lg border p-3">
               <span className="text-sm">{label}</span>
-              <Switch
-                checked={watch(key) as boolean ?? true}
-                onCheckedChange={(v) => setValue(key, v, { shouldDirty: true })}
-                className="cursor-pointer"
+              <Controller
+                name={key}
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value ?? true}
+                    onCheckedChange={field.onChange}
+                    className="cursor-pointer"
+                  />
+                )}
               />
             </div>
           ))}

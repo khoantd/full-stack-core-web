@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from '../auth/schemas/user.schema';
 import { Tenant, TenantSchema } from './schemas/tenant.schema';
 import { TenantService } from './tenant.service';
 import { TenantController } from './tenant.controller';
@@ -12,6 +13,7 @@ import { TenantBankAccountController } from './tenant-bank-account.controller';
     MongooseModule.forFeature([
       { name: Tenant.name, schema: TenantSchema },
       { name: TenantBankAccount.name, schema: TenantBankAccountSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   controllers: [TenantBankAccountController, TenantController],
@@ -22,6 +24,7 @@ import { TenantBankAccountController } from './tenant-bank-account.controller';
     MongooseModule.forFeature([
       { name: Tenant.name, schema: TenantSchema },
       { name: TenantBankAccount.name, schema: TenantBankAccountSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
 })
