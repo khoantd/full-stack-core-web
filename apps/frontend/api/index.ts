@@ -1,7 +1,7 @@
 export { default as axiosClient } from "./axiosClient";
 export {
   getStoredToken,
-  setStoredToken,
-  removeStoredToken,
+  setStoredTokens,
+  removeStoredTokens,
 } from "./axiosClient";
 export type { LoginRequest, LoginResponse, User, UsersResponse, UsersQueryParams } from "./types";

@@ -20,11 +20,17 @@ export class TenantGuard implements CanActivate {
       throw new ForbiddenException('No tenant associated with this account');
     }
 
-    const tenant = await this.tenantService.findById(user.tenantId);
+    let tenant: any;
+    try {
+      tenant = await this.tenantService.findById(user.tenantId);
+    } catch {
+      throw new NotFoundException('Tenant not found');
+    }
     if (!tenant) {
       throw new NotFoundException('Tenant not found');
     }
-    if (tenant.status !== 'active') {
+    // Treat missing status as 'active' to support legacy tenants created before the field existed
+    if (tenant.status && tenant.status !== 'active') {
       throw new ForbiddenException('Tenant account is inactive');
     }
 

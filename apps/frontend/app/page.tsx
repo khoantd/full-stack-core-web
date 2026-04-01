@@ -13,6 +13,8 @@ import { LandingThemeProvider } from "@/context/ThemeContext";
 import { THEMES, DEFAULT_THEME } from "@/lib/themes";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Car Parts - Quality Auto Parts for Every Ride",
   description:

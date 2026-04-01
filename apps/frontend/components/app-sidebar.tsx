@@ -42,9 +42,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import type { FeatureKey } from "@/types/tenant.type"
+import type { Icon } from "@tabler/icons-react"
 
 // Map feature keys to their nav items
-const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: React.ElementType }> = {
+const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: Icon }> = {
   blogs: { title: "Blogs", url: "/dashboard/blogs", icon: IconNews },
   services: { title: "Services", url: "/dashboard/services", icon: IconBriefcase },
   events: { title: "Events", url: "/dashboard/events", icon: IconCalendar },

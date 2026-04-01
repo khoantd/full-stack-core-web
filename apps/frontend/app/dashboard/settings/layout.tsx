@@ -16,6 +16,10 @@ const sidebarNavItems = [
     href: "/dashboard/settings"
   },
   {
+    title: "My Account",
+    href: "/dashboard/settings/account"
+  },
+  {
     title: "My Preferences",
     href: "/dashboard/settings/profile"
   },

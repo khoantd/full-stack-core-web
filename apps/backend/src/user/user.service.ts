@@ -97,9 +97,11 @@ export class UserService {
   }
 
   // 🟢 Lấy user theo ID
-  async findById(id: string) {
+  async findById(id: string, tenantId?: string) {
+    const query: any = { _id: id };
+    if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
     const user = await this.userModel
-      .findById(id)
+      .findOne(query)
       .populate('role', 'name')
       .exec();
 
@@ -189,9 +191,12 @@ export class UserService {
       role?: string;
       securityConfirmed?: boolean;
     },
+    tenantId?: string,
   ) {
     try {
-      const user = await this.userModel.findById(id);
+      const query: any = { _id: id };
+      if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
+      const user = await this.userModel.findOne(query);
 
       if (!user) {
         throw new NotFoundException('Không tìm thấy user');
@@ -262,9 +267,11 @@ export class UserService {
   }
 
   // 🔴 Xóa user
-  async delete(id: string) {
+  async delete(id: string, tenantId?: string) {
     try {
-      const user = await this.userModel.findById(id);
+      const query: any = { _id: id };
+      if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
+      const user = await this.userModel.findOne(query);
 
       if (!user) {
         throw new NotFoundException('Không tìm thấy user');
@@ -282,8 +289,10 @@ export class UserService {
   }
 
   // 🔴 Deactivate user — invalidates their session (refresh token nulled)
-  async deactivate(id: string) {
-    const user = await this.userModel.findById(id);
+  async deactivate(id: string, tenantId?: string) {
+    const query: any = { _id: id };
+    if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
+    const user = await this.userModel.findOne(query);
     if (!user) throw new NotFoundException('Không tìm thấy user');
     user.status = 'inactive';
     user.refreshToken = null;
@@ -292,23 +301,27 @@ export class UserService {
   }
 
   // 🟢 Activate user
-  async activate(id: string) {
-    const user = await this.userModel.findById(id);
+  async activate(id: string, tenantId?: string) {
+    const query: any = { _id: id };
+    if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
+    const user = await this.userModel.findOne(query);
     if (!user) throw new NotFoundException('Không tìm thấy user');
     user.status = 'active';
     await user.save();
     return { message: 'User đã được kích hoạt', id };
   }
 
-  // 📊 Dashboard stats
-  async getDashboardStats() {
+  // 📊 Dashboard stats — scoped to tenant (tenantId optional for system-wide)
+  async getDashboardStats(tenantId?: string) {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tenantFilter: any = tenantId ? { tenantId: new Types.ObjectId(tenantId) } : {};
 
     const [totalUsers, newTodayUsers, totalByStatus] = await Promise.all([
-      this.userModel.countDocuments(),
-      this.userModel.countDocuments({ createdAt: { $gte: startOfDay } }),
+      this.userModel.countDocuments(tenantFilter),
+      this.userModel.countDocuments({ ...tenantFilter, createdAt: { $gte: startOfDay } }),
       this.userModel.aggregate([
+        { $match: tenantFilter },
         { $group: { _id: '$status', count: { $sum: 1 } } },
       ]),
     ]);

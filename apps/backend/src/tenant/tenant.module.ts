@@ -14,7 +14,7 @@ import { TenantBankAccountController } from './tenant-bank-account.controller';
       { name: TenantBankAccount.name, schema: TenantBankAccountSchema },
     ]),
   ],
-  controllers: [TenantController, TenantBankAccountController],
+  controllers: [TenantBankAccountController, TenantController],
   providers: [TenantService, TenantBankAccountService],
   exports: [
     TenantService,

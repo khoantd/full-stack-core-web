@@ -5,9 +5,11 @@ import { UserService } from './user.service';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 import { Role, RoleSchema } from '../auth/schemas/role.schema';
 import { AuthGuard } from '../guards/auth.guard';
+import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
   imports: [
+    TenantModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },

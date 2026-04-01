@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import axios from "axios";
 import { FriendGateway } from './socket/friend.gateway';
@@ -58,7 +58,23 @@ export class AuthService {
           roleName = defaultRole.name;
         }
       }
-      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: (user as any).tenantId?.toString() };
+
+      // Repair missing tenantId for legacy accounts
+      let tenantId = (user as any).tenantId?.toString();
+      if (!tenantId) {
+        const defaultTenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
+        if (defaultTenant) {
+          (user as any).tenantId = defaultTenant._id;
+          tenantId = (defaultTenant._id as any).toString();
+          await user.save();
+        }
+      }
+
+      if (!tenantId) {
+        throw new NotFoundException('No tenant found for this account. Please contact support.');
+      }
+
+      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId };
       const tokens = await this.generateUserTokens(payload);
       
       user.refreshToken = tokens.refreshToken;
@@ -277,6 +293,30 @@ export class AuthService {
     await user.save();
 
     return { message: 'Password has been reset successfully', ...tokens };
+  }
+
+  /**
+   * Sets a default tenantId (organization) for users who don't have one.
+   * Uses the provided tenantId, or falls back to the oldest tenant in the system.
+   * Returns the number of users updated.
+   */
+  async setDefaultOrganization(tenantId?: string): Promise<{ updated: number; tenantId: string }> {
+    let resolvedId: Types.ObjectId;
+
+    if (tenantId) {
+      resolvedId = new Types.ObjectId(tenantId);
+    } else {
+      const defaultTenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
+      if (!defaultTenant) throw new BadRequestException('No tenant found to use as default');
+      resolvedId = defaultTenant._id as Types.ObjectId;
+    }
+
+    const result = await this.userModel.updateMany(
+      { $or: [{ tenantId: { $exists: false } }, { tenantId: null }] },
+      { $set: { tenantId: resolvedId } },
+    );
+
+    return { updated: result.modifiedCount, tenantId: resolvedId.toString() };
   }
 
 

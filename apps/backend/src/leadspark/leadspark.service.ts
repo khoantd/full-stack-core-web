@@ -90,9 +90,9 @@ export class LeadSparkService {
     throw new Error(`PATCH failed (${patchRes.status}): ${body}`);
   }
 
-  /** Sync all local products to LeadSpark AI */
-  async syncAllProducts(): Promise<LeadSparkSyncResult> {
-    const products = await this.productModel.find().exec();
+  /** Sync all local products to LeadSpark AI — scoped to tenant */
+  async syncAllProducts(tenantId: string): Promise<LeadSparkSyncResult> {
+    const products = await this.productModel.find({ tenantId }).exec();
     const errors: LeadSparkSyncResult['errors'] = [];
     let synced = 0;
 

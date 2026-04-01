@@ -4,6 +4,7 @@ import { ApiKey, ApiKeySchema } from './schemas/api-key.schema';
 import { ApiKeyService } from './api-key.service';
 import { ApiKeyController } from './api-key.controller';
 import { TenantModule } from '../tenant/tenant.module';
+import { TenantGuard } from '../guards/tenant.guard';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { TenantModule } from '../tenant/tenant.module';
     TenantModule,
   ],
   controllers: [ApiKeyController],
-  providers: [ApiKeyService],
+  providers: [ApiKeyService, TenantGuard],
   exports: [ApiKeyService],
 })
 export class ApiKeyModule {}

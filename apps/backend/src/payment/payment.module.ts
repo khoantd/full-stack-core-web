@@ -7,6 +7,7 @@ import { Event, EventSchema } from '../event/schemas/event.schema';
 import { TelegramModule } from '../telegram/telegram.module';
 import { VietQRModule } from '../vietqr/vietqr.module';
 import { TenantModule } from '../tenant/tenant.module';
+import { TenantGuard } from '../guards/tenant.guard';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { TenantModule } from '../tenant/tenant.module';
     TenantModule,
   ],
   controllers: [PaymentController],
-  providers: [PaymentService],
+  providers: [PaymentService, TenantGuard],
   exports: [PaymentService],
 })
 export class PaymentModule {}

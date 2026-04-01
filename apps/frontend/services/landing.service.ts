@@ -44,13 +44,17 @@ export interface LandingData {
 }
 
 export async function getLandingData(): Promise<LandingData> {
-  const res = await fetch(`${API_URL}/landing`, {
-    next: { revalidate: 10 }, // ISR: revalidate every 10s as fallback
-  });
+  try {
+    const res = await fetch(`${API_URL}/landing`, {
+      next: { revalidate: 10 },
+    });
 
-  if (!res.ok) {
+    if (!res.ok) {
+      return { products: [], categories: [], config: {} };
+    }
+
+    return res.json();
+  } catch {
     return { products: [], categories: [], config: {} };
   }
-
-  return res.json();
 }

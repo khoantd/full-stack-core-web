@@ -1,6 +1,6 @@
 import {
   Body, Controller, Delete, Get, Param, Post, Put, Patch,
-  UseGuards, UsePipes, ValidationPipe, Req,
+  UseGuards, UsePipes, ValidationPipe, Req, NotFoundException,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -21,8 +21,10 @@ export class TenantController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.tenantService.findById(id);
+  async findOne(@Param('id') id: string) {
+    const tenant = await this.tenantService.findById(id);
+    if (!tenant) throw new NotFoundException('Tenant not found');
+    return tenant;
   }
 
   @Post()
@@ -55,7 +57,7 @@ export class TenantController {
   }
 
   @Delete(':id')
-  @Roles('superadmin')
+  @Roles('admin', 'owner', 'superadmin')
   delete(@Param('id') id: string) {
     return this.tenantService.delete(id);
   }

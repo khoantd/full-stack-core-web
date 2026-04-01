@@ -7,6 +7,10 @@ import { Product, ProductDocument } from '../product/schemas/product.schema';
 import { Blog } from '../blog/schemas/blog.schema';
 import { BlogVersion } from '../blog/schemas/blog-version.schema';
 import { Service } from '../service/schemas/service.schema';
+import { Role } from '../auth/schemas/role.schema';
+import { User } from '../auth/schemas/user.schema';
+
+const SEED_ROLES = ['admin', 'user', 'staff'];
 
 const SEED_CATEGORIES = [
   { name: 'Engine Parts', description: 'High-performance engine components for all makes and models.' },
@@ -94,6 +98,8 @@ export class SeedService implements OnModuleInit {
     @InjectModel(Blog.name) private blogModel: Model<Blog>,
     @InjectModel(BlogVersion.name) private blogVersionModel: Model<BlogVersion>,
     @InjectModel(Service.name) private serviceModel: Model<Service>,
+    @InjectModel(Role.name) private roleModel: Model<Role>,
+    @InjectModel(User.name) private userModel: Model<User>,
   ) {}
 
   async onModuleInit() {
@@ -101,6 +107,9 @@ export class SeedService implements OnModuleInit {
   }
 
   async seed() {
+    await this.seedRoles();
+    await this.repairUserRoles();
+
     const tenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
     if (!tenant) {
       this.logger.warn('No tenant found — skipping demo seed.');
@@ -110,12 +119,53 @@ export class SeedService implements OnModuleInit {
     const tenantId = (tenant._id as Types.ObjectId).toString();
     this.logger.log(`Seeding demo data for tenant: ${tenant.name} (${tenantId})`);
 
+    await this.repairUserTenants(tenant._id as Types.ObjectId);
     const categoryMap = await this.seedCategories(tenantId);
     await this.seedProducts(tenantId, categoryMap);
     await this.seedBlogs(tenantId);
     await this.seedServices(tenantId);
 
     this.logger.log('Demo seed complete.');
+  }
+
+  private async seedRoles() {
+    for (const name of SEED_ROLES) {
+      const exists = await this.roleModel.findOne({ name }).exec();
+      if (!exists) {
+        await this.roleModel.create({ name });
+        this.logger.log(`  + Role: ${name}`);
+      }
+    }
+  }
+
+  private async repairUserRoles() {
+    const adminRole = await this.roleModel.findOne({ name: 'admin' }).exec();
+    if (!adminRole) return;
+
+    const result = await this.userModel.updateMany(
+      { role: { $exists: false } },
+      { $set: { role: adminRole._id } },
+    );
+    // Also catch docs where role is null
+    const result2 = await this.userModel.updateMany(
+      { role: null },
+      { $set: { role: adminRole._id } },
+    );
+
+    const fixed = result.modifiedCount + result2.modifiedCount;
+    if (fixed > 0) {
+      this.logger.log(`  ~ Repaired role for ${fixed} user(s) → admin`);
+    }
+  }
+
+  private async repairUserTenants(defaultTenantId: Types.ObjectId) {
+    const result = await this.userModel.updateMany(
+      { $or: [{ tenantId: { $exists: false } }, { tenantId: null }] },
+      { $set: { tenantId: defaultTenantId } },
+    );
+    if (result.modifiedCount > 0) {
+      this.logger.log(`  ~ Repaired tenantId for ${result.modifiedCount} user(s) → ${defaultTenantId}`);
+    }
   }
 
   private async seedCategories(tenantId: string): Promise<Map<string, string>> {

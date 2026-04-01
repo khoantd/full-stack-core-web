@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { ForgotPasswordForm } from "@/components/ForgotPasswordForm";
 import { Metadata } from "next";
 
@@ -21,7 +22,9 @@ export default function ForgotPasswordPage() {
               Enter your email and we&apos;ll send you a reset link
             </p>
           </div>
-          <ForgotPasswordForm />
+          <Suspense>
+            <ForgotPasswordForm />
+          </Suspense>
         </div>
       </div>
     </div>

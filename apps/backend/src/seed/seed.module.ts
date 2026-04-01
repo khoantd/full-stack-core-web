@@ -7,6 +7,8 @@ import { Product, ProductSchema } from '../product/schemas/product.schema';
 import { Blog, BlogSchema } from '../blog/schemas/blog.schema';
 import { BlogVersion, BlogVersionSchema } from '../blog/schemas/blog-version.schema';
 import { Service, ServiceSchema } from '../service/schemas/service.schema';
+import { Role, RoleSchema } from '../auth/schemas/role.schema';
+import { User, UserSchema } from '../auth/schemas/user.schema';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { Service, ServiceSchema } from '../service/schemas/service.schema';
       { name: Blog.name, schema: BlogSchema },
       { name: BlogVersion.name, schema: BlogVersionSchema },
       { name: Service.name, schema: ServiceSchema },
+      { name: Role.name, schema: RoleSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   providers: [SeedService],

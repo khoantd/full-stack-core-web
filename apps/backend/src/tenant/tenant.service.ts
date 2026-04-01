@@ -23,10 +23,12 @@ export class TenantService {
     return this.tenantModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async findById(id: string): Promise<Tenant> {
-    const tenant = await this.tenantModel.findById(id).exec();
-    if (!tenant) throw new NotFoundException(`Tenant not found`);
-    return tenant;
+  async findById(id: string): Promise<Tenant | null> {
+    try {
+      return await this.tenantModel.findById(id).exec();
+    } catch {
+      return null;
+    }
   }
 
   async findBySlug(slug: string): Promise<Tenant | null> {
