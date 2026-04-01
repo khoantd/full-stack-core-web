@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authService } from "@/services/auth.service";
+import { authService, syncAuthSessionCookies } from "@/services/auth.service";
 import { setStoredTokens } from "@/api/axiosClient";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -190,12 +190,7 @@ export function RegisterForm() {
       const refreshToken = result?.refreshToken ?? result?.refresh_token;
       if (accessToken) {
         setStoredTokens(accessToken, refreshToken);
-        if (typeof document !== "undefined") {
-          document.cookie = `access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-          if (refreshToken) {
-            document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-          }
-        }
+        syncAuthSessionCookies(accessToken, refreshToken);
         router.push("/dashboard");
         return;
       }

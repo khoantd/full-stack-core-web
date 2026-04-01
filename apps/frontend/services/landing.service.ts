@@ -2,7 +2,15 @@ import { cookies, headers } from "next/headers";
 import { getTenantSlugFromToken } from "@/lib/jwt";
 import { tenantSlugFromRequest } from "@/lib/tenant-slug-from-host";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+function landingApiBaseUrl(): string {
+  const raw =
+    process.env.LANDING_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_API_URL?.trim() ||
+    "http://localhost:3001";
+  return raw.replace(/\/$/, "");
+}
+
+const API_URL = landingApiBaseUrl();
 
 /** Forward active org to the API: Host subdomain, optional x-tenant-slug, then JWT tenantSlug cookie. */
 async function landingRequestHeaders(): Promise<HeadersInit> {
@@ -21,10 +29,25 @@ async function landingRequestHeaders(): Promise<HeadersInit> {
       out["X-Tenant-Slug"] = fromMiddleware.trim().toLowerCase();
       return out;
     }
-    const token = (await cookies()).get("access_token")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("access_token")?.value;
     if (token) {
       const slug = getTenantSlugFromToken(token);
       if (slug) out["X-Tenant-Slug"] = slug;
+    }
+    if (!out["X-Tenant-Slug"]) {
+      const slugCookie = cookieStore.get("tenant_slug")?.value;
+      if (slugCookie) {
+        try {
+          out["X-Tenant-Slug"] = decodeURIComponent(slugCookie).trim().toLowerCase();
+        } catch {
+          /* ignore malformed cookie */
+        }
+      }
+    }
+    if (!out["X-Tenant-Slug"]) {
+      const pub = process.env.NEXT_PUBLIC_LANDING_TENANT_SLUG?.trim().toLowerCase();
+      if (pub) out["X-Tenant-Slug"] = pub;
     }
   } catch {
     /* outside Next request context */

@@ -6,6 +6,8 @@ import { getLandingData, getPublicBlogs } from "@/services/landing.service";
 import { blogAuthor, formatBlogDate } from "@/lib/blog-display";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Blog",
   description: "Latest news, tips, and updates.",

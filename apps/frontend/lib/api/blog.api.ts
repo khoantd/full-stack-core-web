@@ -1,4 +1,5 @@
 import axiosClient from "@/api/axiosClient";
+import { mapApiBlog } from "@/lib/normalize-blog-status";
 import type {
   Blog,
   BlogVersion,
@@ -15,22 +16,26 @@ export const blogApi = {
     const response = await axiosClient.get<BlogsResponse>("/blogs", {
       params: { page, limit, search, status },
     });
-    return response.data;
+    const body = response.data;
+    return {
+      ...body,
+      data: (body.data ?? []).map((row) => mapApiBlog(row)),
+    };
   },
 
   getBlogById: async (id: string): Promise<Blog> => {
     const response = await axiosClient.get<Blog>(`/blogs/${id}`);
-    return response.data;
+    return mapApiBlog(response.data);
   },
 
   createBlog: async (data: CreateBlogRequest): Promise<Blog> => {
     const response = await axiosClient.post<Blog>("/blogs", data);
-    return response.data;
+    return mapApiBlog(response.data);
   },
 
   updateBlog: async (id: string, data: UpdateBlogRequest): Promise<Blog> => {
     const response = await axiosClient.put<Blog>(`/blogs/${id}`, data);
-    return response.data;
+    return mapApiBlog(response.data);
   },
 
   deleteBlog: async (id: string): Promise<DeleteBlogResponse> => {
@@ -44,7 +49,9 @@ export const blogApi = {
   },
 
   restoreVersion: async (blogId: string, versionId: string): Promise<Blog> => {
-    const response = await axiosClient.post<Blog>(`/blogs/${blogId}/versions/${versionId}/restore`);
-    return response.data;
+    const response = await axiosClient.post<Blog>(
+      `/blogs/${blogId}/versions/${versionId}/restore`
+    );
+    return mapApiBlog(response.data);
   },
 };

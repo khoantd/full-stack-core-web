@@ -1,4 +1,5 @@
 import axios, { type AxiosError } from "axios";
+import { syncAuthSessionCookies } from "@/lib/auth-cookies";
 
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -102,6 +103,7 @@ axiosClient.interceptors.response.use(
         
         if (data.accessToken && data.refreshToken) {
           setStoredTokens(data.accessToken, data.refreshToken);
+          syncAuthSessionCookies(data.accessToken, data.refreshToken);
           processQueue(null, data.accessToken);
           originalRequest.headers.Authorization = 'Bearer ' + data.accessToken;
           return axiosClient(originalRequest);

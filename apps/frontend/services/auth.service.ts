@@ -1,5 +1,8 @@
 import axiosClient, { removeStoredTokens, setStoredTokens } from "@/api/axiosClient";
+import { clearAuthSessionCookies, syncAuthSessionCookies } from "@/lib/auth-cookies";
 import type { LoginRequest, LoginResponse, CreateUserRequest, User } from "@/api/types";
+
+export { syncAuthSessionCookies } from "@/lib/auth-cookies";
 
 // Hỗ trợ nhiều format response - token có thể là string hoặc object { token, accessToken, ... }
 function toTokenString(val: unknown): string | null {
@@ -47,13 +50,7 @@ export const authService = {
       } else {
         setStoredTokens(token);
       }
-      // Also write to cookie so Next.js middleware can read it server-side
-      if (typeof document !== "undefined") {
-        document.cookie = `access_token=${token}; path=/; max-age=900; SameSite=Lax`;
-        if (refreshToken) {
-          document.cookie = `refresh_token=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-        }
-      }
+      syncAuthSessionCookies(token, refreshToken);
     } else {
       throw new Error("Token không tồn tại trong response API");
     }
@@ -72,10 +69,7 @@ export const authService = {
   logout: () => {
     removeStoredTokens();
     // Clear cookies too
-    if (typeof document !== "undefined") {
-      document.cookie = "access_token=; path=/; max-age=0";
-      document.cookie = "refresh_token=; path=/; max-age=0";
-    }
+    clearAuthSessionCookies();
   },
 
   forgotPassword: async (email: string): Promise<{ message: string }> => {

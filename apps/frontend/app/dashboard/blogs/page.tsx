@@ -234,8 +234,20 @@ function BlogsPageContent() {
         </CardContent>
       </Card>
 
-      <BlogFormDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} blog={null} onSuccess={handleSuccess} />
-      <BlogFormDialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen} blog={selectedBlog} onSuccess={handleSuccess} />
+      <BlogFormDialog
+        variant="create"
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        blog={null}
+        onSuccess={handleSuccess}
+      />
+      <BlogFormDialog
+        variant="edit"
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        blog={selectedBlog}
+        onSuccess={handleSuccess}
+      />
       <BlogDetailDialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen} blog={selectedBlog} />
       <DeleteBlogDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} blog={selectedBlog} onSuccess={handleSuccess} />
       <VersionHistoryDialog open={isVersionDialogOpen} onOpenChange={setIsVersionDialogOpen} blog={selectedBlog} />

@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useCreateBlog, useUpdateBlog } from "@/hooks/useBlog";
+import { normalizeBlogStatus } from "@/lib/normalize-blog-status";
 import type { Blog, BlogStatus } from "@/types/blog.type";
 
 const blogFormSchema = z.object({
@@ -31,6 +32,16 @@ const blogFormSchema = z.object({
 
 type BlogFormValues = z.infer<typeof blogFormSchema>;
 
+const emptyFormValues: BlogFormValues = {
+  title: "",
+  description: "",
+  image: "",
+  status: "Draft",
+  author: "",
+  seoTitle: "",
+  seoDescription: "",
+};
+
 interface BlogFormProps {
   blog?: Blog | null;
   onSuccess?: () => void;
@@ -43,28 +54,29 @@ export default function BlogForm({ blog, onSuccess, onCancel }: BlogFormProps) {
   const updateBlog = useUpdateBlog();
   const isLoading = createBlog.isPending || updateBlog.isPending;
 
+  /**
+   * Must be the initial form state on first paint for edit mode. Using only the `values` prop applies
+   * updates in a useEffect after mount; Radix Select often keeps an empty trigger when `value` changes
+   * from that sync. BlogFormDialog remounts this component when the dialog opens (key), so these
+   * defaults stay aligned with the blog being edited.
+   */
+  const defaultValues = React.useMemo((): BlogFormValues => {
+    if (!blog) return emptyFormValues;
+    return {
+      title: blog.title || "",
+      description: blog.description || "",
+      image: blog.image || "",
+      status: normalizeBlogStatus(blog.status),
+      author: blog.author ?? "",
+      seoTitle: blog.seoTitle ?? "",
+      seoDescription: blog.seoDescription ?? "",
+    };
+  }, [blog]);
+
   const form = useForm<BlogFormValues>({
     resolver: zodResolver(blogFormSchema),
-    defaultValues: {
-      title: "", description: "", image: "", status: "Draft", author: "", seoTitle: "", seoDescription: "",
-    },
+    defaultValues,
   });
-
-  React.useEffect(() => {
-    if (isEditMode && blog) {
-      form.reset({
-        title: blog.title || "",
-        description: blog.description || "",
-        image: blog.image || "",
-        status: (blog.status as BlogStatus) || "Draft",
-        author: blog.author || "",
-        seoTitle: blog.seoTitle || "",
-        seoDescription: blog.seoDescription || "",
-      });
-    } else {
-      form.reset({ title: "", description: "", image: "", status: "Draft", author: "", seoTitle: "", seoDescription: "" });
-    }
-  }, [blog, isEditMode, form]);
 
   const onSubmit = async (values: BlogFormValues) => {
     try {
@@ -106,8 +118,17 @@ export default function BlogForm({ blog, onSuccess, onCancel }: BlogFormProps) {
           <FormField control={form.control} name="status" render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+              <Select
+                key={blog ? `${blog._id}-${defaultValues.status}` : "create-status"}
+                onValueChange={field.onChange}
+                value={field.value}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                </FormControl>
                 <SelectContent>
                   <SelectItem value="Draft">Draft</SelectItem>
                   <SelectItem value="Published">Published</SelectItem>

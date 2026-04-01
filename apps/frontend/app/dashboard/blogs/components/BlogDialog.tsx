@@ -33,15 +33,29 @@ interface BlogFormDialogProps {
   onOpenChange: (open: boolean) => void;
   blog?: Blog | null;
   onSuccess?: () => void;
+  /** Distinct keys when two dialogs mount (create + edit) so React does not reuse stale form state. */
+  variant: "create" | "edit";
 }
 
-export function BlogFormDialog({ open, onOpenChange, blog, onSuccess }: BlogFormDialogProps) {
+export function BlogFormDialog({
+  open,
+  onOpenChange,
+  blog,
+  onSuccess,
+  variant,
+}: BlogFormDialogProps) {
   const isEditMode = !!blog;
 
   const handleSuccess = () => {
     onOpenChange(false);
     onSuccess?.();
   };
+
+  const formKey = open
+    ? isEditMode && blog
+      ? `${variant}-${blog._id}`
+      : `${variant}-new`
+    : `${variant}-closed`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +68,12 @@ export function BlogFormDialog({ open, onOpenChange, blog, onSuccess }: BlogForm
               : "Fill in the details to create a new blog post."}
           </DialogDescription>
         </DialogHeader>
-        <BlogForm blog={blog} onSuccess={handleSuccess} onCancel={() => onOpenChange(false)} />
+        <BlogForm
+          key={formKey}
+          blog={blog}
+          onSuccess={handleSuccess}
+          onCancel={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );
