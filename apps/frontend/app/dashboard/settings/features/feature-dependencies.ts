@@ -4,6 +4,7 @@ import { type FeatureKey } from "@/types/tenant.type";
 export const FEATURE_DEPENDENCIES: Partial<Record<FeatureKey, FeatureKey[]>> = {
   payments: ["events"],
   products: ["categories"],
+  serviceCategories: ["services"],
 };
 
 export interface DependencyCheckResult {

@@ -5,13 +5,17 @@ import {
   UpdateCategoryProductRequest,
   CategoryProductQueryParams,
 } from "@/types/category-product.type";
+import { getStoredToken } from "@/api/axiosClient";
+import { getTenantIdFromToken } from "@/lib/jwt";
 
 export const CATEGORY_PRODUCTS_QUERY_KEY = "categoryProducts";
 
 export function useCategoryProducts(params?: CategoryProductQueryParams) {
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useQuery({
     queryKey: [
       CATEGORY_PRODUCTS_QUERY_KEY,
+      tenantId,
       params?.page,
       params?.limit,
       params?.search,
@@ -25,8 +29,9 @@ export function useCategoryProducts(params?: CategoryProductQueryParams) {
 }
 
 export function useCategoryProductById(id: string) {
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useQuery({
-    queryKey: [CATEGORY_PRODUCTS_QUERY_KEY, id],
+    queryKey: [CATEGORY_PRODUCTS_QUERY_KEY, tenantId, id],
     queryFn: () => categoryProductApi.getCategoryProductById(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
@@ -36,12 +41,13 @@ export function useCategoryProductById(id: string) {
 
 export function useCreateCategoryProduct() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: (data: CreateCategoryProductRequest) =>
       categoryProductApi.createCategoryProduct(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY],
+        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY, tenantId],
       });
     },
   });
@@ -49,6 +55,7 @@ export function useCreateCategoryProduct() {
 
 export function useUpdateCategoryProduct() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: ({
       id,
@@ -59,7 +66,7 @@ export function useUpdateCategoryProduct() {
     }) => categoryProductApi.updateCategoryProduct(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY],
+        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY, tenantId],
       });
     },
   });
@@ -67,11 +74,12 @@ export function useUpdateCategoryProduct() {
 
 export function useDeleteCategoryProduct() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: (id: string) => categoryProductApi.deleteCategoryProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY],
+        queryKey: [CATEGORY_PRODUCTS_QUERY_KEY, tenantId],
       });
     },
   });

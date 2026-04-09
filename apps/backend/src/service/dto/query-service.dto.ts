@@ -20,4 +20,12 @@ export class QueryServiceDto {
   @IsOptional()
   @IsString()
   category?: string;
+
+  /**
+   * Comma-separated list of category ids, e.g. "id1,id2".
+   * Kept as string here; parsing happens in service layer.
+   */
+  @IsOptional()
+  @IsString()
+  categoryIds?: string;
 }

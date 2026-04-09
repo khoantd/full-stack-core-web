@@ -4,6 +4,7 @@ export const ALL_FEATURES = [
   'automakers',
   'events',
   'services',
+  'serviceCategories',
   'blogs',
   'payments',
 ] as const;

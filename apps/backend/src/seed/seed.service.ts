@@ -9,6 +9,7 @@ import { BlogVersion } from '../blog/schemas/blog-version.schema';
 import { Service } from '../service/schemas/service.schema';
 import { Role } from '../auth/schemas/role.schema';
 import { User } from '../auth/schemas/user.schema';
+import { TenantMembership, TenantMembershipDocument } from '../tenant-membership/schemas/tenant-membership.schema';
 
 const SEED_ROLES = ['admin', 'user', 'staff'];
 
@@ -100,6 +101,7 @@ export class SeedService implements OnModuleInit {
     @InjectModel(Service.name) private serviceModel: Model<Service>,
     @InjectModel(Role.name) private roleModel: Model<Role>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(TenantMembership.name) private membershipModel: Model<TenantMembershipDocument>,
   ) {}
 
   async onModuleInit() {
@@ -120,6 +122,7 @@ export class SeedService implements OnModuleInit {
     this.logger.log(`Seeding demo data for tenant: ${tenant.name} (${tenantId})`);
 
     await this.repairUserTenants(tenant._id as Types.ObjectId);
+    await this.seedTenantMemberships();
     const categoryMap = await this.seedCategories(tenantId);
     await this.seedProducts(tenantId, categoryMap);
     await this.seedBlogs(tenantId);
@@ -165,6 +168,39 @@ export class SeedService implements OnModuleInit {
     );
     if (result.modifiedCount > 0) {
       this.logger.log(`  ~ Repaired tenantId for ${result.modifiedCount} user(s) → ${defaultTenantId}`);
+    }
+  }
+
+  private async seedTenantMemberships() {
+    const users = await this.userModel.find({ tenantId: { $ne: null } }).select('_id tenantId').lean().exec();
+    if (users.length === 0) return;
+
+    let created = 0;
+    for (const u of users) {
+      const uid = (u as any)._id?.toString();
+      const tid = (u as any).tenantId?.toString();
+      if (!Types.ObjectId.isValid(uid) || !Types.ObjectId.isValid(tid)) continue;
+
+      const res = await this.membershipModel
+        .updateOne(
+          { userId: new Types.ObjectId(uid), tenantId: new Types.ObjectId(tid) },
+          {
+            $setOnInsert: {
+              userId: new Types.ObjectId(uid),
+              tenantId: new Types.ObjectId(tid),
+              roleInTenant: 'member',
+              status: 'active',
+            },
+          },
+          { upsert: true },
+        )
+        .exec();
+
+      if (res.upsertedCount && res.upsertedCount > 0) created += res.upsertedCount;
+    }
+
+    if (created > 0) {
+      this.logger.log(`  + TenantMembership: created ${created} membership(s) from users.tenantId`);
     }
   }
 

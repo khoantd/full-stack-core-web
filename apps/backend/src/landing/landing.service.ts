@@ -65,13 +65,13 @@ export class LandingService {
 
     const [products, categories, blogs] = await Promise.all([
       this.productModel
-        .find()
+        .find(tenantId ? { tenantId } : {})
         .populate('category', 'name')
         .sort({ createdAt: -1 })
         .limit(6)
         .exec(),
       this.categoryModel
-        .find()
+        .find(tenantId ? { tenantId: tenantId.toString() } : {})
         .sort({ createdAt: -1 })
         .limit(6)
         .exec(),

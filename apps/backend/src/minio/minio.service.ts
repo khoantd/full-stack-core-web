@@ -1,5 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as AWS from 'aws-sdk';
+import {
+  S3Client,
+  PutObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectCommand,
+} from '@aws-sdk/client-s3';
 import * as sharp from 'sharp';
 
 const BUCKET = 'imagefolder';
@@ -18,32 +23,32 @@ export interface FileItem {
 @Injectable()
 export class MinioService {
   private readonly logger = new Logger(MinioService.name);
-  private s3: AWS.S3;
+  private s3: S3Client;
 
   constructor() {
-    this.s3 = new AWS.S3({
+    this.s3 = new S3Client({
       endpoint: MINIO_ENDPOINT,
-      accessKeyId: MINIO_ACCESS_KEY,
-      secretAccessKey: MINIO_SECRET_KEY,
-      s3ForcePathStyle: true,
-      signatureVersion: 'v4',
+      credentials: {
+        accessKeyId: MINIO_ACCESS_KEY,
+        secretAccessKey: MINIO_SECRET_KEY,
+      },
+      forcePathStyle: true,
+      region: 'us-east-1',
     });
   }
 
   async uploadFile(bucketName: string, file: Express.Multer.File): Promise<string> {
     const key = `${Date.now()}-${file.originalname}`;
-    const params = {
-      Bucket: bucketName,
-      Key: key,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
 
     try {
-      await this.s3.upload(params).promise();
+      await this.s3.send(new PutObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      }));
       const relativePath = `/${bucketName}/${key}`;
 
-      // Generate thumbnails for images
       if (file.mimetype.startsWith('image/')) {
         await this.generateThumbnails(bucketName, key, file.buffer);
       }
@@ -61,7 +66,12 @@ export class MinioService {
       try {
         const thumb = await sharp(buffer).resize(width).jpeg({ quality: 80 }).toBuffer();
         const thumbKey = `thumbnails/${width}/${originalKey}`;
-        await this.s3.upload({ Bucket: bucket, Key: thumbKey, Body: thumb, ContentType: 'image/jpeg' }).promise();
+        await this.s3.send(new PutObjectCommand({
+          Bucket: bucket,
+          Key: thumbKey,
+          Body: thumb,
+          ContentType: 'image/jpeg',
+        }));
       } catch (err) {
         this.logger.warn(`Thumbnail ${width}px failed: ${err.message}`);
       }
@@ -77,13 +87,12 @@ export class MinioService {
     } = {},
   ): Promise<{ items: FileItem[]; nextContinuationToken?: string; isTruncated: boolean }> {
     try {
-      const params: AWS.S3.ListObjectsV2Request = {
+      const result = await this.s3.send(new ListObjectsV2Command({
         Bucket: bucketName,
         Prefix: options.prefix,
         MaxKeys: options.maxKeys ?? 20,
         ContinuationToken: options.continuationToken,
-      };
-      const result = await this.s3.listObjectsV2(params).promise();
+      }));
       const items = (result.Contents || [])
         .filter(obj => !obj.Key?.startsWith('thumbnails/'))
         .map(obj => ({
@@ -106,11 +115,10 @@ export class MinioService {
 
   async deleteFile(bucketName: string, key: string): Promise<void> {
     try {
-      await this.s3.deleteObject({ Bucket: bucketName, Key: key }).promise();
-      // Also delete thumbnails if they exist
+      await this.s3.send(new DeleteObjectCommand({ Bucket: bucketName, Key: key }));
       const thumbKeys = [`thumbnails/200/${key}`, `thumbnails/800/${key}`];
       await Promise.allSettled(
-        thumbKeys.map(k => this.s3.deleteObject({ Bucket: bucketName, Key: k }).promise()),
+        thumbKeys.map(k => this.s3.send(new DeleteObjectCommand({ Bucket: bucketName, Key: k }))),
       );
     } catch (err) {
       this.logger.error(`Delete failed: ${err.message}`);

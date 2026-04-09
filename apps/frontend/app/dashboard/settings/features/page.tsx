@@ -28,6 +28,7 @@ const FEATURE_META: Record<FeatureKey, { label: string; description: string; ico
   automakers: { label: "Automakers", description: "Vehicle brands and manufacturer data.", icon: IconCar },
   events: { label: "Events", description: "Create and manage events and schedules.", icon: IconCalendar },
   services: { label: "Services", description: "Service listings and offerings.", icon: IconBriefcase },
+  serviceCategories: { label: "Service Categories", description: "Organize services into categories.", icon: IconCategory },
   blogs: { label: "Blogs", description: "Blog posts and content publishing.", icon: IconNews },
   payments: { label: "Payments", description: "Payment processing and transaction history.", icon: IconCreditCard },
 };

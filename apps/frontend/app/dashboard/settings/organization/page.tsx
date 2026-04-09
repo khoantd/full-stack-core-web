@@ -128,6 +128,9 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
   const updateTenant = useUpdateTenant();
   const deleteTenant = useDeleteTenant();
 
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  const subdomain = `${tenant.slug}.${rootDomain}`;
+
   const handleUpdate = (values: TenantFormValues) => {
     updateTenant.mutate(
       { id: tenant._id, data: values },
@@ -159,7 +162,10 @@ function TenantCard({ tenant }: { tenant: Tenant }) {
             )}
             <div>
               <CardTitle className="text-base">{tenant.name}</CardTitle>
-              <CardDescription className="text-xs font-mono">{tenant.slug}</CardDescription>
+              <CardDescription className="text-xs font-mono">
+                {tenant.slug}
+                <span className="ml-2 text-muted-foreground">({subdomain})</span>
+              </CardDescription>
             </div>
           </div>
           <Badge

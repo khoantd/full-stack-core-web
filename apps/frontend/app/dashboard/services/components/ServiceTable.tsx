@@ -21,7 +21,15 @@ export interface ServiceTableActions {
   onDelete?: (service: Service) => void;
 }
 
-export const createColumns = (actions?: ServiceTableActions): ColumnDef<Service>[] => [
+export type ServiceCategoryLookup = Record<string, { name: string } | undefined>;
+
+export const createColumns = (
+  actions?: ServiceTableActions,
+  options?: {
+    serviceCategoriesEnabled?: boolean;
+    serviceCategoryLookup?: ServiceCategoryLookup;
+  }
+): ColumnDef<Service>[] => [
   {
     accessorKey: "_id",
     header: "#",
@@ -65,8 +73,36 @@ export const createColumns = (actions?: ServiceTableActions): ColumnDef<Service>
   {
     accessorKey: "category",
     header: "Category",
+    enableHiding: false,
     cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("category") || "—"}</span>,
   },
+  ...(options?.serviceCategoriesEnabled
+    ? [
+        {
+          id: "serviceCategories",
+          header: "Service Categories",
+          cell: ({ row }: { row: any }) => {
+            const ids = (row.original?.categoryIds ?? []) as string[];
+            if (!Array.isArray(ids) || ids.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+
+            const lookup = options?.serviceCategoryLookup ?? {};
+            const names = ids
+              .map((id) => lookup[id]?.name)
+              .filter((n): n is string => typeof n === "string" && n.length > 0);
+
+            const display = names.length ? names.slice(0, 2).join(", ") : `${ids.length} selected`;
+            const title = names.length ? names.join(", ") : ids.join(", ");
+
+            return (
+              <span className="text-sm text-muted-foreground" title={title}>
+                {display}
+                {names.length > 2 ? ` +${names.length - 2}` : ""}
+              </span>
+            );
+          },
+        } as ColumnDef<Service>,
+      ]
+    : []),
   {
     accessorKey: "price",
     header: "Price",
@@ -147,15 +183,27 @@ interface ServiceTableProps {
   actions?: ServiceTableActions;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  serviceCategoriesEnabled?: boolean;
+  serviceCategoryLookup?: ServiceCategoryLookup;
 }
 
-export default function ServiceTable({ data, actions, searchValue = "", onSearchChange }: ServiceTableProps) {
+export default function ServiceTable({
+  data,
+  actions,
+  searchValue = "",
+  onSearchChange,
+  serviceCategoriesEnabled,
+  serviceCategoryLookup,
+}: ServiceTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const tableColumns = React.useMemo(() => createColumns(actions), [actions]);
+  const tableColumns = React.useMemo(
+    () => createColumns(actions, { serviceCategoriesEnabled, serviceCategoryLookup }),
+    [actions, serviceCategoriesEnabled, serviceCategoryLookup],
+  );
 
   const table = useReactTable({
     data,

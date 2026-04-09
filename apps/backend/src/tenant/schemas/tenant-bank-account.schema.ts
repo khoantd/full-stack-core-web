@@ -9,7 +9,7 @@ export class TenantBankAccount extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Tenant', required: true, index: true })
   tenantId: Types.ObjectId;
 
-  @Prop({ required: true, enum: Object.values(BankCode) })
+  @Prop({ type: String, required: true, enum: Object.values(BankCode) })
   bankCode: BankCode;
 
   @Prop({ required: true })

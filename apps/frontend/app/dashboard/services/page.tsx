@@ -7,8 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useServices } from "@/hooks/useService";
+import { useFeatureEnabled } from "@/hooks/useFeatureEnabled";
+import { useServiceCategories } from "@/hooks/useServiceCategory";
 import { ServiceTable, ServiceFormDialog, ServiceDetailDialog, DeleteServiceDialog } from "./components";
 import type { Service, ServiceStatus } from "@/types/service.type";
+import Link from "next/link";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -25,6 +28,17 @@ export default function ServicesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const debouncedSearch = useDebounce(searchInput, 300);
+  const serviceCategoriesEnabled = useFeatureEnabled("serviceCategories");
+  const { data: categoriesResp } = useServiceCategories(
+    { page: "all", limit: 200 },
+    { enabled: serviceCategoriesEnabled }
+  );
+  const serviceCategoryLookup = useCallback(() => {
+    const list = categoriesResp?.data ?? [];
+    const map: Record<string, { name: string } | undefined> = {};
+    for (const c of list) map[c._id] = { name: c.name };
+    return map;
+  }, [categoriesResp?.data]);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -85,9 +99,16 @@ export default function ServicesPage() {
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Services</h1>
-        <Button variant="secondary" onClick={() => { setSelectedService(null); setIsCreateOpen(true); }}>
-          <PlusCircledIcon className="mr-2 h-4 w-4" /> Add New Service
-        </Button>
+        <div className="flex items-center gap-2">
+          {serviceCategoriesEnabled && (
+            <Button asChild variant="outline">
+              <Link href="/dashboard/service-categories">Manage Categories</Link>
+            </Button>
+          )}
+          <Button variant="secondary" onClick={() => { setSelectedService(null); setIsCreateOpen(true); }}>
+            <PlusCircledIcon className="mr-2 h-4 w-4" /> Add New Service
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 items-center">
@@ -129,6 +150,8 @@ export default function ServicesPage() {
                 actions={{ onView: handleView, onEdit: handleEdit, onDelete: handleDelete }}
                 searchValue={searchInput}
                 onSearchChange={setSearchInput}
+                serviceCategoriesEnabled={serviceCategoriesEnabled}
+                serviceCategoryLookup={serviceCategoryLookup()}
               />
               {isEmptySearch && (
                 <div className="flex flex-col items-center justify-center py-8">
@@ -157,8 +180,8 @@ export default function ServicesPage() {
         </CardContent>
       </Card>
 
-      <ServiceFormDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} service={null} onSuccess={handleSuccess} />
-      <ServiceFormDialog open={isEditOpen} onOpenChange={setIsEditOpen} service={selectedService} onSuccess={handleSuccess} />
+      <ServiceFormDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} service={null} onSuccess={handleSuccess} variant="create" />
+      <ServiceFormDialog open={isEditOpen} onOpenChange={setIsEditOpen} service={selectedService} onSuccess={handleSuccess} variant="edit" />
       <ServiceDetailDialog open={isDetailOpen} onOpenChange={setIsDetailOpen} service={selectedService} />
       <DeleteServiceDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} service={selectedService} onSuccess={handleSuccess} />
     </>

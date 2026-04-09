@@ -10,9 +10,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useDeleteService } from "@/hooks/useService";
+import { useServiceCategories } from "@/hooks/useServiceCategory";
+import { useFeatureEnabled } from "@/hooks/useFeatureEnabled";
 import ServiceForm from "./ServiceForm";
-import type { Service } from "@/types/service.type";
+import type { Service, ServiceContentBlock } from "@/types/service.type";
 
 // Create / Edit dialog
 interface ServiceFormDialogProps {
@@ -20,10 +23,19 @@ interface ServiceFormDialogProps {
   onOpenChange: (open: boolean) => void;
   service?: Service | null;
   onSuccess?: () => void;
+  /** Distinct keys when two dialogs mount (create + edit) so React does not reuse stale form state. */
+  variant: "create" | "edit";
 }
 
-export function ServiceFormDialog({ open, onOpenChange, service, onSuccess }: ServiceFormDialogProps) {
+export function ServiceFormDialog({ open, onOpenChange, service, onSuccess, variant }: ServiceFormDialogProps) {
   const isEditMode = !!service;
+
+  const formKey = open
+    ? isEditMode && service
+      ? `${variant}-${service._id}`
+      : `${variant}-new`
+    : `${variant}-closed`;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -34,6 +46,7 @@ export function ServiceFormDialog({ open, onOpenChange, service, onSuccess }: Se
           </DialogDescription>
         </DialogHeader>
         <ServiceForm
+          key={formKey}
           service={service}
           onSuccess={() => { onOpenChange(false); onSuccess?.(); }}
           onCancel={() => onOpenChange(false)}
@@ -51,6 +64,13 @@ interface ServiceDetailDialogProps {
 }
 
 export function ServiceDetailDialog({ open, onOpenChange, service }: ServiceDetailDialogProps) {
+  const serviceCategoriesEnabled = useFeatureEnabled("serviceCategories");
+  const { data: categoriesResp } = useServiceCategories(
+    { page: "all", limit: 200 },
+    { enabled: serviceCategoriesEnabled }
+  );
+  const categories = categoriesResp?.data ?? [];
+
   if (!service) return null;
 
   const formatDate = (d: string) =>
@@ -91,12 +111,27 @@ export function ServiceDetailDialog({ open, onOpenChange, service }: ServiceDeta
               <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[service.status] || "bg-gray-100 text-gray-700"}`}>
                 {service.status}
               </span>
-              {service.category && (
+              {service.category ? (
                 <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <Tag className="h-3 w-3" />{service.category}
+                  <Tag className="h-3 w-3" />
+                  {service.category}
                 </span>
-              )}
+              ) : null}
             </div>
+
+            {serviceCategoriesEnabled && service.categoryIds && service.categoryIds.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {service.categoryIds.map((id) => {
+                  const c = categories.find((x) => x._id === id);
+                  return (
+                    <Badge key={id} variant="secondary" className="inline-flex items-center gap-1">
+                      <Tag className="h-3 w-3" />
+                      {c?.name ?? "Category"}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
@@ -118,6 +153,16 @@ export function ServiceDetailDialog({ open, onOpenChange, service }: ServiceDeta
             <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
             <p className="text-sm whitespace-pre-wrap">{service.description}</p>
           </div>
+
+          {service.content && service.content.length > 0 && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Details</p>
+                <ServiceContentRenderer blocks={service.content} />
+              </div>
+            </>
+          )}
 
           {(service.seoTitle || service.seoDescription) && (
             <>
@@ -159,6 +204,55 @@ export function ServiceDetailDialog({ open, onOpenChange, service }: ServiceDeta
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ServiceContentRenderer({ blocks }: { blocks: ServiceContentBlock[] }) {
+  return (
+    <div className="space-y-3">
+      {blocks.map((b, idx) => {
+        if (b.type === "heading") {
+          const TagName = (b.level && [1, 2, 3, 4].includes(b.level) ? (`h${b.level}` as const) : "h3") as any;
+          return (
+            <TagName key={idx} className="font-semibold">
+              {b.text}
+            </TagName>
+          );
+        }
+        if (b.type === "paragraph") {
+          return (
+            <p key={idx} className="text-sm whitespace-pre-wrap">
+              {b.text}
+            </p>
+          );
+        }
+        if (b.type === "bullets") {
+          return (
+            <ul key={idx} className="list-disc pl-5 space-y-1 text-sm">
+              {b.items.map((it, i) => (
+                <li key={i}>{it}</li>
+              ))}
+            </ul>
+          );
+        }
+        if (b.type === "image") {
+          return (
+            <div key={idx} className="space-y-2">
+              <img
+                src={b.url}
+                alt={b.alt || ""}
+                className="w-full rounded-md object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+              {b.alt && <p className="text-xs text-muted-foreground">{b.alt}</p>}
+            </div>
+          );
+        }
+        return null;
+      })}
+    </div>
   );
 }
 

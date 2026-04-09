@@ -9,10 +9,13 @@ import { BlogVersion, BlogVersionSchema } from '../blog/schemas/blog-version.sch
 import { Service, ServiceSchema } from '../service/schemas/service.schema';
 import { Role, RoleSchema } from '../auth/schemas/role.schema';
 import { User, UserSchema } from '../auth/schemas/user.schema';
+import { TenantMembershipModule } from '../tenant-membership/tenant-membership.module';
+import { TenantMembership, TenantMembershipSchema } from '../tenant-membership/schemas/tenant-membership.schema';
 
 @Module({
   imports: [
     TenantModule,
+    TenantMembershipModule,
     MongooseModule.forFeature([
       { name: CategoryProduct.name, schema: CategoryProductSchema },
       { name: Product.name, schema: ProductSchema },
@@ -21,6 +24,7 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: Service.name, schema: ServiceSchema },
       { name: Role.name, schema: RoleSchema },
       { name: User.name, schema: UserSchema },
+      { name: TenantMembership.name, schema: TenantMembershipSchema },
     ]),
   ],
   providers: [SeedService],

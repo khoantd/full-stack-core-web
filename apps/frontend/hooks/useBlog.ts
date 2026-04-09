@@ -3,14 +3,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { blogApi } from "@/lib/api/blog.api";
 import type { BlogsQueryParams, CreateBlogRequest, UpdateBlogRequest } from "@/types/blog.type";
+import { getStoredToken } from "@/api/axiosClient";
+import { getTenantIdFromToken } from "@/lib/jwt";
 
 export const BLOGS_QUERY_KEY = "blogs";
 
 export function useBlogs(params: BlogsQueryParams = {}) {
   const { page = 1, limit = 10, search, status } = params;
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
 
   return useQuery({
-    queryKey: [BLOGS_QUERY_KEY, page, limit, search, status],
+    queryKey: [BLOGS_QUERY_KEY, tenantId, page, limit, search, status],
     queryFn: () => blogApi.getBlogs({ page, limit, search, status }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -20,8 +23,9 @@ export function useBlogs(params: BlogsQueryParams = {}) {
 }
 
 export function useBlog(id: string | null) {
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useQuery({
-    queryKey: [BLOGS_QUERY_KEY, id],
+    queryKey: [BLOGS_QUERY_KEY, tenantId, id],
     queryFn: () => blogApi.getBlogById(id!),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
@@ -30,8 +34,9 @@ export function useBlog(id: string | null) {
 }
 
 export function useBlogVersions(id: string | null) {
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useQuery({
-    queryKey: [BLOGS_QUERY_KEY, id, "versions"],
+    queryKey: [BLOGS_QUERY_KEY, tenantId, id, "versions"],
     queryFn: () => blogApi.getVersions(id!),
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
@@ -40,33 +45,37 @@ export function useBlogVersions(id: string | null) {
 
 export function useCreateBlog() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: (data: CreateBlogRequest) => blogApi.createBlog(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY, tenantId] }),
   });
 }
 
 export function useUpdateBlog() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBlogRequest }) => blogApi.updateBlog(id, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY, tenantId] }),
   });
 }
 
 export function useDeleteBlog() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: (id: string) => blogApi.deleteBlog(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY, tenantId] }),
   });
 }
 
 export function useRestoreBlogVersion() {
   const queryClient = useQueryClient();
+  const tenantId = getTenantIdFromToken(getStoredToken() ?? "") ?? "";
   return useMutation({
     mutationFn: ({ blogId, versionId }: { blogId: string; versionId: string }) =>
       blogApi.restoreVersion(blogId, versionId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [BLOGS_QUERY_KEY, tenantId] }),
   });
 }

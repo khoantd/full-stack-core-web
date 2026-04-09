@@ -1,4 +1,5 @@
 import axiosClient from "@/api/axiosClient";
+import { mapApiService } from "@/lib/normalize-service-status";
 import type {
   Service,
   ServicesResponse,
@@ -10,26 +11,30 @@ import type {
 
 export const serviceApi = {
   getServices: async (params: ServicesQueryParams = {}): Promise<ServicesResponse> => {
-    const { page = 1, limit = 10, search, status, category } = params;
+    const { page = 1, limit = 10, search, status, category, categoryIds } = params;
     const response = await axiosClient.get<ServicesResponse>("/services", {
-      params: { page, limit, search, status, category },
+      params: { page, limit, search, status, category, ...(categoryIds?.length ? { categoryIds: categoryIds.join(",") } : {}) },
     });
-    return response.data;
+    const body = response.data;
+    return {
+      ...body,
+      data: (body.data ?? []).map((row) => mapApiService(row)),
+    };
   },
 
   getServiceById: async (id: string): Promise<Service> => {
     const response = await axiosClient.get<Service>(`/services/${id}`);
-    return response.data;
+    return mapApiService(response.data);
   },
 
   createService: async (data: CreateServiceRequest): Promise<Service> => {
     const response = await axiosClient.post<Service>("/services", data);
-    return response.data;
+    return mapApiService(response.data);
   },
 
   updateService: async (id: string, data: UpdateServiceRequest): Promise<Service> => {
     const response = await axiosClient.put<Service>(`/services/${id}`, data);
-    return response.data;
+    return mapApiService(response.data);
   },
 
   deleteService: async (id: string): Promise<DeleteServiceResponse> => {

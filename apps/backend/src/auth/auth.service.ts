@@ -7,6 +7,7 @@ import axios from "axios";
 import { FriendGateway } from './socket/friend.gateway';
 import { Role } from './schemas/role.schema';
 import { Tenant, TenantDocument } from '../tenant/schemas/tenant.schema';
+import { TenantMembershipService } from '../tenant-membership/tenant-membership.service';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import * as nodemailer from 'nodemailer';
@@ -17,6 +18,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Role.name) private roleModel: Model<Role>,
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
+    private readonly tenantMembershipService: TenantMembershipService,
     private readonly friendGateway: FriendGateway,
     private jwtService: JwtService,) { }
 
@@ -88,6 +90,15 @@ export class AuthService {
         tenantSlug = await this.resolvePayloadTenantSlug(tenantId);
       }
 
+      // Ensure membership exists for the active tenant (for multi-tenant switching).
+      if (Types.ObjectId.isValid(String(user._id)) && Types.ObjectId.isValid(String(tenantId))) {
+        await this.tenantMembershipService.ensureMembership({
+          userId: new Types.ObjectId(String(user._id)),
+          tenantId: new Types.ObjectId(String(tenantId)),
+          roleInTenant: roleName === 'admin' || roleName === 'superadmin' ? 'admin' : 'member',
+        });
+      }
+
       const payload = { uid: user.uid, email: user.email, role: roleName, tenantId, tenantSlug };
       const tokens = await this.generateUserTokens(payload);
       
@@ -150,6 +161,13 @@ export class AuthService {
     });
     const savedUser = await newUser.save();
 
+    // Create membership for the registering user.
+    await this.tenantMembershipService.ensureMembership({
+      userId: savedUser._id as unknown as Types.ObjectId,
+      tenantId: tenant._id as unknown as Types.ObjectId,
+      roleInTenant: 'admin',
+    });
+
     // Issue tokens so the frontend can auto-login after registration
     const roleName = role?.name ?? 'admin';
     const payload = {
@@ -164,6 +182,43 @@ export class AuthService {
     await savedUser.save();
 
     const user = await this.userModel.findById(savedUser._id).populate('role', 'name').exec();
+    return { user, ...tokens };
+  }
+
+  async switchTenant(params: { email: string; tenantId: string }) {
+    const { email, tenantId } = params;
+    if (!email) throw new UnauthorizedException('Missing user context');
+    if (!Types.ObjectId.isValid(tenantId)) throw new BadRequestException('Invalid tenantId');
+
+    const user = await this.userModel.findOne({ email }).populate('role', 'name').exec();
+    if (!user) throw new NotFoundException('User not found');
+
+    const tenant = await this.tenantModel.findById(tenantId).exec();
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const isMember = await this.tenantMembershipService.isMember({
+      userId: String(user._id),
+      tenantId: String(tenant._id),
+    });
+    if (!isMember) throw new UnauthorizedException('You are not a member of this organization');
+
+    // Keep User.tenantId as the active tenant for compatibility with TenantGuard.
+    (user as any).tenantId = tenant._id as Types.ObjectId;
+
+    const roleName =
+      user.role && (user.role as any).name ? (user.role as any).name : String((user as any).role ?? 'user');
+
+    const payload = {
+      uid: user.uid,
+      email: user.email,
+      role: roleName,
+      tenantId: (tenant._id as Types.ObjectId).toString(),
+      tenantSlug: tenant.slug,
+    };
+    const tokens = await this.generateUserTokens(payload);
+    user.refreshToken = tokens.refreshToken;
+    await user.save();
+
     return { user, ...tokens };
   }
 

@@ -7,18 +7,23 @@ import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateFeaturesDto } from './dto/update-features.dto';
 import { UpdateLandingConfigDto } from './dto/update-landing-config.dto';
+import { SwitchTenantDto } from './dto/switch-tenant.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/guards/roles.decorator';
+import { AuthService } from '../auth/auth.service';
 
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('tenants')
 export class TenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Get()
-  findAll() {
-    return this.tenantService.findAll();
+  findAll(@Req() req: any) {
+    return this.tenantService.findAllForUserEmail(req.user?.email);
   }
 
   // Static path segments before :id so "my" is never treated as an ObjectId route param.
@@ -54,6 +59,13 @@ export class TenantController {
     return this.tenantService.updateLandingConfig(String(tenantId), dto);
   }
 
+  @Post('my/switch')
+  @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+  switchMyTenant(@Req() req: any, @Body() dto: SwitchTenantDto) {
+    const email = req.user?.email;
+    return this.authService.switchTenant({ email, tenantId: dto.tenantId });
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const tenant = await this.tenantService.findById(id);
@@ -64,8 +76,8 @@ export class TenantController {
   @Post()
   @Roles('admin', 'superadmin')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  create(@Body() dto: CreateTenantDto) {
-    return this.tenantService.create(dto);
+  create(@Req() req: any, @Body() dto: CreateTenantDto) {
+    return this.tenantService.createForUserEmail(dto, req.user?.email);
   }
 
   @Put(':id')

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Service } from './schemas/service.schema';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -41,6 +41,15 @@ export class ServiceService {
     if (query.category?.trim()) {
       filter.category = query.category.trim();
     }
+    if (query.categoryIds?.trim()) {
+      const ids = query.categoryIds
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean);
+      if (ids.length > 0) {
+        filter.categoryIds = { $in: ids.map((id) => new Types.ObjectId(id)) };
+      }
+    }
 
     const total = await this.serviceModel.countDocuments(filter);
 
@@ -75,7 +84,11 @@ export class ServiceService {
 
   async create(dto: CreateServiceDto, tenantId: string): Promise<Service> {
     try {
-      const newService = new this.serviceModel({ ...dto, tenantId });
+      const payload: Record<string, any> = { ...dto, tenantId };
+      if (dto.categoryIds?.length) {
+        payload.categoryIds = dto.categoryIds.map((id) => new Types.ObjectId(id));
+      }
+      const newService = new this.serviceModel(payload);
       return await newService.save();
     } catch {
       throw new BadRequestException('Failed to create service');
@@ -86,7 +99,11 @@ export class ServiceService {
     try {
       const service = await this.serviceModel.findOne({ _id: id, tenantId });
       if (!service) throw new NotFoundException(`Service with ID "${id}" not found`);
-      Object.assign(service, dto);
+      const payload: Record<string, any> = { ...dto };
+      if (dto.categoryIds) {
+        payload.categoryIds = dto.categoryIds.map((cid) => new Types.ObjectId(cid));
+      }
+      Object.assign(service, payload);
       return await service.save();
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

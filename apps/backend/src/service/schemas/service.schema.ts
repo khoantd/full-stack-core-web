@@ -7,6 +7,12 @@ export enum ServiceStatus {
   ARCHIVED = 'Archived',
 }
 
+export type ServiceContentBlock =
+  | { type: 'heading'; text: string; level?: 1 | 2 | 3 | 4 }
+  | { type: 'paragraph'; text: string }
+  | { type: 'bullets'; items: string[] }
+  | { type: 'image'; url: string; alt?: string };
+
 @Schema({ collection: 'services', timestamps: true })
 export class Service extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Tenant', index: true })
@@ -33,11 +39,17 @@ export class Service extends Document {
   @Prop()
   category?: string;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'ServiceCategory' }], default: undefined })
+  categoryIds?: Types.ObjectId[];
+
   @Prop()
   seoTitle?: string;
 
   @Prop()
   seoDescription?: string;
+
+  @Prop({ type: [Object], default: undefined })
+  content?: ServiceContentBlock[];
 
   createdAt: Date;
   updatedAt: Date;

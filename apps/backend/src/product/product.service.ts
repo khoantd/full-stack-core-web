@@ -17,7 +17,9 @@ export class ProductService {
   ) {}
 
   async create(createProductDto: CreateProductDto, tenantId: string): Promise<Product> {
-    const categoryExists = await this.categoryProductModel.findById(createProductDto.category).exec();
+    const categoryExists = await this.categoryProductModel
+      .findOne({ _id: createProductDto.category, tenantId })
+      .exec();
     if (!categoryExists) throw new BadRequestException(`Category with ID ${createProductDto.category} not found`);
 
     const data: any = { ...createProductDto, tenantId };
@@ -60,7 +62,9 @@ export class ProductService {
 
   async update(id: string, updateProductDto: UpdateProductDto, tenantId: string): Promise<Product> {
     if (updateProductDto.category) {
-      const categoryExists = await this.categoryProductModel.findById(updateProductDto.category).exec();
+      const categoryExists = await this.categoryProductModel
+        .findOne({ _id: updateProductDto.category, tenantId })
+        .exec();
       if (!categoryExists) throw new BadRequestException(`Category with ID ${updateProductDto.category} not found`);
     }
 

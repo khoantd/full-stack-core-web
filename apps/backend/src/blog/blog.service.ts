@@ -138,6 +138,9 @@ export class BlogService {
 
     const version = await this.blogVersionModel.findById(versionId).exec();
     if (!version) throw new NotFoundException('Version not found');
+    if (String((version as any).blogId) !== String(blogId)) {
+      throw new NotFoundException('Version not found');
+    }
 
     blog.title = version.title;
     blog.description = version.description;

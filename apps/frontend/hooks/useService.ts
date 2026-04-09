@@ -7,10 +7,10 @@ import type { ServicesQueryParams, CreateServiceRequest, UpdateServiceRequest } 
 export const SERVICES_QUERY_KEY = "services";
 
 export function useServices(params: ServicesQueryParams = {}) {
-  const { page = 1, limit = 10, search, status, category } = params;
+  const { page = 1, limit = 10, search, status, category, categoryIds } = params;
   return useQuery({
-    queryKey: [SERVICES_QUERY_KEY, page, limit, search, status, category],
-    queryFn: () => serviceApi.getServices({ page, limit, search, status, category }),
+    queryKey: [SERVICES_QUERY_KEY, page, limit, search, status, category, categoryIds?.join(",")],
+    queryFn: () => serviceApi.getServices({ page, limit, search, status, category, categoryIds }),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 1,

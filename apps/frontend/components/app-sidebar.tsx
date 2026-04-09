@@ -30,7 +30,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useTenants } from "@/hooks/useTenant"
-import { getStoredToken } from "@/api/axiosClient"
+import { getStoredToken, setStoredTokens } from "@/api/axiosClient"
 import { getTenantIdFromToken, getUserFromToken } from "@/lib/jwt"
 import {
   DropdownMenu,
@@ -43,11 +43,36 @@ import {
 import Link from "next/link"
 import type { FeatureKey } from "@/types/tenant.type"
 import type { Icon } from "@tabler/icons-react"
+import { tenantService } from "@/services/tenant.service"
+import { syncAuthSessionCookies } from "@/lib/auth-cookies"
+import { useQueryClient } from "@tanstack/react-query"
+
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+
+function buildTenantUrl(tenantSlug: string): string {
+  const slug = tenantSlug.trim().toLowerCase();
+  const protocol = typeof window !== "undefined" ? window.location.protocol : "http:";
+  const rootHostname = ROOT_DOMAIN.split(":")[0];
+  const rootPort = ROOT_DOMAIN.includes(":") ? ROOT_DOMAIN.split(":")[1] : "";
+
+  const local =
+    rootHostname === "localhost" ||
+    rootHostname.endsWith(".localhost") ||
+    rootHostname.startsWith("127.");
+
+  if (local) {
+    const host = `${slug}.localhost${rootPort ? `:${rootPort}` : ""}`;
+    return `${protocol}//${host}${window.location.pathname}${window.location.search}`;
+  }
+
+  return `${protocol}//${slug}.${ROOT_DOMAIN}${window.location.pathname}${window.location.search}`;
+}
 
 // Map feature keys to their nav items
 const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: Icon }> = {
   blogs: { title: "Blogs", url: "/dashboard/blogs", icon: IconNews },
   services: { title: "Services", url: "/dashboard/services", icon: IconBriefcase },
+  serviceCategories: { title: "Service Categories", url: "/dashboard/service-categories", icon: IconCategory },
   events: { title: "Events", url: "/dashboard/events", icon: IconCalendar },
   categories: { title: "Categories", url: "/dashboard/category-products", icon: IconCategory },
   products: { title: "Products", url: "/dashboard/products", icon: IconBox },
@@ -78,6 +103,8 @@ function useCurrentUser() {
 function TenantSwitcher() {
   const { data: tenants } = useTenants();
   const [currentTenantId, setCurrentTenantId] = React.useState<string | null>(null);
+  const [isSwitching, setIsSwitching] = React.useState(false);
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     const token = getStoredToken();
@@ -86,6 +113,36 @@ function TenantSwitcher() {
 
   const currentTenant = tenants?.find((t) => t._id === currentTenantId);
   const displayName = currentTenant?.name ?? "Organization";
+
+  const onSwitchTenant = React.useCallback(
+    async (tenantId: string) => {
+      if (!tenantId || tenantId === currentTenantId) return;
+      const target = tenants?.find((t) => t._id === tenantId);
+      if (!target) return;
+
+      setIsSwitching(true);
+      try {
+        const res = await tenantService.switchMyTenant(tenantId);
+        if (res?.accessToken && res?.refreshToken) {
+          setStoredTokens(res.accessToken, res.refreshToken);
+          syncAuthSessionCookies(res.accessToken, res.refreshToken);
+          setCurrentTenantId(getTenantIdFromToken(res.accessToken));
+        }
+
+        // Prevent cross-tenant cache bleed after switching.
+        queryClient.clear();
+
+        if (target.slug && typeof window !== "undefined") {
+          window.location.href = buildTenantUrl(target.slug);
+        } else if (typeof window !== "undefined") {
+          window.location.reload();
+        }
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [currentTenantId, tenants, queryClient],
+  );
 
   return (
     <DropdownMenu>
@@ -104,6 +161,8 @@ function TenantSwitcher() {
         {tenants?.map((tenant) => (
           <DropdownMenuItem
             key={tenant._id}
+            disabled={isSwitching}
+            onSelect={() => onSwitchTenant(tenant._id)}
             className={`cursor-pointer ${tenant._id === currentTenantId ? "bg-accent" : ""}`}
           >
             <IconBuilding className="mr-2 size-4 shrink-0" />
@@ -152,6 +211,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       items: [
         ...(enabledFeatures.has("blogs") ? [FEATURE_NAV_MAP.blogs] : []),
         ...(enabledFeatures.has("services") ? [FEATURE_NAV_MAP.services] : []),
+        ...(enabledFeatures.has("serviceCategories") ? [FEATURE_NAV_MAP.serviceCategories] : []),
         ...(enabledFeatures.has("events") ? [FEATURE_NAV_MAP.events] : []),
         { title: "Media Library", url: "/dashboard/media", icon: IconPhoto },
       ],

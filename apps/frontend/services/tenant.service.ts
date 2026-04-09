@@ -1,6 +1,12 @@
 import axiosClient from "@/api/axiosClient";
 import type { Tenant, CreateTenantRequest, UpdateTenantRequest, FeatureKey, LandingConfig } from "@/types/tenant.type";
 
+type SwitchTenantResponse = {
+  user: unknown;
+  accessToken: string;
+  refreshToken: string;
+};
+
 export const tenantService = {
   getAll: async (): Promise<Tenant[]> => {
     const res = await axiosClient.get<Tenant[]>("/tenants");
@@ -29,6 +35,11 @@ export const tenantService = {
 
   updateLandingConfig: async (config: LandingConfig): Promise<Tenant> => {
     const res = await axiosClient.patch<Tenant>(`/tenants/my/landing`, config);
+    return res.data;
+  },
+
+  switchMyTenant: async (tenantId: string): Promise<SwitchTenantResponse> => {
+    const res = await axiosClient.post<SwitchTenantResponse>(`/tenants/my/switch`, { tenantId });
     return res.data;
   },
 

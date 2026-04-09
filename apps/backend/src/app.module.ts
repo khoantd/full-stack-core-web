@@ -21,6 +21,7 @@ import { AuditLogModule } from './audit-log/audit-log.module';
 import { LandingModule } from './landing/landing.module';
 import { LeadSparkModule } from './leadspark/leadspark.module';
 import { ServiceModule } from './service/service.module';
+import { ServiceCategoryModule } from './service-category/service-category.module';
 import { TenantModule } from './tenant/tenant.module';
 import { VietQRModule } from './vietqr/vietqr.module';
 import { ApiKeyModule } from './api-key/api-key.module';
@@ -66,6 +67,7 @@ import { SeedModule } from './seed/seed.module';
     LandingModule,
     LeadSparkModule,
     ServiceModule,
+    ServiceCategoryModule,
     TenantModule,
     VietQRModule,
     ApiKeyModule,

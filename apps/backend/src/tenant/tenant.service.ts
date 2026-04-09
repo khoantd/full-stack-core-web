@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
 import { Tenant, TenantDocument, FeatureKey, LandingConfig } from './schemas/tenant.schema';
 import { CreateTenantDto } from './dto/create-tenant.dto';
+import { TenantMembershipService } from '../tenant-membership/tenant-membership.service';
 
 type UpdateTenantPayload = Partial<CreateTenantDto> & { enabledFeatures?: FeatureKey[] };
 
@@ -14,6 +15,7 @@ export class TenantService {
   constructor(
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     @InjectModel(User.name) private userModel: Model<User>,
+    private readonly tenantMembershipService: TenantMembershipService,
   ) {}
 
   async create(dto: CreateTenantDto): Promise<Tenant> {
@@ -23,8 +25,31 @@ export class TenantService {
     return this.tenantModel.create({ ...dto, slug });
   }
 
+  async createForUserEmail(dto: CreateTenantDto, email: string | undefined): Promise<Tenant> {
+    const tenant = await this.create(dto);
+    if (!email) return tenant;
+
+    const user = await this.userModel.findOne({ email }).select('_id').exec();
+    if (user?._id) {
+      await this.tenantMembershipService.ensureMembership({
+        userId: user._id as unknown as Types.ObjectId,
+        tenantId: (tenant as any)._id as Types.ObjectId,
+        roleInTenant: 'admin',
+      });
+    }
+
+    return tenant;
+  }
+
   async findAll(): Promise<Tenant[]> {
     return this.tenantModel.find().sort({ createdAt: -1 }).exec();
+  }
+
+  async findAllForUserEmail(email: string | undefined): Promise<Tenant[]> {
+    if (!email) return [];
+    const user = await this.userModel.findOne({ email }).select('_id').lean().exec();
+    if (!user?._id) return [];
+    return this.tenantMembershipService.findTenantsForUser(String((user as any)._id));
   }
 
   async findById(id: string): Promise<Tenant | null> {

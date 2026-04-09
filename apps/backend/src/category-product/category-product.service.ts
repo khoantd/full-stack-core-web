@@ -83,7 +83,7 @@ export class CategoryProductService {
     if (!categoryProduct) throw new NotFoundException(`Category with ID ${id} not found`);
 
     const Product = this.categoryProductModel.db.model('Product');
-    const productCount = await Product.countDocuments({ category: id }).exec();
+    const productCount = await Product.countDocuments({ tenantId, category: id }).exec();
     if (productCount > 0) throw new BadRequestException(`Cannot delete category. It has ${productCount} product(s) associated with it.`);
 
     // Reassign children to parent's parent
