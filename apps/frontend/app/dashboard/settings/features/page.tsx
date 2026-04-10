@@ -11,6 +11,7 @@ import {
   IconNews,
   IconBriefcase,
   IconLoader2,
+  IconTag,
 } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +27,7 @@ const FEATURE_META: Record<FeatureKey, { label: string; description: string; ico
   categories: { label: "Categories", description: "Manage product categories and hierarchies.", icon: IconCategory },
   products: { label: "Products", description: "Product catalog with inventory management.", icon: IconBox },
   automakers: { label: "Automakers", description: "Vehicle brands and manufacturer data.", icon: IconCar },
+  pricings: { label: "Pricings", description: "Tiered pricing catalog with multi-currency support.", icon: IconTag },
   events: { label: "Events", description: "Create and manage events and schedules.", icon: IconCalendar },
   services: { label: "Services", description: "Service listings and offerings.", icon: IconBriefcase },
   serviceCategories: { label: "Service Categories", description: "Organize services into categories.", icon: IconCategory },

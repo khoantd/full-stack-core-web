@@ -16,6 +16,7 @@ import {
   IconBriefcase,
   IconChevronDown,
   IconCar,
+  IconTag,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -78,6 +79,7 @@ const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: Ic
   products: { title: "Products", url: "/dashboard/products", icon: IconBox },
   automakers: { title: "Automakers", url: "/dashboard/automakers", icon: IconCar },
   payments: { title: "Payments", url: "/dashboard/payments", icon: IconCreditCard },
+  pricings: { title: "Pricings", url: "/dashboard/pricings", icon: IconTag },
 };
 
 function useCurrentUser() {
@@ -219,6 +221,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       label: "Catalog",
       items: [
+        ...(enabledFeatures.has("pricings") ? [FEATURE_NAV_MAP.pricings] : []),
         ...(enabledFeatures.has("categories") ? [FEATURE_NAV_MAP.categories] : []),
         ...(enabledFeatures.has("products") ? [FEATURE_NAV_MAP.products] : []),
         ...(enabledFeatures.has("automakers") ? [FEATURE_NAV_MAP.automakers] : []),

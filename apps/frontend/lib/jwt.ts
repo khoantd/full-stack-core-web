@@ -19,7 +19,7 @@ export function getTenantIdFromToken(token: string): string | null {
   return decoded?.payload?.tenantId ?? decoded?.tenantId ?? null;
 }
 
-/** Organization slug from access token (for public landing X-Tenant-Slug). */
+/** Organization slug from access token (tenant context). */
 export function getTenantSlugFromToken(token: string): string | null {
   const decoded = decodeJwt(token);
   const slug = decoded?.payload?.tenantSlug ?? decoded?.tenantSlug;

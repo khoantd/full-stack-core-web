@@ -57,12 +57,11 @@ jobs:
             docker stop be-core-web-cms || true
             docker rm be-core-web-cms || true
             
-            docker run -d --name be-core-web-cms --restart unless-stopped -p 3066:3000 \
+            docker run -d --name be-core-web-cms --restart unless-stopped -p 3066:3001 \
               -e NODE_OPTIONS="--dns-result-order=ipv4first" \
               -e MONGODB_URI="${{ secrets.MONGODB_URI }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              haupham2311/be-core-web-cms:latest \
-              node -e "const { setDefaultResultOrder } = require('node:dns'); setDefaultResultOrder('ipv4first'); require('/app/dist/src/main');"
+              haupham2311/be-core-web-cms:latest
 
             
             docker pull haupham2311/fe-core-web-cms:latest

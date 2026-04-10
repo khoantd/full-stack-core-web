@@ -55,3 +55,26 @@ docker compose down
 # Dừng và xóa cả volume (xóa dữ liệu MongoDB)
 docker compose down -v
 ```
+
+## Build & push images (deploy VPS)
+
+Script: `scripts/docker-build-push.sh` (dùng `docker buildx`, có hỗ trợ `--platform`).
+
+Ví dụ với GHCR:
+
+```bash
+docker login ghcr.io
+
+REGISTRY=ghcr.io \
+NAMESPACE=<github-org-or-user> \
+APP_NAME=coreweb \
+TAG=latest \
+PLATFORMS=linux/amd64 \
+NEXT_PUBLIC_API_URL=https://api.example.com \
+NEXT_PUBLIC_APP_URL=https://example.com \
+./scripts/docker-build-push.sh
+```
+
+Kết quả images:
+- `ghcr.io/<namespace>/coreweb-backend:latest`
+- `ghcr.io/<namespace>/coreweb-frontend:latest`

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
-import { Tenant, TenantDocument, FeatureKey, LandingConfig } from './schemas/tenant.schema';
+import { Tenant, TenantDocument, FeatureKey } from './schemas/tenant.schema';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { TenantMembershipService } from '../tenant-membership/tenant-membership.service';
 
@@ -123,37 +123,5 @@ export class TenantService {
     const tenant = await this.tenantModel.findByIdAndDelete(id).exec();
     if (!tenant) throw new NotFoundException(`Tenant not found`);
     return { message: 'Tenant deleted successfully' };
-  }
-
-  /**
-   * Merges into existing landingConfig so PATCH bodies that omit keys (e.g. partial forms)
-   * do not wipe the rest of the stored config.
-   */
-  async updateLandingConfig(id: string, config: Partial<LandingConfig>): Promise<Tenant> {
-    if (!id || id === 'undefined' || !Types.ObjectId.isValid(id)) {
-      throw new BadRequestException('Missing or invalid tenant');
-    }
-    const tenant = await this.tenantModel.findById(id).exec();
-    if (!tenant) throw new NotFoundException('Tenant not found');
-
-    const prev: Record<string, unknown> =
-      tenant.landingConfig &&
-      typeof tenant.landingConfig === 'object' &&
-      !Array.isArray(tenant.landingConfig)
-        ? { ...(tenant.landingConfig as Record<string, unknown>) }
-        : {};
-
-    const incoming = config as Record<string, unknown>;
-    const merged: Record<string, unknown> = { ...prev };
-    for (const [key, val] of Object.entries(incoming)) {
-      if (val !== undefined) {
-        merged[key] = val;
-      }
-    }
-
-    tenant.landingConfig = merged as unknown as LandingConfig;
-    tenant.markModified('landingConfig');
-    await tenant.save();
-    return tenant;
   }
 }

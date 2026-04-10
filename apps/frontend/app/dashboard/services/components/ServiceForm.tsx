@@ -271,7 +271,7 @@ export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFor
                   {field.value.map((id) => {
                     const c = categories.find((x) => x._id === id);
                     return (
-                      <Badge key={id} variant="secondary" className="cursor-pointer" onClick={() => field.onChange(field.value.filter((x) => x !== id))}>
+                      <Badge key={id} variant="secondary" className="cursor-pointer" onClick={() => field.onChange((field.value ?? []).filter((x) => x !== id))}>
                         {c?.name ?? "Category"}
                         <span className="ml-1 text-muted-foreground">×</span>
                       </Badge>
@@ -391,7 +391,7 @@ export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFor
                     </Button>
                   </div>
 
-                  <BlockEditor control={form.control} index={index} disabled={isLoading} />
+                  <BlockEditor control={form.control as unknown as Control<Record<string, unknown>>} index={index} disabled={isLoading} />
                 </div>
               ))}
             </div>
@@ -472,7 +472,7 @@ function BlockEditor({
   index,
   disabled,
 }: {
-  control: Control<any>;
+  control: Control<Record<string, unknown>>;
   index: number;
   disabled?: boolean;
 }) {

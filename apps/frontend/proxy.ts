@@ -19,7 +19,7 @@ export function proxy(request: NextRequest) {
 
   if (subdomain) {
     if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
     if (pathname === '/') {

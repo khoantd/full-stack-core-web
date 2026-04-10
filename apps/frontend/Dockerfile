@@ -3,17 +3,23 @@ FROM node:20 AS build
 
 WORKDIR /app
 
-# Copy dependency files
-COPY package.json ./
+# Next.js reads NEXT_PUBLIC_* at build time.
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
-# Cài dependency qua Yarn (giữ nguyên phiên bản)
-RUN yarn install --frozen-lockfile
+# Copy dependency files (npm only)
+COPY package.json package-lock.json ./
+
+# Install dependencies (reproducible via package-lock.json)
+RUN npm ci --legacy-peer-deps
 
 # Copy toàn bộ project
 COPY . .
 
 # Build production
-RUN yarn build
+RUN npm run build
 
 
 # --- Stage 2: Production runtime ---
@@ -27,4 +33,4 @@ COPY --from=build /app ./
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["yarn", "start"]
+CMD ["npm", "run", "start"]

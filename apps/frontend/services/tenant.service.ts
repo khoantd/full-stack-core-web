@@ -1,5 +1,5 @@
 import axiosClient from "@/api/axiosClient";
-import type { Tenant, CreateTenantRequest, UpdateTenantRequest, FeatureKey, LandingConfig } from "@/types/tenant.type";
+import type { Tenant, CreateTenantRequest, UpdateTenantRequest, FeatureKey } from "@/types/tenant.type";
 
 type SwitchTenantResponse = {
   user: unknown;
@@ -30,11 +30,6 @@ export const tenantService = {
 
   updateFeatures: async (enabledFeatures: FeatureKey[]): Promise<Tenant> => {
     const res = await axiosClient.patch<Tenant>(`/tenants/my/features`, { enabledFeatures });
-    return res.data;
-  },
-
-  updateLandingConfig: async (config: LandingConfig): Promise<Tenant> => {
-    const res = await axiosClient.patch<Tenant>(`/tenants/my/landing`, config);
     return res.data;
   },
 

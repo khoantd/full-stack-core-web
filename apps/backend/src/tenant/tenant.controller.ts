@@ -6,7 +6,6 @@ import { Types } from 'mongoose';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateFeaturesDto } from './dto/update-features.dto';
-import { UpdateLandingConfigDto } from './dto/update-landing-config.dto';
 import { SwitchTenantDto } from './dto/switch-tenant.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
@@ -41,22 +40,6 @@ export class TenantController {
       throw new BadRequestException('Missing or invalid tenant');
     }
     return this.tenantService.update(String(tenantId), { enabledFeatures: dto.enabledFeatures });
-  }
-
-  @Patch('my/landing')
-  @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  )
-  updateMyLanding(@Req() req: any, @Body() dto: UpdateLandingConfigDto) {
-    const tenantId = req.user?.tenantId;
-    if (!tenantId || !Types.ObjectId.isValid(String(tenantId))) {
-      throw new BadRequestException('Missing or invalid tenant');
-    }
-    return this.tenantService.updateLandingConfig(String(tenantId), dto);
   }
 
   @Post('my/switch')

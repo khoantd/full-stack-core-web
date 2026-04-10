@@ -7,6 +7,7 @@ export const ALL_FEATURES = [
   'serviceCategories',
   'blogs',
   'payments',
+  'pricings',
 ] as const;
 
 export type FeatureKey = typeof ALL_FEATURES[number];

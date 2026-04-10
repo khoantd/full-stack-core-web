@@ -3,7 +3,7 @@ import { getTenantSlugFromToken } from "@/lib/jwt";
 const COOKIE_ACCESS_MAX = 900;
 const COOKIE_REFRESH_MAX = 604800;
 
-/** Sets access/refresh cookies and `tenant_slug` for server-rendered landing. */
+/** Sets access/refresh cookies and `tenant_slug` for tenant-scoped requests. */
 export function syncAuthSessionCookies(accessToken: string, refreshToken?: string | null): void {
   if (typeof document === "undefined") return;
   document.cookie = `access_token=${accessToken}; path=/; max-age=${COOKIE_ACCESS_MAX}; SameSite=Lax`;

@@ -22,7 +22,7 @@ export class AuthService {
     private readonly friendGateway: FriendGateway,
     private jwtService: JwtService,) { }
 
-  /** Slug for the user's active organization (for public landing X-Tenant-Slug). */
+  /** Organization slug embedded in JWT for tenant-scoped requests. */
   private async resolvePayloadTenantSlug(tenantId: string | undefined): Promise<string | undefined> {
     if (!tenantId || !Types.ObjectId.isValid(tenantId)) return undefined;
     const doc = await this.tenantModel.findById(tenantId).select('slug').lean().exec();
