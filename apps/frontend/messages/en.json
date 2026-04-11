@@ -259,6 +259,7 @@
       },
       "form": {
         "name": "Name",
+        "nameVi": "Name (Vietnamese)",
         "slug": "Slug",
         "status": "Status",
         "sortOrder": "Sort order",
@@ -266,8 +267,13 @@
         "saving": "Saving...",
         "update": "Update",
         "create": "Create",
+        "cancel": "Cancel",
         "nameRequired": "Name is required",
-        "slugRequired": "Slug is required"
+        "nameViRequired": "Vietnamese name is required",
+        "slugRequired": "Slug is required",
+        "placeholderName": "e.g. Sleep Therapy",
+        "placeholderSlug": "e.g. sleep-therapy",
+        "placeholderNameVi": "e.g. Liệu pháp giấc ngủ"
       },
       "dialog": {
         "createTitle": "Create Service Category",

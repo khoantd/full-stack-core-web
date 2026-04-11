@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { type Translations } from '../../common/i18n/translations';
 
 export enum ServiceCategoryStatus {
   DRAFT = 'Draft',
@@ -8,6 +9,11 @@ export enum ServiceCategoryStatus {
 }
 
 export type ServiceCategoryDocument = ServiceCategory & Document;
+
+/** Localized display name; slug/status/sortOrder/parent stay on the root document only. */
+export type ServiceCategoryTranslatableFields = {
+  name: string;
+};
 
 @Schema({ collection: 'serviceCategories', timestamps: true })
 export class ServiceCategory {
@@ -28,6 +34,9 @@ export class ServiceCategory {
 
   @Prop({ type: Types.ObjectId, ref: 'ServiceCategory', default: null })
   parent?: Types.ObjectId | null;
+
+  @Prop({ type: Object, default: undefined })
+  translations?: Translations<ServiceCategoryTranslatableFields>;
 
   createdAt: Date;
   updatedAt: Date;

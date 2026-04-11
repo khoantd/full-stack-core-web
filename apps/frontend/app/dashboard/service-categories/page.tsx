@@ -10,10 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useCreateServiceCategory, useDeleteServiceCategory, useServiceCategories, useUpdateServiceCategory } from "@/hooks/useServiceCategory";
+import { useDeleteServiceCategory, useServiceCategories } from "@/hooks/useServiceCategory";
 import type { ServiceCategory } from "@/types/service-category.type";
 import { DeleteServiceCategoryDialog, ServiceCategoryDetailDialog, ServiceCategoryFormDialog, ServiceCategoryTable } from "./components";
-import type { ServiceCategoryFormValues } from "./components/ServiceCategoryForm";
 
 export default function ServiceCategoriesPage() {
   const t = useTranslations("pages.serviceCategories");
@@ -37,11 +36,14 @@ export default function ServiceCategoriesPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { data, isLoading, error } = useServiceCategories({ page, limit, search: debouncedSearch });
+  const { data, isLoading, error, refetch } = useServiceCategories({ page, limit, search: debouncedSearch });
 
-  const createMutation = useCreateServiceCategory();
-  const updateMutation = useUpdateServiceCategory();
   const deleteMutation = useDeleteServiceCategory();
+
+  const handleFormDialogOpenChange = useCallback((open: boolean) => {
+    setFormDialogOpen(open);
+    if (!open) setToEdit(undefined);
+  }, []);
 
   const handleCreate = () => {
     setToEdit(undefined);
@@ -63,22 +65,9 @@ export default function ServiceCategoriesPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = async (values: ServiceCategoryFormValues) => {
-    try {
-      const payload = { ...values, sortOrder: Number(values.sortOrder) };
-      if (toEdit) {
-        await updateMutation.mutateAsync({ id: toEdit._id, data: payload });
-        toast.success(t("updated"));
-      } else {
-        await createMutation.mutateAsync(payload);
-        toast.success(t("created"));
-      }
-      setFormDialogOpen(false);
-      setToEdit(undefined);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || (toEdit ? t("updateFailed") : t("createFailed")));
-    }
-  };
+  const handleFormSuccess = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = async () => {
     if (!selected) return;
@@ -87,8 +76,12 @@ export default function ServiceCategoriesPage() {
       toast.success(t("deleted"));
       setDeleteDialogOpen(false);
       setSelected(null);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || t("deleteFailed"));
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      toast.error(msg || t("deleteFailed"));
     }
   };
 
@@ -202,10 +195,9 @@ export default function ServiceCategoriesPage() {
 
       <ServiceCategoryFormDialog
         open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         category={toEdit}
-        onSubmit={handleFormSubmit}
-        isLoading={createMutation.isPending || updateMutation.isPending}
+        onSuccess={handleFormSuccess}
       />
 
       <ServiceCategoryDetailDialog

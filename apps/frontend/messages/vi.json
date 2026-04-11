@@ -259,6 +259,7 @@
       },
       "form": {
         "name": "Tên",
+        "nameVi": "Tên (Tiếng Việt)",
         "slug": "Slug",
         "status": "Trạng thái",
         "sortOrder": "Thứ tự sắp xếp",
@@ -266,8 +267,13 @@
         "saving": "Đang lưu...",
         "update": "Cập nhật",
         "create": "Tạo mới",
+        "cancel": "Hủy",
         "nameRequired": "Tên là bắt buộc",
-        "slugRequired": "Slug là bắt buộc"
+        "nameViRequired": "Tên tiếng Việt là bắt buộc",
+        "slugRequired": "Slug là bắt buộc",
+        "placeholderName": "ví dụ: Sleep Therapy",
+        "placeholderSlug": "ví dụ: sleep-therapy",
+        "placeholderNameVi": "ví dụ: Liệu pháp giấc ngủ"
       },
       "dialog": {
         "createTitle": "Tạo danh mục dịch vụ",

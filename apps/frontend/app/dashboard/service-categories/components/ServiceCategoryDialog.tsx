@@ -19,24 +19,29 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { ServiceCategory } from "@/types/service-category.type";
-import { ServiceCategoryForm, type ServiceCategoryFormValues } from "./ServiceCategoryForm";
+import { ServiceCategoryForm } from "./ServiceCategoryForm";
 
 interface ServiceCategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category?: ServiceCategory;
-  onSubmit: (data: ServiceCategoryFormValues) => void;
-  isLoading?: boolean;
+  onSuccess?: () => void;
 }
 
 export function ServiceCategoryFormDialog({
   open,
   onOpenChange,
   category,
-  onSubmit,
-  isLoading,
+  onSuccess,
 }: ServiceCategoryFormDialogProps) {
   const t = useTranslations("pages.serviceCategories.dialog");
+  const formKey = open ? (category ? `edit-${category._id}` : "create-new") : "closed";
+
+  const handleSuccess = () => {
+    onOpenChange(false);
+    onSuccess?.();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
@@ -46,7 +51,12 @@ export function ServiceCategoryFormDialog({
             {category ? t("editDescription") : t("createDescription")}
           </DialogDescription>
         </DialogHeader>
-        <ServiceCategoryForm initialData={category} onSubmit={onSubmit} isLoading={isLoading} />
+        <ServiceCategoryForm
+          key={formKey}
+          category={category}
+          onSuccess={handleSuccess}
+          onCancel={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );

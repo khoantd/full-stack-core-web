@@ -26,25 +26,42 @@ export class ServiceCategoryController {
 
   @Get()
   @UsePipes(new ValidationPipe({ transform: true }))
-  findAll(@Query() queryDto: QueryServiceCategoryDto, @CurrentTenant() tenantId: string) {
-    return this.serviceCategoryService.findAll(queryDto, tenantId);
+  findAll(
+    @Query() queryDto: QueryServiceCategoryDto,
+    @CurrentTenant() tenantId: string,
+    @Query('locale') locale?: string,
+  ) {
+    return this.serviceCategoryService.findAll(queryDto, tenantId, locale);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.serviceCategoryService.findOne(id, tenantId);
+  findOne(
+    @Param('id') id: string,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.serviceCategoryService.findOne(id, tenantId, locale);
   }
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  create(@Body() dto: CreateServiceCategoryDto, @CurrentTenant() tenantId: string) {
-    return this.serviceCategoryService.create(dto, tenantId);
+  create(
+    @Body() dto: CreateServiceCategoryDto,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.serviceCategoryService.create(dto, tenantId, locale);
   }
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  update(@Param('id') id: string, @Body() dto: UpdateServiceCategoryDto, @CurrentTenant() tenantId: string) {
-    return this.serviceCategoryService.update(id, dto, tenantId);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateServiceCategoryDto,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.serviceCategoryService.update(id, dto, tenantId, locale);
   }
 
   @Delete(':id')
