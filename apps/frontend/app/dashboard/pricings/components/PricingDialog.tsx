@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -14,15 +15,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Separator } from "@/components/ui/separator";
 import { buttonVariants } from "@/components/ui/button";
-import type { CreatePricingRequest, Pricing, UpdatePricingRequest } from "@/types/pricing.type";
+import type { Pricing } from "@/types/pricing.type";
 import { PricingForm } from "./PricingForm";
 
 interface PricingFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pricing: Pricing | null;
-  onSubmit: (payload: CreatePricingRequest | UpdatePricingRequest) => void;
-  isLoading?: boolean;
+  onSuccess?: () => void;
   /** Distinct keys when two dialogs mount (create + edit) so React does not reuse stale form state. */
   variant: "create" | "edit";
 }
@@ -31,10 +31,10 @@ export function PricingFormDialog({
   open,
   onOpenChange,
   pricing,
-  onSubmit,
-  isLoading,
+  onSuccess,
   variant,
 }: PricingFormDialogProps) {
+  const t = useTranslations("pages.pricings.dialog");
   const isEditMode = !!pricing;
   const formKey = open
     ? isEditMode && pricing
@@ -42,20 +42,25 @@ export function PricingFormDialog({
       : `${variant}-new`
     : `${variant}-closed`;
 
+  const handleSuccess = () => {
+    onOpenChange(false);
+    onSuccess?.();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit Pricing" : "Create Pricing"}</DialogTitle>
+          <DialogTitle>{isEditMode ? t("editTitle") : t("createTitle")}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? "Update the pricing catalog entry below." : "Create a new pricing catalog entry with tiers."}
+            {isEditMode ? t("editDescription") : t("createDescription")}
           </DialogDescription>
         </DialogHeader>
         <PricingForm
           key={formKey}
-          initialData={pricing}
-          onSubmit={onSubmit}
-          isLoading={isLoading}
+          pricing={pricing}
+          onSuccess={handleSuccess}
+          onCancel={() => onOpenChange(false)}
         />
       </DialogContent>
     </Dialog>
@@ -68,12 +73,15 @@ interface PricingDetailDialogProps {
   pricing: Pricing | null;
 }
 
-function formatAmount(currency: "VND" | "USD", unitAmount: number) {
+function formatAmount(currency: "VND" | "USD", unitAmount: number, locale: string) {
   const amount = currency === "USD" ? unitAmount / 100 : unitAmount;
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount);
 }
 
 export function PricingDetailDialog({ open, onOpenChange, pricing }: PricingDetailDialogProps) {
+  const t = useTranslations("pages.pricings.dialog");
+  const ts = useTranslations("pages.pricings");
+  const locale = useLocale();
   if (!pricing) return null;
   const tiers = [...(pricing.tiers ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -81,8 +89,8 @@ export function PricingDetailDialog({ open, onOpenChange, pricing }: PricingDeta
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[720px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Pricing Details</DialogTitle>
-          <DialogDescription>View tiers and metadata for this pricing entry.</DialogDescription>
+          <DialogTitle>{t("detailTitle")}</DialogTitle>
+          <DialogDescription>{t("detailDescription")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -90,10 +98,16 @@ export function PricingDetailDialog({ open, onOpenChange, pricing }: PricingDeta
             <h3 className="text-lg font-semibold">{pricing.title}</h3>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-foreground">
-                {pricing.status}
+                {pricing.status === "Draft"
+                  ? ts("statusDraft")
+                  : pricing.status === "Published"
+                    ? ts("statusPublished")
+                    : pricing.status === "Archived"
+                      ? ts("statusArchived")
+                      : pricing.status}
               </span>
               {pricing.slug ? (
-                <span className="text-xs text-muted-foreground">Slug: {pricing.slug}</span>
+                <span className="text-xs text-muted-foreground">{t("slug")} {pricing.slug}</span>
               ) : null}
             </div>
           </div>
@@ -101,27 +115,27 @@ export function PricingDetailDialog({ open, onOpenChange, pricing }: PricingDeta
           <Separator />
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Tiers</p>
+            <p className="text-sm font-medium">{t("tiersLabel")}</p>
             {tiers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No tiers</p>
+              <p className="text-sm text-muted-foreground">{t("noTiers")}</p>
             ) : (
               <div className="space-y-3">
-                {tiers.map((t, idx) => (
-                  <div key={`${t.name}-${idx}`} className="rounded-md border p-3">
+                {tiers.map((tier, idx) => (
+                  <div key={`${tier.name}-${idx}`} className="rounded-md border p-3">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="font-medium">{t.name}</p>
-                        {t.description ? (
-                          <p className="text-sm text-muted-foreground">{t.description}</p>
+                        <p className="font-medium">{tier.name}</p>
+                        {tier.description ? (
+                          <p className="text-sm text-muted-foreground">{tier.description}</p>
                         ) : null}
                       </div>
                       <div className="text-sm font-semibold">
-                        {formatAmount(t.currency, t.unitAmount)}
+                        {formatAmount(tier.currency, tier.unitAmount, locale)}
                       </div>
                     </div>
-                    {t.features?.length ? (
+                    {tier.features?.length ? (
                       <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                        {t.features.map((f) => (
+                        {tier.features.map((f) => (
                           <li key={f}>{f}</li>
                         ))}
                       </ul>
@@ -136,12 +150,12 @@ export function PricingDetailDialog({ open, onOpenChange, pricing }: PricingDeta
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground">Created At</p>
-              <p>{new Date(pricing.createdAt).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{t("createdAt")}</p>
+              <p>{new Date(pricing.createdAt).toLocaleString(locale)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Updated At</p>
-              <p>{new Date(pricing.updatedAt).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{t("updatedAt")}</p>
+              <p>{new Date(pricing.updatedAt).toLocaleString(locale)}</p>
             </div>
           </div>
         </div>
@@ -159,30 +173,29 @@ interface DeletePricingDialogProps {
 }
 
 export function DeletePricingDialog({ open, onOpenChange, pricing, onConfirm, isLoading }: DeletePricingDialogProps) {
+  const t = useTranslations("pages.pricings.dialog");
   if (!pricing) return null;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Pricing?</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete{" "}
-            <span className="font-semibold text-foreground">&quot;{pricing.title}&quot;</span>. This action cannot be undone.
+            {t("deleteDescription", { title: pricing.title })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoading}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => { e.preventDefault(); onConfirm(); }}
             disabled={isLoading}
             className={buttonVariants({ variant: "destructive" })}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? t("deleting") : t("deleteAction")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { DeleteServiceCategoryDialog, ServiceCategoryDetailDialog, ServiceCatego
 import type { ServiceCategoryFormValues } from "./components/ServiceCategoryForm";
 
 export default function ServiceCategoriesPage() {
+  const t = useTranslations("pages.serviceCategories");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
@@ -66,15 +68,15 @@ export default function ServiceCategoriesPage() {
       const payload = { ...values, sortOrder: Number(values.sortOrder) };
       if (toEdit) {
         await updateMutation.mutateAsync({ id: toEdit._id, data: payload });
-        toast.success("Service category updated successfully");
+        toast.success(t("updated"));
       } else {
         await createMutation.mutateAsync(payload);
-        toast.success("Service category created successfully");
+        toast.success(t("created"));
       }
       setFormDialogOpen(false);
       setToEdit(undefined);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || `Failed to ${toEdit ? "update" : "create"} service category`);
+      toast.error(e?.response?.data?.message || (toEdit ? t("updateFailed") : t("createFailed")));
     }
   };
 
@@ -82,11 +84,11 @@ export default function ServiceCategoriesPage() {
     if (!selected) return;
     try {
       await deleteMutation.mutateAsync(selected._id);
-      toast.success("Service category deleted successfully");
+      toast.success(t("deleted"));
       setDeleteDialogOpen(false);
       setSelected(null);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Failed to delete service category");
+      toast.error(e?.response?.data?.message || t("deleteFailed"));
     }
   };
 
@@ -99,8 +101,8 @@ export default function ServiceCategoriesPage() {
       <div className="flex items-center justify-center h-[400px]">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>Failed to load service categories. Please try again later.</CardDescription>
+            <CardTitle>{t("errorTitle")}</CardTitle>
+            <CardDescription>{t("errorSubtitle")}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -114,20 +116,22 @@ export default function ServiceCategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Service Categories</h1>
-          <p className="text-muted-foreground">Manage your service categories</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Category
+          {t("add")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
+          <CardTitle>{t("categoriesLabel")}</CardTitle>
           <CardDescription>
-            {pagination ? `Showing ${categories.length} of ${pagination.total} categories` : "Loading categories..."}
+            {pagination
+              ? t("showing", { count: categories.length, total: pagination.total })
+              : t("loading")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,14 +142,14 @@ export default function ServiceCategoriesPage() {
             </div>
           ) : categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[400px] text-center">
-              <p className="text-lg font-medium text-muted-foreground mb-2">No categories found</p>
+              <p className="text-lg font-medium text-muted-foreground mb-2">{t("noYetTitle")}</p>
               <p className="text-sm text-muted-foreground mb-4">
-                {search ? "Try adjusting your search" : "Get started by creating your first service category"}
+                {search ? t("noYetSearch") : t("noYetSubtitle")}
               </p>
               {!search && (
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Category
+                  {t("add")}
                 </Button>
               )}
             </div>
@@ -220,4 +224,3 @@ export default function ServiceCategoriesPage() {
     </div>
   );
 }
-

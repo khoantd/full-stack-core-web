@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import axiosClient from "@/api/axiosClient";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { routing, type AppLocale } from "@/i18n/routing";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
+import { usePathname } from "@/i18n/navigation";
 import {
   Select,
   SelectContent,
@@ -66,7 +66,6 @@ export default function ProfileSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -100,15 +99,6 @@ export default function ProfileSettingsPage() {
 
   const setLanguage = (lang: string) => {
     set("language", lang);
-
-    // UI locale comes from the URL prefix (next-intl). Changing the preference
-    // alone won't re-render translations. For supported locales, update route.
-    if ((routing.locales as readonly string[]).includes(lang)) {
-      const locale = lang as AppLocale;
-      const query = searchParams?.toString();
-      const target = `${pathname}${query ? `?${query}` : ""}`;
-      router.replace(target as any, { locale });
-    }
   };
 
   const handleSave = async () => {
@@ -119,6 +109,15 @@ export default function ProfileSettingsPage() {
       setSaved(true);
       toast.success("Preferences saved — your settings have been updated.");
       setTimeout(() => setSaved(false), 3000);
+
+      // Hard-navigate so middleware runs and the root layout re-fetches getLocale()
+      // / getMessages() with the new locale. Soft client-side navigation skips
+      // root layout re-rendering, leaving NextIntlClientProvider with stale messages.
+      if ((routing.locales as readonly string[]).includes(prefs.language)) {
+        const query = searchParams?.toString();
+        const target = `/${prefs.language}${pathname}${query ? `?${query}` : ""}`;
+        window.location.href = target;
+      }
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? "Failed to save preferences");
     } finally {

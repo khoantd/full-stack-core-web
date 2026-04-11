@@ -10,6 +10,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -34,6 +35,7 @@ export function ServiceCategoryTable({
   searchValue,
   onSearchChange,
 }: ServiceCategoryTableProps) {
+  const t = useTranslations("pages.serviceCategories.table");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -43,7 +45,7 @@ export function ServiceCategoryTable({
       accessorKey: "name",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Name
+          {t("name")}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -51,19 +53,19 @@ export function ServiceCategoryTable({
     },
     {
       accessorKey: "slug",
-      header: "Slug",
+      header: t("slug"),
       cell: ({ row }) => <div className="max-w-[240px] truncate text-muted-foreground">{row.getValue("slug")}</div>,
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("status"),
       cell: ({ row }) => <div>{row.getValue("status")}</div>,
     },
     {
       accessorKey: "sortOrder",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Order
+          {t("order")}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -73,7 +75,7 @@ export function ServiceCategoryTable({
       accessorKey: "createdAt",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Created
+          {t("created")}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -93,19 +95,19 @@ export function ServiceCategoryTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onView(category)}>
                 <Eye className="mr-2 h-4 w-4" />
-                View
+                {t("view")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(category)}>
                 <Pencil className="mr-2 h-4 w-4" />
-                Edit
+                {t("edit")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(category)} className="text-destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                {t("delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -130,7 +132,7 @@ export function ServiceCategoryTable({
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Search service categories..."
+          placeholder={t("searchPlaceholder")}
           value={searchValue}
           onChange={(event) => onSearchChange(event.target.value)}
           className="max-w-sm"
@@ -163,7 +165,7 @@ export function ServiceCategoryTable({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {t("noResults")}
                 </TableCell>
               </TableRow>
             )}
@@ -173,4 +175,3 @@ export function ServiceCategoryTable({
     </div>
   );
 }
-

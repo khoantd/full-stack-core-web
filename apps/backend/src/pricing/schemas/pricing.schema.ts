@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { type Translations } from '../../common/i18n/translations';
 
 export enum PricingStatus {
   DRAFT = 'Draft',
@@ -38,6 +39,12 @@ export class PricingTier {
   order: number;
 }
 
+/** Localized fields overlaid per locale (slug/status stay on the root document only). */
+export type PricingTranslatableFields = {
+  title: string;
+  tiers: PricingTier[];
+};
+
 export type PricingDocument = Pricing & Document;
 
 @Schema({ collection: 'pricings', timestamps: true })
@@ -56,6 +63,9 @@ export class Pricing extends Document {
 
   @Prop({ type: [PricingTier], default: [] })
   tiers: PricingTier[];
+
+  @Prop({ type: Object, default: undefined })
+  translations?: Translations<PricingTranslatableFields>;
 
   createdAt: Date;
   updatedAt: Date;

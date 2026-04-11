@@ -1,8 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,14 +12,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ServiceCategory, ServiceCategoryStatus } from "@/types/service-category.type";
 
-const schema = z.object({
-  name: z.string().min(1, "Name is required").max(120),
-  slug: z.string().min(1, "Slug is required").max(160),
-  status: z.enum(["Draft", "Published", "Archived"]).default("Published"),
-  sortOrder: z.coerce.number().min(0).default(0),
-});
+function createSchema(msgs: { nameRequired: string; slugRequired: string }) {
+  return z.object({
+    name: z.string().min(1, msgs.nameRequired).max(120),
+    slug: z.string().min(1, msgs.slugRequired).max(160),
+    status: z.enum(["Draft", "Published", "Archived"]).default("Published"),
+    sortOrder: z.coerce.number().min(0).default(0),
+  });
+}
 
-export type ServiceCategoryFormValues = z.infer<typeof schema>;
+export type ServiceCategoryFormValues = z.infer<ReturnType<typeof createSchema>>;
 
 function slugify(input: string): string {
   return input
@@ -36,6 +40,13 @@ interface Props {
 }
 
 export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props) {
+  const t = useTranslations("pages.serviceCategories.form");
+
+  const schema = useMemo(
+    () => createSchema({ nameRequired: t("nameRequired"), slugRequired: t("slugRequired") }),
+    [t],
+  );
+
   const form = useForm<ServiceCategoryFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -64,7 +75,7 @@ export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props)
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t("name")}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. Sleep Therapy" disabled={isLoading} {...field} />
               </FormControl>
@@ -78,7 +89,7 @@ export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props)
           name="slug"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Slug</FormLabel>
+              <FormLabel>{t("slug")}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g. sleep-therapy" disabled={isLoading} {...field} />
               </FormControl>
@@ -93,11 +104,11 @@ export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props)
             name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Status</FormLabel>
+                <FormLabel>{t("status")}</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t("selectStatus")} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -116,7 +127,7 @@ export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props)
             name="sortOrder"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Sort order</FormLabel>
+                <FormLabel>{t("sortOrder")}</FormLabel>
                 <FormControl>
                   <Input type="number" min="0" disabled={isLoading} {...field} />
                 </FormControl>
@@ -127,10 +138,9 @@ export function ServiceCategoryForm({ initialData, onSubmit, isLoading }: Props)
         </div>
 
         <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Saving..." : initialData ? "Update" : "Create"}
+          {isLoading ? t("saving") : initialData ? t("update") : t("create")}
         </Button>
       </form>
     </Form>
   );
 }
-

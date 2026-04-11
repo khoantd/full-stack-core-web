@@ -4,7 +4,12 @@ import { Model } from 'mongoose';
 import { CreatePricingDto } from './dto/create-pricing.dto';
 import { QueryPricingDto } from './dto/query-pricing.dto';
 import { UpdatePricingDto } from './dto/update-pricing.dto';
-import { Pricing, PricingDocument } from './schemas/pricing.schema';
+import {
+  Pricing,
+  PricingDocument,
+  type PricingTranslatableFields,
+} from './schemas/pricing.schema';
+import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
 
 export interface PaginationResult<T> {
   data: T[];
@@ -25,7 +30,11 @@ export class PricingService {
     private readonly pricingModel: Model<PricingDocument>,
   ) {}
 
-  async findAll(query: QueryPricingDto, tenantId: string): Promise<PaginationResult<Pricing>> {
+  async findAll(
+    query: QueryPricingDto,
+    tenantId: string,
+    locale?: string,
+  ): Promise<PaginationResult<Pricing>> {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page ?? '1', 10) || 1;
     const limit = isGetAll ? Number.MAX_SAFE_INTEGER : parseInt(query.limit ?? '10', 10) || 10;
@@ -42,9 +51,11 @@ export class PricingService {
     const total = await this.pricingModel.countDocuments(filter).exec();
 
     if (isGetAll) {
-      const data = await this.pricingModel.find(filter).sort({ createdAt: -1 }).exec();
+      const data = await this.pricingModel.find(filter).sort({ createdAt: -1 }).lean().exec();
       return {
-        data,
+        data: data.map((p: any) =>
+          overlayTranslatedFields(p, p.translations, locale) as Pricing,
+        ),
         pagination: { total: data.length, page: 'all', limit: data.length, totalPages: 1, hasNextPage: false, hasPrevPage: false },
       };
     }
@@ -54,20 +65,27 @@ export class PricingService {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
+      .lean()
       .exec();
 
     const totalPages = Math.ceil(total / limit);
     return {
-      data,
+      data: data.map((p: any) =>
+        overlayTranslatedFields(p, p.translations, locale) as Pricing,
+      ),
       pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 },
     };
   }
 
-  async findById(id: string, tenantId: string): Promise<Pricing> {
+  async findById(id: string, tenantId: string, locale?: string): Promise<Pricing> {
     try {
-      const pricing = await this.pricingModel.findOne({ _id: id, tenantId }).exec();
+      const pricing = await this.pricingModel.findOne({ _id: id, tenantId }).lean().exec();
       if (!pricing) throw new NotFoundException(`Pricing with ID "${id}" not found`);
-      return pricing;
+      return overlayTranslatedFields(
+        pricing as any,
+        (pricing as any).translations,
+        locale,
+      ) as Pricing;
     } catch (error: any) {
       if (error instanceof NotFoundException) throw error;
       if (error?.name === 'CastError') throw new BadRequestException(`Invalid pricing ID format: "${id}"`);
@@ -75,7 +93,7 @@ export class PricingService {
     }
   }
 
-  async create(dto: CreatePricingDto, tenantId: string): Promise<Pricing> {
+  async create(dto: CreatePricingDto, tenantId: string, locale?: string): Promise<Pricing> {
     try {
       const payload: Record<string, any> = { ...dto, tenantId };
       // Normalize tier ordering if not provided
@@ -84,6 +102,17 @@ export class PricingService {
           .map((t: any, idx: number) => ({ ...t, order: typeof t.order === 'number' ? t.order : idx }))
           .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
       }
+      if (locale) {
+        const patch: Partial<PricingTranslatableFields> = {
+          title: payload.title,
+          tiers: payload.tiers,
+        };
+        payload.translations = upsertTranslation<PricingTranslatableFields>(
+          payload.translations,
+          locale,
+          patch,
+        );
+      }
       const created = new this.pricingModel(payload);
       return await created.save();
     } catch {
@@ -91,7 +120,7 @@ export class PricingService {
     }
   }
 
-  async update(id: string, dto: UpdatePricingDto, tenantId: string): Promise<Pricing> {
+  async update(id: string, dto: UpdatePricingDto, tenantId: string, locale?: string): Promise<Pricing> {
     try {
       const pricing = await this.pricingModel.findOne({ _id: id, tenantId }).exec();
       if (!pricing) throw new NotFoundException(`Pricing with ID "${id}" not found`);
@@ -104,6 +133,21 @@ export class PricingService {
       }
 
       Object.assign(pricing, payload);
+
+      if (locale) {
+        const patch: Partial<PricingTranslatableFields> = {};
+        if (dto.title !== undefined) patch.title = pricing.title;
+        if (dto.tiers !== undefined) patch.tiers = pricing.tiers as any;
+
+        if (Object.keys(patch).length > 0) {
+          pricing.translations = upsertTranslation<PricingTranslatableFields>(
+            pricing.translations as any,
+            locale,
+            patch,
+          ) as any;
+        }
+      }
+
       return await pricing.save();
     } catch (error: any) {
       if (error instanceof NotFoundException) throw error;

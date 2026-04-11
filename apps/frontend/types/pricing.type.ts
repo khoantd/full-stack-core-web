@@ -17,12 +17,19 @@ export interface PricingTier {
   order: number;
 }
 
+/** Localized fields stored per locale (API merges via ?locale=). */
+export type PricingTranslatableFields = {
+  title: string;
+  tiers: PricingTier[];
+};
+
 export interface Pricing {
   _id: string;
   title: string;
   slug?: string;
   status: PricingStatus;
   tiers: PricingTier[];
+  translations?: Partial<Record<string, Partial<PricingTranslatableFields>>>;
   createdAt: string;
   updatedAt: string;
 }

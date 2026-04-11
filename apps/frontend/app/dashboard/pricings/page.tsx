@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreatePricing, useDeletePricing, usePricings, useUpdatePricing } from "@/hooks/usePricing";
-import type { Pricing, PricingStatus, CreatePricingRequest, UpdatePricingRequest } from "@/types/pricing.type";
+import { useDeletePricing, usePricings } from "@/hooks/usePricing";
+import type { Pricing, PricingStatus } from "@/types/pricing.type";
 import { PricingTable } from "./components/PricingTable";
 import { DeletePricingDialog, PricingDetailDialog, PricingFormDialog } from "./components/PricingDialog";
 import { useTranslations } from "next-intl";
@@ -44,8 +44,6 @@ export default function PricingsPage() {
     status: statusFilter !== "all" ? (statusFilter as PricingStatus) : undefined,
   });
 
-  const createMutation = useCreatePricing();
-  const updateMutation = useUpdatePricing();
   const deleteMutation = useDeletePricing();
 
   const pricings = data?.data ?? [];
@@ -64,28 +62,7 @@ export default function PricingsPage() {
   const handleEdit = useCallback((p: Pricing) => { setSelectedPricing(p); setIsEditOpen(true); }, []);
   const handleDelete = useCallback((p: Pricing) => { setSelectedPricing(p); setIsDeleteOpen(true); }, []);
 
-  const handleCreateSubmit = useCallback(async (payload: CreatePricingRequest | UpdatePricingRequest) => {
-    try {
-      await createMutation.mutateAsync(payload as CreatePricingRequest);
-      toast.success(t("created"));
-      setIsCreateOpen(false);
-      refetch();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("createFailed"));
-    }
-  }, [createMutation, refetch, t]);
-
-  const handleEditSubmit = useCallback(async (payload: UpdatePricingRequest) => {
-    if (!selectedPricing) return;
-    try {
-      await updateMutation.mutateAsync({ id: selectedPricing._id, data: payload });
-      toast.success(t("updated"));
-      setIsEditOpen(false);
-      refetch();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("updateFailed"));
-    }
-  }, [selectedPricing, updateMutation, refetch, t]);
+  const handleFormSuccess = useCallback(() => { refetch(); }, [refetch]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedPricing) return;
@@ -95,8 +72,11 @@ export default function PricingsPage() {
       setIsDeleteOpen(false);
       setSelectedPricing(null);
       refetch();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("deleteFailed"));
+    } catch (err: unknown) {
+      const msg = err && typeof err === "object" && "response" in err
+        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      toast.error(msg || t("deleteFailed"));
     }
   }, [deleteMutation, selectedPricing, refetch, t]);
 
@@ -122,7 +102,9 @@ export default function PricingsPage() {
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Card>
           <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-4 py-12">
-            <p className="text-destructive">{error instanceof Error ? error.message : "An error occurred"}</p>
+            <p className="text-destructive">
+              {error instanceof Error ? error.message : t("loadError")}
+            </p>
             <Button onClick={() => refetch()} variant="outline">{t("tryAgain")}</Button>
           </CardContent>
         </Card>
@@ -157,9 +139,9 @@ export default function PricingsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("allStatuses")}</SelectItem>
-            <SelectItem value="Draft">Draft</SelectItem>
-            <SelectItem value="Published">Published</SelectItem>
-            <SelectItem value="Archived">Archived</SelectItem>
+            <SelectItem value="Draft">{t("statusDraft")}</SelectItem>
+            <SelectItem value="Published">{t("statusPublished")}</SelectItem>
+            <SelectItem value="Archived">{t("statusArchived")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -235,8 +217,7 @@ export default function PricingsPage() {
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         pricing={null}
-        onSubmit={handleCreateSubmit}
-        isLoading={createMutation.isPending}
+        onSuccess={handleFormSuccess}
         variant="create"
       />
 
@@ -244,8 +225,7 @@ export default function PricingsPage() {
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
         pricing={selectedPricing}
-        onSubmit={handleEditSubmit}
-        isLoading={updateMutation.isPending}
+        onSuccess={handleFormSuccess}
         variant="edit"
       />
 
@@ -265,4 +245,3 @@ export default function PricingsPage() {
     </>
   );
 }
-
