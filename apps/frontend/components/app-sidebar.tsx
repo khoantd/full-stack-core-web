@@ -17,6 +17,8 @@ import {
   IconChevronDown,
   IconCar,
   IconTag,
+  IconHelp,
+  IconMessageCircle,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -80,6 +82,8 @@ const FEATURE_NAV_DEF: Record<FeatureKey, { url: string; icon: Icon }> = {
   automakers: { url: "/dashboard/automakers", icon: IconCar },
   payments: { url: "/dashboard/payments", icon: IconCreditCard },
   pricings: { url: "/dashboard/pricings", icon: IconTag },
+  faqs: { url: "/dashboard/faq-sections", icon: IconHelp },
+  testimonials: { url: "/dashboard/testimonial-sections", icon: IconMessageCircle },
 };
 
 function useCurrentUser() {
@@ -233,6 +237,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               : []),
             ...(enabledFeatures.has("events")
               ? [{ title: t("nav.items.events"), ...FEATURE_NAV_DEF.events }]
+              : []),
+            ...(enabledFeatures.has("faqs")
+              ? [{ title: t("nav.items.faqs"), ...FEATURE_NAV_DEF.faqs }]
+              : []),
+            ...(enabledFeatures.has("testimonials")
+              ? [{ title: t("nav.items.testimonials"), ...FEATURE_NAV_DEF.testimonials }]
               : []),
             { title: t("nav.items.mediaLibrary"), url: "/dashboard/media", icon: IconPhoto },
           ],

@@ -26,6 +26,8 @@ import { VietQRModule } from './vietqr/vietqr.module';
 import { ApiKeyModule } from './api-key/api-key.module';
 import { SeedModule } from './seed/seed.module';
 import { PricingModule } from './pricing/pricing.module';
+import { FaqSectionModule } from './faq-section/faq-section.module';
+import { TestimonialSectionModule } from './testimonial-section/testimonial-section.module';
 
 @Module({
   imports: [
@@ -71,6 +73,8 @@ import { PricingModule } from './pricing/pricing.module';
     VietQRModule,
     ApiKeyModule,
     PricingModule,
+    FaqSectionModule,
+    TestimonialSectionModule,
     SeedModule,
   ],
   controllers: [AppController],

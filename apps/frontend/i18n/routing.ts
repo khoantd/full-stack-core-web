@@ -25,6 +25,8 @@ export const routing = defineRouting({
     '/dashboard/events/[id]/attendees': '/dashboard/events/[id]/attendees',
     '/dashboard/media': '/dashboard/media',
     '/dashboard/pricings': '/dashboard/pricings',
+    '/dashboard/faq-sections': '/dashboard/faq-sections',
+    '/dashboard/testimonial-sections': '/dashboard/testimonial-sections',
     '/dashboard/category-products': '/dashboard/category-products',
     '/dashboard/products': '/dashboard/products',
     '/dashboard/automakers': '/dashboard/automakers',

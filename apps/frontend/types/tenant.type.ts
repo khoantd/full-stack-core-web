@@ -8,6 +8,8 @@ export const ALL_FEATURES = [
   'blogs',
   'payments',
   'pricings',
+  'faqs',
+  'testimonials',
 ] as const;
 
 export type FeatureKey = typeof ALL_FEATURES[number];
