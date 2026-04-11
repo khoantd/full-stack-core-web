@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircledIcon } from "@radix-ui/react-icons";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,17 +41,15 @@ function UsersPageContent() {
   }, [searchInput]);
 
   // Check role from JWT before fetching — null = not yet hydrated
-  const [canAccess, setCanAccess] = useState<boolean | null>(null);
-  useEffect(() => {
-    const token = getStoredToken();
+  const canAccess = useMemo(() => {
+    const token = typeof window !== "undefined" ? getStoredToken() : null;
     const currentUser = token ? getUserFromToken(token) : null;
-    // role may be a string or an object { name: string }
     const rawRole = currentUser?.role;
     const userRole: string =
       rawRole && typeof rawRole === "object"
         ? (rawRole as { name?: string }).name ?? ""
         : String(rawRole ?? "");
-    setCanAccess(ALLOWED_ROLES.includes(userRole.toLowerCase()));
+    return ALLOWED_ROLES.includes(userRole.toLowerCase());
   }, []);
 
   const { data, isLoading, isError, error, refetch } = useUsers(

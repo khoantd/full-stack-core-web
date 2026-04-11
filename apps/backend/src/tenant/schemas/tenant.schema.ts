@@ -62,6 +62,12 @@ export class Tenant extends Document {
   @Prop({ type: [String], default: [...ALL_FEATURES] })
   enabledFeatures: FeatureKey[];
 
+  @Prop({ default: 'en' })
+  defaultLocale: string;
+
+  @Prop({ type: [String], default: ['en'] })
+  supportedLocales: string[];
+
   @Prop({ type: Object, default: {} })
   landingConfig: LandingConfig;
 

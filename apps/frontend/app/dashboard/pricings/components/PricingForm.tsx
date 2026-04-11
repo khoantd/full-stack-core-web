@@ -130,7 +130,7 @@ interface PricingFormProps {
 export function PricingForm({ initialData, onSubmit, isLoading }: PricingFormProps) {
   const defaultTiers = useMemo<TierForm[]>(
     () => (initialData?.tiers?.length ? tiersToForm(initialData.tiers) : [{ name: "Basic", currency: "USD", price: "0.00", description: "", featuresText: "", order: 0 }]),
-    [initialData?.tiers],
+    [initialData],
   );
 
   const form = useForm<PricingFormValues>({

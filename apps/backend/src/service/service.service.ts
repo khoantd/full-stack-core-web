@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Service } from './schemas/service.schema';
+import { Service, type ServiceTranslatableFields } from './schemas/service.schema';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { QueryServiceDto } from './dto/query-service.dto';
+import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
 
 export interface PaginationResult {
   data: Service[];
@@ -24,7 +25,40 @@ export class ServiceService {
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
   ) {}
 
-  async findAll(query: QueryServiceDto, tenantId: string): Promise<PaginationResult> {
+  private static readonly DEFAULT_LOCALE = 'en';
+  private static readonly TRANSLATABLE_KEYS = [
+    'title',
+    'description',
+    'seoTitle',
+    'seoDescription',
+    'duration',
+    'category',
+    'content',
+  ] as const;
+
+  private splitBaseAndTranslationPayload<TDto extends Record<string, any>>(
+    dto: TDto,
+    locale: string | undefined,
+  ): { basePatch: Partial<TDto>; translationPatch: Partial<ServiceTranslatableFields> } {
+    const isDefaultLocale = !locale || locale === ServiceService.DEFAULT_LOCALE;
+
+    const basePatch: Record<string, any> = { ...dto };
+    const translationPatch: Partial<ServiceTranslatableFields> = {};
+
+    for (const key of ServiceService.TRANSLATABLE_KEYS) {
+      if (dto[key] !== undefined) {
+        translationPatch[key] = dto[key];
+      }
+
+      if (!isDefaultLocale) {
+        delete basePatch[key];
+      }
+    }
+
+    return { basePatch: basePatch as Partial<TDto>, translationPatch };
+  }
+
+  async findAll(query: QueryServiceDto, tenantId: string, locale?: string): Promise<PaginationResult> {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page) || 1;
     const limit = isGetAll ? Number.MAX_SAFE_INTEGER : parseInt(query.limit) || 10;
@@ -54,27 +88,27 @@ export class ServiceService {
     const total = await this.serviceModel.countDocuments(filter);
 
     if (isGetAll) {
-      const data = await this.serviceModel.find(filter).sort({ createdAt: -1 }).exec();
+      const data = await this.serviceModel.find(filter).sort({ createdAt: -1 }).lean().exec();
       return {
-        data,
+        data: data.map((s: any) => overlayTranslatedFields(s, s.translations, locale)),
         pagination: { total: data.length, page: 1, limit: data.length, totalPages: 1, hasNextPage: false, hasPrevPage: false },
       };
     }
 
-    const data = await this.serviceModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec();
+    const data = await this.serviceModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec();
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map((s: any) => overlayTranslatedFields(s, s.translations, locale)),
       pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 },
     };
   }
 
-  async findById(id: string, tenantId: string): Promise<Service> {
+  async findById(id: string, tenantId: string, locale?: string): Promise<any> {
     try {
-      const service = await this.serviceModel.findOne({ _id: id, tenantId }).exec();
+      const service = await this.serviceModel.findOne({ _id: id, tenantId }).lean().exec();
       if (!service) throw new NotFoundException(`Service with ID "${id}" not found`);
-      return service;
+      return overlayTranslatedFields(service as any, (service as any).translations, locale);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       if (error.name === 'CastError') throw new BadRequestException(`Invalid service ID format: "${id}"`);
@@ -82,28 +116,54 @@ export class ServiceService {
     }
   }
 
-  async create(dto: CreateServiceDto, tenantId: string): Promise<Service> {
+  async create(dto: CreateServiceDto, tenantId: string, locale?: string): Promise<Service> {
     try {
-      const payload: Record<string, any> = { ...dto, tenantId };
+      const { basePatch, translationPatch } = this.splitBaseAndTranslationPayload(dto as any, locale);
+      const payload: Record<string, any> = { ...basePatch, tenantId };
+
       if (dto.categoryIds?.length) {
         payload.categoryIds = dto.categoryIds.map((id) => new Types.ObjectId(id));
       }
-      const newService = new this.serviceModel(payload);
+
+      if (locale && Object.keys(translationPatch).length > 0) {
+        payload.translations = upsertTranslation<ServiceTranslatableFields>(
+          payload.translations,
+          locale,
+          translationPatch,
+        );
+      }
+
+      const newService = new this.serviceModel(payload as any);
       return await newService.save();
     } catch {
       throw new BadRequestException('Failed to create service');
     }
   }
 
-  async update(id: string, dto: UpdateServiceDto, tenantId: string): Promise<Service> {
+  async update(id: string, dto: UpdateServiceDto, tenantId: string, locale?: string): Promise<Service> {
     try {
       const service = await this.serviceModel.findOne({ _id: id, tenantId });
       if (!service) throw new NotFoundException(`Service with ID "${id}" not found`);
-      const payload: Record<string, any> = { ...dto };
+      const { basePatch, translationPatch } = this.splitBaseAndTranslationPayload(dto as any, locale);
+      const payload: Record<string, any> = { ...basePatch };
       if (dto.categoryIds) {
         payload.categoryIds = dto.categoryIds.map((cid) => new Types.ObjectId(cid));
       }
       Object.assign(service, payload);
+
+      if (locale && Object.keys(translationPatch).length > 0) {
+        const isDefaultLocale = locale === ServiceService.DEFAULT_LOCALE;
+        const patch: Partial<ServiceTranslatableFields> = {};
+        for (const key of ServiceService.TRANSLATABLE_KEYS) {
+          if (translationPatch[key] === undefined) continue;
+          patch[key] = isDefaultLocale ? (service as any)[key] : translationPatch[key];
+        }
+        service.translations = upsertTranslation<ServiceTranslatableFields>(
+          service.translations as any,
+          locale,
+          patch,
+        ) as any;
+      }
       return await service.save();
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

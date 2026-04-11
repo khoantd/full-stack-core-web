@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import {
@@ -13,11 +13,11 @@ import {
  * Tránh hydration error khi browser extension (vd: Screen Recorder) sửa DOM.
  */
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   // Server và client đầu tiên đều render loading - tránh hydration mismatch
   if (!mounted) {

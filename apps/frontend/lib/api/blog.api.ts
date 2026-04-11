@@ -11,10 +11,10 @@ import type {
 } from "@/types/blog.type";
 
 export const blogApi = {
-  getBlogs: async (params: BlogsQueryParams = {}): Promise<BlogsResponse> => {
+  getBlogs: async (params: BlogsQueryParams = {}, locale?: string): Promise<BlogsResponse> => {
     const { page = 1, limit = 10, search, status } = params;
     const response = await axiosClient.get<BlogsResponse>("/blogs", {
-      params: { page, limit, search, status },
+      params: { page, limit, search, status, ...(locale ? { locale } : {}) },
     });
     const body = response.data;
     return {
@@ -23,18 +23,24 @@ export const blogApi = {
     };
   },
 
-  getBlogById: async (id: string): Promise<Blog> => {
-    const response = await axiosClient.get<Blog>(`/blogs/${id}`);
+  getBlogById: async (id: string, locale?: string): Promise<Blog> => {
+    const response = await axiosClient.get<Blog>(`/blogs/${id}`, {
+      params: locale ? { locale } : undefined,
+    });
     return mapApiBlog(response.data);
   },
 
-  createBlog: async (data: CreateBlogRequest): Promise<Blog> => {
-    const response = await axiosClient.post<Blog>("/blogs", data);
+  createBlog: async (data: CreateBlogRequest, locale?: string): Promise<Blog> => {
+    const response = await axiosClient.post<Blog>("/blogs", data, {
+      params: locale ? { locale } : undefined,
+    });
     return mapApiBlog(response.data);
   },
 
-  updateBlog: async (id: string, data: UpdateBlogRequest): Promise<Blog> => {
-    const response = await axiosClient.put<Blog>(`/blogs/${id}`, data);
+  updateBlog: async (id: string, data: UpdateBlogRequest, locale?: string): Promise<Blog> => {
+    const response = await axiosClient.put<Blog>(`/blogs/${id}`, data, {
+      params: locale ? { locale } : undefined,
+    });
     return mapApiBlog(response.data);
   },
 

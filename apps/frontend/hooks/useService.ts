@@ -30,7 +30,13 @@ export function useService(id: string | null) {
 export function useCreateService() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateServiceRequest) => serviceApi.createService(data),
+    mutationFn: (vars: { data: CreateServiceRequest; locale?: "en" | "vi" } | CreateServiceRequest) => {
+      if ("data" in (vars as any)) {
+        const v = vars as { data: CreateServiceRequest; locale?: "en" | "vi" };
+        return serviceApi.createService(v.data, { locale: v.locale });
+      }
+      return serviceApi.createService(vars as CreateServiceRequest);
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [SERVICES_QUERY_KEY] }),
   });
 }
@@ -38,8 +44,8 @@ export function useCreateService() {
 export function useUpdateService() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateServiceRequest }) =>
-      serviceApi.updateService(id, data),
+    mutationFn: ({ id, data, locale }: { id: string; data: UpdateServiceRequest; locale?: "en" | "vi" }) =>
+      serviceApi.updateService(id, data, { locale }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: [SERVICES_QUERY_KEY] }),
   });
 }

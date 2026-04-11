@@ -5,11 +5,12 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Blog, BlogStatus } from './schemas/blog.schema';
+import { Blog, BlogStatus, type BlogTranslatableFields } from './schemas/blog.schema';
 import { BlogVersion } from './schemas/blog-version.schema';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { QueryBlogDto } from './dto/query-blog.dto';
+import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
 
 export interface PaginationResult {
   data: Blog[];
@@ -30,7 +31,7 @@ export class BlogService {
     @InjectModel(BlogVersion.name) private readonly blogVersionModel: Model<BlogVersion>,
   ) {}
 
-  async findAll(query: QueryBlogDto, tenantId: string): Promise<PaginationResult> {
+  async findAll(query: QueryBlogDto, tenantId: string, locale?: string): Promise<PaginationResult> {
     const isGetAll = query.page === 'all';
     const page = isGetAll ? 1 : parseInt(query.page) || 1;
     const limit = isGetAll ? Number.MAX_SAFE_INTEGER : parseInt(query.limit) || 10;
@@ -49,27 +50,27 @@ export class BlogService {
     const total = await this.blogModel.countDocuments(filter);
 
     if (isGetAll) {
-      const data = await this.blogModel.find(filter).sort({ createdAt: -1 }).exec();
+      const data = await this.blogModel.find(filter).sort({ createdAt: -1 }).lean().exec();
       return {
-        data,
+        data: data.map((b: any) => overlayTranslatedFields(b, b.translations, locale)),
         pagination: { total: data.length, page: 1, limit: data.length, totalPages: 1, hasNextPage: false, hasPrevPage: false },
       };
     }
 
-    const data = await this.blogModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).exec();
+    const data = await this.blogModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec();
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: data.map((b: any) => overlayTranslatedFields(b, b.translations, locale)),
       pagination: { total, page, limit, totalPages, hasNextPage: page < totalPages, hasPrevPage: page > 1 },
     };
   }
 
-  async findById(id: string, tenantId: string): Promise<Blog> {
+  async findById(id: string, tenantId: string, locale?: string): Promise<any> {
     try {
-      const blog = await this.blogModel.findOne({ _id: id, tenantId }).exec();
+      const blog = await this.blogModel.findOne({ _id: id, tenantId }).lean().exec();
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
-      return blog;
+      return overlayTranslatedFields(blog as any, (blog as any).translations, locale);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       if (error.name === 'CastError') throw new BadRequestException(`Invalid blog ID format: "${id}"`);
@@ -77,11 +78,21 @@ export class BlogService {
     }
   }
 
-  async create(createBlogDto: CreateBlogDto, tenantId: string): Promise<Blog> {
+  async create(createBlogDto: CreateBlogDto, tenantId: string, locale?: string): Promise<Blog> {
     try {
       const data: any = { ...createBlogDto, tenantId };
       if (data.status === BlogStatus.PUBLISHED && !data.publishedAt) {
         data.publishedAt = new Date();
+      }
+      if (locale) {
+        const patch: Partial<BlogTranslatableFields> = {
+          title: data.title,
+          description: data.description,
+          seoTitle: data.seoTitle,
+          seoDescription: data.seoDescription,
+          author: data.author,
+        };
+        data.translations = upsertTranslation<BlogTranslatableFields>(data.translations, locale, patch);
       }
       const newBlog = new this.blogModel(data);
       const saved = await newBlog.save();
@@ -92,15 +103,41 @@ export class BlogService {
     }
   }
 
-  async update(id: string, updateBlogDto: UpdateBlogDto, tenantId: string): Promise<Blog> {
+  async update(id: string, updateBlogDto: UpdateBlogDto, tenantId: string, locale?: string): Promise<Blog> {
     try {
       const blog = await this.blogModel.findOne({ _id: id, tenantId });
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
 
-      Object.assign(blog, updateBlogDto);
+      const hasImageUpdate = Object.prototype.hasOwnProperty.call(updateBlogDto, 'image');
+      const { image, ...rest } = updateBlogDto as UpdateBlogDto & { image?: string | null };
+      Object.assign(blog, rest);
+
+      if (hasImageUpdate) {
+        if (image == null || image === '') {
+          await this.blogModel.updateOne({ _id: id, tenantId }, { $unset: { image: 1 } });
+          delete (blog as { image?: string }).image;
+        } else {
+          blog.image = image;
+        }
+      }
 
       if (updateBlogDto.status === BlogStatus.PUBLISHED && !blog.publishedAt) {
         blog.publishedAt = new Date();
+      }
+
+      if (locale) {
+        const patch: Partial<BlogTranslatableFields> = {};
+        if (updateBlogDto.title !== undefined) patch.title = blog.title;
+        if (updateBlogDto.description !== undefined) patch.description = blog.description;
+        if (updateBlogDto.seoTitle !== undefined) patch.seoTitle = blog.seoTitle;
+        if (updateBlogDto.seoDescription !== undefined) patch.seoDescription = blog.seoDescription;
+        if (updateBlogDto.author !== undefined) patch.author = blog.author;
+
+        blog.translations = upsertTranslation<BlogTranslatableFields>(
+          blog.translations as any,
+          locale,
+          patch,
+        ) as any;
       }
 
       await blog.save();

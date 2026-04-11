@@ -42,8 +42,10 @@ import {
   DeleteProductDialog,
 } from "./components/ProductDialog";
 import { leadSparkApi } from "@/lib/api/leadspark.api";
+import { useTranslations } from "next-intl";
 
 export default function ProductsPage() {
+  const t = useTranslations("pages.products");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
@@ -137,17 +139,17 @@ export default function ProductsPage() {
           id: productToEdit._id,
           data,
         });
-        toast.success("Product updated successfully");
+        toast.success(t("updated"));
       } else {
         await createMutation.mutateAsync(data);
-        toast.success("Product created successfully");
+        toast.success(t("created"));
       }
       setFormDialogOpen(false);
       setProductToEdit(undefined);
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
-          `Failed to ${productToEdit ? "update" : "create"} product`
+          t("createOrUpdateFailed", { action: productToEdit ? "update" : "create" })
       );
     }
   };
@@ -157,11 +159,11 @@ export default function ProductsPage() {
 
     try {
       await deleteMutation.mutateAsync(selectedProduct._id);
-      toast.success("Product deleted successfully");
+      toast.success(t("deleted"));
       setDeleteDialogOpen(false);
       setSelectedProduct(null);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to delete product");
+      toast.error(error?.response?.data?.message || t("deleteFailed"));
     }
   };
 
@@ -179,9 +181,9 @@ export default function ProductsPage() {
       <div className="flex items-center justify-center h-[400px]">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Error</CardTitle>
+            <CardTitle>{t("errorTitle")}</CardTitle>
             <CardDescription>
-              Failed to load products. Please try again later.
+              {t("errorSubtitle")}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -196,9 +198,9 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            Manage your product catalog
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -208,7 +210,7 @@ export default function ProductsPage() {
           </Button>
           <Button onClick={handleCreate}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Product
+            {t("add")}
           </Button>
         </div>
       </div>
@@ -217,11 +219,11 @@ export default function ProductsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Products</CardTitle>
+              <CardTitle>{t("title")}</CardTitle>
               <CardDescription>
                 {pagination
                   ? `Showing ${products.length} of ${pagination.total} products`
-                  : "Loading products..."}
+                  : t("loading")}
               </CardDescription>
             </div>
             <div className="w-[200px]">
@@ -230,10 +232,10 @@ export default function ProductsPage() {
                 onValueChange={handleCategoryFilterChange}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by category" />
+                  <SelectValue placeholder={t("filterByCategory")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
+                  <SelectItem value="all">{t("allCategories")}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category._id} value={category._id}>
                       {category.name}
@@ -253,17 +255,17 @@ export default function ProductsPage() {
           ) : products.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[400px] text-center">
               <p className="text-lg font-medium text-muted-foreground mb-2">
-                No products found
+                {t("noneFound")}
               </p>
               <p className="text-sm text-muted-foreground mb-4">
                 {search || categoryFilter
-                  ? "Try adjusting your filters"
-                  : "Get started by creating your first product"}
+                  ? t("adjustFilters")
+                  : t("getStarted")}
               </p>
               {!search && !categoryFilter && (
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Product
+                  {t("add")}
                 </Button>
               )}
             </div>

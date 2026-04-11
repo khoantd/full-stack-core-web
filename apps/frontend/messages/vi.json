@@ -1,0 +1,172 @@
+{
+  "nav": {
+    "sections": {
+      "overview": "Tổng quan",
+      "content": "Nội dung",
+      "catalog": "Danh mục",
+      "finance": "Tài chính",
+      "system": "Hệ thống"
+    },
+    "items": {
+      "dashboard": "Bảng điều khiển",
+      "users": "Người dùng",
+      "blogs": "Bài viết",
+      "services": "Dịch vụ",
+      "serviceCategories": "Danh mục dịch vụ",
+      "events": "Sự kiện",
+      "mediaLibrary": "Thư viện media",
+      "pricings": "Bảng giá",
+      "categories": "Danh mục",
+      "products": "Sản phẩm",
+      "automakers": "Hãng xe",
+      "payments": "Thanh toán",
+      "auditLog": "Nhật ký kiểm toán",
+      "settings": "Cài đặt"
+    },
+    "tenant": {
+      "organizations": "Tổ chức",
+      "manageOrganizations": "Quản lý tổ chức"
+    }
+  },
+  "settings": {
+    "features": {
+      "title": "Tính năng",
+      "subtitle": "Bật hoặc tắt các tính năng cho tổ chức của bạn. Tính năng bị tắt sẽ được ẩn khỏi thanh bên.",
+      "save": "Lưu thay đổi",
+      "saved": "Đã cập nhật tính năng",
+      "noTenant": "Không có ID tổ chức trong phiên của bạn. Hãy đăng xuất và đăng nhập lại để tài khoản của bạn được liên kết với một tenant.",
+      "loadError": "Không thể tải danh sách tenant.",
+      "updateFailed": "Cập nhật thất bại",
+      "featureMeta": {
+        "categories": {
+          "label": "Danh mục",
+          "description": "Quản lý danh mục sản phẩm và phân cấp."
+        },
+        "products": {
+          "label": "Sản phẩm",
+          "description": "Danh mục sản phẩm với quản lý tồn kho."
+        },
+        "automakers": {
+          "label": "Hãng xe",
+          "description": "Thương hiệu xe và dữ liệu nhà sản xuất."
+        },
+        "pricings": {
+          "label": "Bảng giá",
+          "description": "Danh mục giá theo bậc với hỗ trợ đa tiền tệ."
+        },
+        "events": {
+          "label": "Sự kiện",
+          "description": "Tạo và quản lý sự kiện và lịch trình."
+        },
+        "services": {
+          "label": "Dịch vụ",
+          "description": "Danh sách và gói dịch vụ."
+        },
+        "serviceCategories": {
+          "label": "Danh mục dịch vụ",
+          "description": "Tổ chức dịch vụ theo danh mục."
+        },
+        "blogs": {
+          "label": "Bài viết",
+          "description": "Bài viết blog và xuất bản nội dung."
+        },
+        "payments": {
+          "label": "Thanh toán",
+          "description": "Xử lý thanh toán và lịch sử giao dịch."
+        }
+      }
+    }
+  },
+  "pages": {
+    "blogs": {
+      "title": "Bài viết",
+      "addNew": "Thêm bài viết",
+      "loading": "Đang tải bài viết...",
+      "filterByStatus": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "noYetTitle": "Chưa có bài viết",
+      "noYetSubtitle": "Tạo bài viết đầu tiên để bắt đầu.",
+      "create": "Tạo bài viết",
+      "noMatch": "Không tìm thấy bài viết phù hợp với bộ lọc",
+      "tryAgain": "Thử lại",
+      "versionHistory": {
+        "title": "Lịch sử phiên bản",
+        "description": "Xem và khôi phục các phiên bản trước của \"{title}\"",
+        "loading": "Đang tải phiên bản...",
+        "empty": "Không có phiên bản nào",
+        "current": "Hiện tại",
+        "restore": "Khôi phục",
+        "restored": "Đã khôi phục phiên bản",
+        "restoreFailed": "Khôi phục phiên bản thất bại"
+      },
+      "pagination": {
+        "showing": "Hiển thị {from} đến {to} trong tổng số {total} bài viết",
+        "previous": "Trước",
+        "next": "Sau",
+        "pageOf": "Trang {page} / {totalPages}"
+      }
+    },
+    "services": {
+      "title": "Dịch vụ",
+      "manageCategories": "Quản lý danh mục",
+      "addNew": "Thêm dịch vụ",
+      "loading": "Đang tải dịch vụ...",
+      "filterByStatus": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "noYetTitle": "Chưa có dịch vụ",
+      "noYetSubtitle": "Tạo dịch vụ đầu tiên để bắt đầu.",
+      "create": "Tạo dịch vụ",
+      "noMatch": "Không tìm thấy dịch vụ phù hợp với bộ lọc",
+      "tryAgain": "Thử lại",
+      "pagination": {
+        "showing": "Hiển thị {from} đến {to} trong tổng số {total} dịch vụ",
+        "previous": "Trước",
+        "next": "Sau",
+        "pageOf": "Trang {page} / {totalPages}"
+      }
+    },
+    "pricings": {
+      "title": "Bảng giá",
+      "add": "Thêm bảng giá",
+      "loading": "Đang tải bảng giá...",
+      "filterByStatus": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "noYetTitle": "Chưa có bảng giá",
+      "noYetSubtitle": "Tạo mục bảng giá đầu tiên để bắt đầu.",
+      "create": "Tạo bảng giá",
+      "noMatch": "Không tìm thấy bảng giá phù hợp với bộ lọc",
+      "tryAgain": "Thử lại",
+      "created": "Tạo bảng giá thành công",
+      "createFailed": "Tạo bảng giá thất bại",
+      "updated": "Cập nhật bảng giá thành công",
+      "updateFailed": "Cập nhật thất bại",
+      "deleted": "Đã xóa bảng giá",
+      "deleteFailed": "Xóa thất bại",
+      "pagination": {
+        "showing": "Hiển thị {from} đến {to} trong tổng số {total} bảng giá",
+        "previous": "Trước",
+        "next": "Sau",
+        "pageOf": "Trang {page} / {totalPages}"
+      }
+    },
+    "products": {
+      "title": "Sản phẩm",
+      "subtitle": "Quản lý danh mục sản phẩm của bạn",
+      "add": "Thêm sản phẩm",
+      "errorTitle": "Lỗi",
+      "errorSubtitle": "Tải sản phẩm thất bại. Vui lòng thử lại sau.",
+      "filterByCategory": "Lọc theo danh mục",
+      "allCategories": "Tất cả danh mục",
+      "noneFound": "Không tìm thấy sản phẩm",
+      "adjustFilters": "Thử điều chỉnh bộ lọc",
+      "getStarted": "Bắt đầu bằng cách tạo sản phẩm đầu tiên",
+      "loading": "Đang tải sản phẩm...",
+      "created": "Tạo sản phẩm thành công",
+      "updated": "Cập nhật sản phẩm thành công",
+      "deleted": "Đã xóa sản phẩm",
+      "deleteFailed": "Xóa sản phẩm thất bại",
+      "createOrUpdateFailed": "Thất bại khi {action} sản phẩm"
+    }
+  }
+}
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { io, Socket } from "socket.io-client";
 import { getStoredToken } from "@/api/axiosClient";
 import { Button } from "@/components/ui/button";
@@ -44,11 +44,10 @@ export function ChatOverlay() {
   const [activePeer, setActivePeer] = useState<string | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [myEmail, setMyEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    setMyEmail(parseEmailFromToken(getStoredToken()));
-  }, []);
+  const myEmail = useMemo(
+    () => (typeof window !== "undefined" ? parseEmailFromToken(getStoredToken()) : null),
+    [],
+  );
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -104,10 +103,7 @@ export function ChatOverlay() {
   }, [myEmail, open]);
 
   useEffect(() => {
-    if (open) {
-      setUnread(0);
-      scrollToBottom();
-    }
+    if (open) scrollToBottom();
   }, [open, messages, scrollToBottom]);
 
   const sendMessage = () => {
@@ -256,7 +252,13 @@ export function ChatOverlay() {
         {/* Toggle button */}
         <button
           id="chat-overlay-toggle"
-          onClick={() => setOpen((o) => !o)}
+          onClick={() =>
+            setOpen((o) => {
+              const next = !o;
+              if (next) setUnread(0);
+              return next;
+            })
+          }
           className={cn(
             "relative flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all duration-200",
             "bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105"

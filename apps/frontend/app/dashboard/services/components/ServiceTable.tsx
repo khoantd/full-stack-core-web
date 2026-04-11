@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLocale } from "next-intl";
 import {
   ColumnDef, ColumnFiltersState, SortingState, VisibilityState,
   flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable,
@@ -28,6 +29,7 @@ export const createColumns = (
   options?: {
     serviceCategoriesEnabled?: boolean;
     serviceCategoryLookup?: ServiceCategoryLookup;
+    locale?: string;
   }
 ): ColumnDef<Service>[] => [
   {
@@ -142,7 +144,9 @@ export const createColumns = (
     ),
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as string;
-      return date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A";
+      return date
+        ? new Date(date).toLocaleDateString(options?.locale, { year: "numeric", month: "short", day: "numeric" })
+        : "N/A";
     },
   },
   {
@@ -195,14 +199,15 @@ export default function ServiceTable({
   serviceCategoriesEnabled,
   serviceCategoryLookup,
 }: ServiceTableProps) {
+  const locale = useLocale();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const tableColumns = React.useMemo(
-    () => createColumns(actions, { serviceCategoriesEnabled, serviceCategoryLookup }),
-    [actions, serviceCategoriesEnabled, serviceCategoryLookup],
+    () => createColumns(actions, { serviceCategoriesEnabled, serviceCategoryLookup, locale }),
+    [actions, serviceCategoriesEnabled, serviceCategoryLookup, locale],
   );
 
   const table = useReactTable({

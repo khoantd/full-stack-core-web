@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { Search, Upload, Trash2, Copy, Image, FileText, Video, File, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search, Upload, Trash2, Copy, Image, FileText, Video, File, ChevronLeft, ChevronRight, Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -14,10 +17,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMediaFiles, useDeleteMediaFile } from "@/hooks/useMedia";
+import { useMediaFiles, useDeleteMediaFile, useMediaProviders } from "@/hooks/useMedia";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { buildFullUrl } from "@/lib/api/media.api";
-import { MediaFile } from "@/types/media.type";
+import type { MediaFile, MediaProviderId } from "@/types/media.type";
 import { formatDistanceToNow } from "date-fns";
 import NextImage from "next/image";
 
@@ -39,11 +42,19 @@ function FileIcon({ contentType }: { contentType: string }) {
 export default function MediaLibraryPage() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("all");
+  const [provider, setProvider] = useState<MediaProviderId>("minio");
   const [deleteTarget, setDeleteTarget] = useState<MediaFile | null>(null);
-  // Cursor history: index 0 = first page (no token), subsequent = continuation tokens
   const [cursorHistory, setCursorHistory] = useState<(string | undefined)[]>([undefined]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: providersData, isLoading: providersLoading } = useMediaProviders();
+
+  useEffect(() => {
+    const enabled = providersData?.providers.filter(p => p.enabled) ?? [];
+    if (enabled.length === 0) return;
+    setProvider(current => (enabled.some(p => p.id === current) ? current : enabled[0].id));
+  }, [providersData]);
 
   const currentToken = cursorHistory[currentIndex];
 
@@ -51,13 +62,21 @@ export default function MediaLibraryPage() {
     type: type !== "all" ? type : undefined,
     limit: PAGE_SIZE,
     continuationToken: currentToken,
+    provider,
   });
 
   const deleteMutation = useDeleteMediaFile();
   const uploadMutation = useFileUpload({
-    onSuccess: () => toast.success("File uploaded"),
+    onSuccess: () => {
+      toast.success("File uploaded");
+      setCursorHistory([undefined]);
+      setCurrentIndex(0);
+    },
     onError: () => toast.error("Upload failed"),
   });
+  const { phase: uploadPhase, uploadProgress } = uploadMutation;
+
+  const enabledProviders = providersData?.providers.filter(p => p.enabled) ?? [];
 
   const files = (data?.data ?? []).filter(f =>
     !search || f.key.toLowerCase().includes(search.toLowerCase()),
@@ -65,7 +84,12 @@ export default function MediaLibraryPage() {
 
   const handleTypeChange = (value: string) => {
     setType(value);
-    // Reset pagination when filter changes
+    setCursorHistory([undefined]);
+    setCurrentIndex(0);
+  };
+
+  const handleProviderChange = (next: MediaProviderId) => {
+    setProvider(next);
     setCursorHistory([undefined]);
     setCurrentIndex(0);
   };
@@ -86,20 +110,20 @@ export default function MediaLibraryPage() {
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    uploadMutation.mutate(file);
+    uploadMutation.mutate({ file, provider });
     e.target.value = "";
   };
 
   const handleCopy = (file: MediaFile) => {
     const url = buildFullUrl(file.url);
-    navigator.clipboard.writeText(url);
+    void navigator.clipboard.writeText(url);
     toast.success("URL copied to clipboard");
   };
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteMutation.mutateAsync(deleteTarget.key);
+      await deleteMutation.mutateAsync({ key: deleteTarget.key, provider });
       toast.success("File deleted");
       setDeleteTarget(null);
     } catch {
@@ -110,19 +134,71 @@ export default function MediaLibraryPage() {
   const hasPrev = currentIndex > 0;
   const hasNext = data?.isTruncated && !!data?.nextContinuationToken;
 
+  const providerLabel =
+    enabledProviders.find(p => p.id === provider)?.label ?? provider;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Media Library</h1>
-          <p className="text-muted-foreground">Browse and manage uploaded files</p>
+          <p className="text-muted-foreground">
+            Browse and manage uploaded files. Copy image URLs for use in blog posts.
+          </p>
+          {enabledProviders.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Storage: <span className="font-medium text-foreground">{providerLabel}</span>
+            </p>
+          )}
         </div>
-        <Button onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
+        <Button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadMutation.isPending || enabledProviders.length === 0}
+        >
           <Upload className="mr-2 h-4 w-4" />
-          {uploadMutation.isPending ? "Uploading..." : "Upload File"}
+          {uploadMutation.isPending
+            ? uploadPhase === "compressing"
+              ? "Preparing…"
+              : "Uploading…"
+            : "Upload File"}
         </Button>
         <input ref={fileInputRef} type="file" className="hidden" onChange={handleUpload} />
       </div>
+
+      {uploadMutation.isPending && (
+        <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+          {uploadPhase === "compressing" ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+              <span>Preparing file…</span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Uploading</span>
+                <span className="tabular-nums text-muted-foreground">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </>
+          )}
+        </div>
+      )}
+
+      {enabledProviders.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {enabledProviders.map(p => (
+            <Button
+              key={p.id}
+              type="button"
+              variant={provider === p.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleProviderChange(p.id)}
+            >
+              {p.label}
+            </Button>
+          ))}
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-6">
@@ -149,7 +225,16 @@ export default function MediaLibraryPage() {
             </Select>
           </div>
 
-          {isLoading ? (
+          {providersLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}
+            </div>
+          ) : enabledProviders.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              No media storage providers are enabled. Configure MEDIA_PROVIDER_MINIO_ENABLED or
+              MEDIA_PROVIDER_LOCAL_ENABLED on the server.
+            </p>
+          ) : isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {Array.from({ length: PAGE_SIZE }).map((_, i) => <Skeleton key={i} className="aspect-square rounded-lg" />)}
             </div>
@@ -158,7 +243,11 @@ export default function MediaLibraryPage() {
           ) : files.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
               <p className="text-muted-foreground">No files found</p>
-              <Button className="mt-4" onClick={() => fileInputRef.current?.click()}>
+              <Button
+                className="mt-4"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadMutation.isPending}
+              >
                 <Upload className="mr-2 h-4 w-4" />Upload your first file
               </Button>
             </div>
@@ -172,20 +261,20 @@ export default function MediaLibraryPage() {
 
                   return (
                     <div key={file.key} className="group relative rounded-lg border bg-muted/30 overflow-hidden hover:border-primary transition-colors cursor-pointer">
-                      <div className="aspect-square flex items-center justify-center bg-muted/50">
+                      <div className="relative aspect-square w-full bg-muted/50">
                         {isImage ? (
-                          <div className="relative w-full h-full">
-                            <NextImage
-                              src={fullUrl}
-                              alt={name}
-                              fill
-                              className="object-cover"
-                              sizes="200px"
-                              unoptimized
-                            />
-                          </div>
+                          <NextImage
+                            src={fullUrl}
+                            alt={name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                            unoptimized
+                          />
                         ) : (
-                          <FileIcon contentType={file.contentType} />
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <FileIcon contentType={file.contentType} />
+                          </div>
                         )}
                       </div>
                       <div className="p-2">

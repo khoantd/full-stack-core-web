@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useLocale } from "next-intl";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -52,7 +53,7 @@ export interface BlogTableActions {
 }
 
 // Factory function to create columns with action handlers
-export const createColumns = (actions?: BlogTableActions): ColumnDef<Blog>[] => [
+export const createColumns = (actions?: BlogTableActions, options?: { locale?: string }): ColumnDef<Blog>[] => [
   {
     accessorKey: "_id",
     header: "#",
@@ -173,7 +174,7 @@ export const createColumns = (actions?: BlogTableActions): ColumnDef<Blog>[] => 
     cell: ({ row }) => {
       const date = row.getValue("createdAt") as string;
       if (!date) return "N/A";
-      return new Date(date).toLocaleDateString("en-US", {
+      return new Date(date).toLocaleDateString(options?.locale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -197,7 +198,7 @@ export const createColumns = (actions?: BlogTableActions): ColumnDef<Blog>[] => 
     cell: ({ row }) => {
       const date = row.getValue("updatedAt") as string;
       if (!date) return "N/A";
-      return new Date(date).toLocaleDateString("en-US", {
+      return new Date(date).toLocaleDateString(options?.locale, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -262,13 +263,14 @@ export default function BlogTable({
   searchValue = "",
   onSearchChange,
 }: BlogTableProps) {
+  const locale = useLocale();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   // Create columns with action handlers
-  const tableColumns = React.useMemo(() => createColumns(actions), [actions]);
+  const tableColumns = React.useMemo(() => createColumns(actions, { locale }), [actions, locale]);
 
   const table = useReactTable({
     data,

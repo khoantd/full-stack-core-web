@@ -1,19 +1,28 @@
 import axiosClient from "@/api/axiosClient";
-import { MediaFilesParams, MediaFilesResponse } from "@/types/media.type";
+import type {
+  MediaFilesParams,
+  MediaFilesResponse,
+  MediaProvidersResponse,
+  MediaProviderId,
+} from "@/types/media.type";
+import { buildMediaUrl } from "@/lib/media-url";
 
-const MINIO_BASE_URL = "https://seyeuthuong.org";
-
+/** @deprecated Use buildMediaUrl from @/lib/media-url */
 export function buildFullUrl(relativePath: string): string {
-  if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) return relativePath;
-  const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
-  return `${MINIO_BASE_URL}${path}`;
+  return buildMediaUrl(relativePath);
 }
 
 export const mediaApi = {
+  getProviders: async (): Promise<MediaProvidersResponse> => {
+    const response = await axiosClient.get<MediaProvidersResponse>("/media/providers");
+    return response.data;
+  },
+
   listFiles: async (params: MediaFilesParams = {}): Promise<MediaFilesResponse> => {
-    const { type, limit = 20, continuationToken } = params;
-    const response = await axiosClient.get<MediaFilesResponse>("/minio/files", {
+    const { type, limit = 20, continuationToken, provider = "minio" } = params;
+    const response = await axiosClient.get<MediaFilesResponse>("/media/files", {
       params: {
+        provider,
         ...(type && type !== "all" ? { type } : {}),
         limit,
         ...(continuationToken ? { continuationToken } : {}),
@@ -22,7 +31,9 @@ export const mediaApi = {
     return response.data;
   },
 
-  deleteFile: async (key: string): Promise<void> => {
-    await axiosClient.delete(`/minio/files/${encodeURIComponent(key)}`);
+  deleteFile: async (key: string, provider: MediaProviderId = "minio"): Promise<void> => {
+    await axiosClient.delete(`/media/files/${encodeURIComponent(key)}`, {
+      params: { provider },
+    });
   },
 };

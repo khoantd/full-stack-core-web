@@ -41,12 +41,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
+import { Link } from "@/i18n/navigation";
 import type { FeatureKey } from "@/types/tenant.type"
 import type { Icon } from "@tabler/icons-react"
 import { tenantService } from "@/services/tenant.service"
 import { syncAuthSessionCookies } from "@/lib/auth-cookies"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslations } from "next-intl";
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
 
@@ -69,17 +70,16 @@ function buildTenantUrl(tenantSlug: string): string {
   return `${protocol}//${slug}.${ROOT_DOMAIN}${window.location.pathname}${window.location.search}`;
 }
 
-// Map feature keys to their nav items
-const FEATURE_NAV_MAP: Record<FeatureKey, { title: string; url: string; icon: Icon }> = {
-  blogs: { title: "Blogs", url: "/dashboard/blogs", icon: IconNews },
-  services: { title: "Services", url: "/dashboard/services", icon: IconBriefcase },
-  serviceCategories: { title: "Service Categories", url: "/dashboard/service-categories", icon: IconCategory },
-  events: { title: "Events", url: "/dashboard/events", icon: IconCalendar },
-  categories: { title: "Categories", url: "/dashboard/category-products", icon: IconCategory },
-  products: { title: "Products", url: "/dashboard/products", icon: IconBox },
-  automakers: { title: "Automakers", url: "/dashboard/automakers", icon: IconCar },
-  payments: { title: "Payments", url: "/dashboard/payments", icon: IconCreditCard },
-  pricings: { title: "Pricings", url: "/dashboard/pricings", icon: IconTag },
+const FEATURE_NAV_DEF: Record<FeatureKey, { url: string; icon: Icon }> = {
+  blogs: { url: "/dashboard/blogs", icon: IconNews },
+  services: { url: "/dashboard/services", icon: IconBriefcase },
+  serviceCategories: { url: "/dashboard/service-categories", icon: IconCategory },
+  events: { url: "/dashboard/events", icon: IconCalendar },
+  categories: { url: "/dashboard/category-products", icon: IconCategory },
+  products: { url: "/dashboard/products", icon: IconBox },
+  automakers: { url: "/dashboard/automakers", icon: IconCar },
+  payments: { url: "/dashboard/payments", icon: IconCreditCard },
+  pricings: { url: "/dashboard/pricings", icon: IconTag },
 };
 
 function useCurrentUser() {
@@ -107,6 +107,7 @@ function TenantSwitcher() {
   const [currentTenantId, setCurrentTenantId] = React.useState<string | null>(null);
   const [isSwitching, setIsSwitching] = React.useState(false);
   const queryClient = useQueryClient();
+  const t = useTranslations();
 
   React.useEffect(() => {
     const token = getStoredToken();
@@ -158,7 +159,9 @@ function TenantSwitcher() {
         </SidebarMenuButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="start" className="min-w-48">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Organizations</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">
+          {t("nav.tenant.organizations")}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {tenants?.map((tenant) => (
           <DropdownMenuItem
@@ -175,7 +178,7 @@ function TenantSwitcher() {
         <DropdownMenuItem asChild>
           <Link href="/dashboard/settings/organization" className="cursor-pointer">
             <IconBuilding className="mr-2 size-4" />
-            Manage Organizations
+            {t("nav.tenant.manageOrganizations")}
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
@@ -187,6 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const currentUser = useCurrentUser();
   const { data: tenants } = useTenants();
   const [currentTenantId, setCurrentTenantId] = React.useState<string | null>(null);
+  const t = useTranslations();
 
   React.useEffect(() => {
     const token = getStoredToken();
@@ -197,50 +201,77 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const tenant = tenants?.find((t) => t._id === currentTenantId);
     const features = tenant?.enabledFeatures;
     // Fall back to all features if not set (existing tenants before migration)
-    return new Set<FeatureKey>(features?.length ? features : Object.keys(FEATURE_NAV_MAP) as FeatureKey[]);
+    return new Set<FeatureKey>(features?.length ? features : (Object.keys(FEATURE_NAV_DEF) as FeatureKey[]));
   }, [tenants, currentTenantId]);
 
-  const navSections = React.useMemo(() => [
-    {
-      label: "Overview",
-      items: [
-        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
-        { title: "Users", url: "/dashboard/users", icon: IconListDetails },
-      ],
-    },
-    {
-      label: "Content",
-      items: [
-        ...(enabledFeatures.has("blogs") ? [FEATURE_NAV_MAP.blogs] : []),
-        ...(enabledFeatures.has("services") ? [FEATURE_NAV_MAP.services] : []),
-        ...(enabledFeatures.has("serviceCategories") ? [FEATURE_NAV_MAP.serviceCategories] : []),
-        ...(enabledFeatures.has("events") ? [FEATURE_NAV_MAP.events] : []),
-        { title: "Media Library", url: "/dashboard/media", icon: IconPhoto },
-      ],
-    },
-    {
-      label: "Catalog",
-      items: [
-        ...(enabledFeatures.has("pricings") ? [FEATURE_NAV_MAP.pricings] : []),
-        ...(enabledFeatures.has("categories") ? [FEATURE_NAV_MAP.categories] : []),
-        ...(enabledFeatures.has("products") ? [FEATURE_NAV_MAP.products] : []),
-        ...(enabledFeatures.has("automakers") ? [FEATURE_NAV_MAP.automakers] : []),
-      ],
-    },
-    {
-      label: "Finance",
-      items: [
-        ...(enabledFeatures.has("payments") ? [FEATURE_NAV_MAP.payments] : []),
-      ],
-    },
-    {
-      label: "System",
-      items: [
-        { title: "Audit Log", url: "/dashboard/audit-logs", icon: IconClipboardList },
-        { title: "Settings", url: "/dashboard/settings", icon: IconChartBar },
-      ],
-    },
-  ].filter((section) => section.items.length > 0), [enabledFeatures]);
+  const navSections = React.useMemo(
+    () =>
+      [
+        {
+          label: t("nav.sections.overview"),
+          items: [
+            { title: t("nav.items.dashboard"), url: "/dashboard", icon: IconDashboard },
+            { title: t("nav.items.users"), url: "/dashboard/users", icon: IconListDetails },
+          ],
+        },
+        {
+          label: t("nav.sections.content"),
+          items: [
+            ...(enabledFeatures.has("blogs")
+              ? [{ title: t("nav.items.blogs"), ...FEATURE_NAV_DEF.blogs }]
+              : []),
+            ...(enabledFeatures.has("services")
+              ? [{ title: t("nav.items.services"), ...FEATURE_NAV_DEF.services }]
+              : []),
+            ...(enabledFeatures.has("serviceCategories")
+              ? [
+                  {
+                    title: t("nav.items.serviceCategories"),
+                    ...FEATURE_NAV_DEF.serviceCategories,
+                  },
+                ]
+              : []),
+            ...(enabledFeatures.has("events")
+              ? [{ title: t("nav.items.events"), ...FEATURE_NAV_DEF.events }]
+              : []),
+            { title: t("nav.items.mediaLibrary"), url: "/dashboard/media", icon: IconPhoto },
+          ],
+        },
+        {
+          label: t("nav.sections.catalog"),
+          items: [
+            ...(enabledFeatures.has("pricings")
+              ? [{ title: t("nav.items.pricings"), ...FEATURE_NAV_DEF.pricings }]
+              : []),
+            ...(enabledFeatures.has("categories")
+              ? [{ title: t("nav.items.categories"), ...FEATURE_NAV_DEF.categories }]
+              : []),
+            ...(enabledFeatures.has("products")
+              ? [{ title: t("nav.items.products"), ...FEATURE_NAV_DEF.products }]
+              : []),
+            ...(enabledFeatures.has("automakers")
+              ? [{ title: t("nav.items.automakers"), ...FEATURE_NAV_DEF.automakers }]
+              : []),
+          ],
+        },
+        {
+          label: t("nav.sections.finance"),
+          items: [
+            ...(enabledFeatures.has("payments")
+              ? [{ title: t("nav.items.payments"), ...FEATURE_NAV_DEF.payments }]
+              : []),
+          ],
+        },
+        {
+          label: t("nav.sections.system"),
+          items: [
+            { title: t("nav.items.auditLog"), url: "/dashboard/audit-logs", icon: IconClipboardList },
+            { title: t("nav.items.settings"), url: "/dashboard/settings", icon: IconChartBar },
+          ],
+        },
+      ].filter((section) => section.items.length > 0),
+    [enabledFeatures, t],
+  );
 
   return (
     <Sidebar collapsible="icon" forceDesktop {...props}>

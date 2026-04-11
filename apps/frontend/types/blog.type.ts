@@ -42,7 +42,8 @@ export interface CreateBlogRequest {
 export interface UpdateBlogRequest {
   title?: string;
   description?: string;
-  image?: string;
+  /** Omit field to leave unchanged; `null` clears the stored image URL */
+  image?: string | null;
   status?: BlogStatus;
   author?: string;
   seoTitle?: string;

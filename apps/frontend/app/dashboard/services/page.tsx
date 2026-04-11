@@ -11,7 +11,8 @@ import { useFeatureEnabled } from "@/hooks/useFeatureEnabled";
 import { useServiceCategories } from "@/hooks/useServiceCategory";
 import { ServiceTable, ServiceFormDialog, ServiceDetailDialog, DeleteServiceDialog } from "./components";
 import type { Service, ServiceStatus } from "@/types/service.type";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -23,6 +24,8 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export default function ServicesPage() {
+  const t = useTranslations("pages.services");
+  const tp = useTranslations("pages.services.pagination");
   const [page, setPage] = useState(1);
   const limit = 10;
   const [searchInput, setSearchInput] = useState("");
@@ -53,8 +56,6 @@ export default function ServicesPage() {
     status: statusFilter !== "all" ? (statusFilter as ServiceStatus) : undefined,
   });
 
-  useEffect(() => { setPage(1); }, [debouncedSearch, statusFilter]);
-
   const handleView = useCallback((s: Service) => { setSelectedService(s); setIsDetailOpen(true); }, []);
   const handleEdit = useCallback((s: Service) => { setSelectedService(s); setIsEditOpen(true); }, []);
   const handleDelete = useCallback((s: Service) => { setSelectedService(s); setIsDeleteOpen(true); }, []);
@@ -63,12 +64,12 @@ export default function ServicesPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Services</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Card>
           <CardContent className="flex min-h-[200px] items-center justify-center py-12">
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <p className="text-muted-foreground">Loading services...</p>
+              <p className="text-muted-foreground">{t("loading")}</p>
             </div>
           </CardContent>
         </Card>
@@ -79,11 +80,11 @@ export default function ServicesPage() {
   if (isError) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Services</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <Card>
           <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-4 py-12">
             <p className="text-destructive">{error instanceof Error ? error.message : "An error occurred"}</p>
-            <Button onClick={() => refetch()} variant="outline">Try Again</Button>
+            <Button onClick={() => refetch()} variant="outline">{t("tryAgain")}</Button>
           </CardContent>
         </Card>
       </div>
@@ -98,26 +99,32 @@ export default function ServicesPage() {
   return (
     <>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Services</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
         <div className="flex items-center gap-2">
           {serviceCategoriesEnabled && (
             <Button asChild variant="outline">
-              <Link href="/dashboard/service-categories">Manage Categories</Link>
+              <Link href="/dashboard/service-categories">{t("manageCategories")}</Link>
             </Button>
           )}
           <Button variant="secondary" onClick={() => { setSelectedService(null); setIsCreateOpen(true); }}>
-            <PlusCircledIcon className="mr-2 h-4 w-4" /> Add New Service
+            <PlusCircledIcon className="mr-2 h-4 w-4" /> {t("addNew")}
           </Button>
         </div>
       </div>
 
       <div className="flex gap-3 items-center">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}
+        >
           <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder={t("filterByStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="all">{t("allStatuses")}</SelectItem>
             <SelectItem value="Draft">Draft</SelectItem>
             <SelectItem value="Published">Published</SelectItem>
             <SelectItem value="Archived">Archived</SelectItem>
@@ -136,11 +143,11 @@ export default function ServicesPage() {
                 </svg>
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-semibold">No services yet</h3>
-                <p className="text-sm text-muted-foreground mt-1">Create your first service to get started.</p>
+                <h3 className="text-lg font-semibold">{t("noYetTitle")}</h3>
+                <p className="text-sm text-muted-foreground mt-1">{t("noYetSubtitle")}</p>
               </div>
               <Button onClick={() => { setSelectedService(null); setIsCreateOpen(true); }}>
-                <PlusCircledIcon className="mr-2 h-4 w-4" /> Create Service
+                <PlusCircledIcon className="mr-2 h-4 w-4" /> {t("create")}
               </Button>
             </div>
           ) : (
@@ -149,28 +156,36 @@ export default function ServicesPage() {
                 data={services}
                 actions={{ onView: handleView, onEdit: handleEdit, onDelete: handleDelete }}
                 searchValue={searchInput}
-                onSearchChange={setSearchInput}
+                onSearchChange={(value) => {
+                  setSearchInput(value);
+                  setPage(1);
+                }}
                 serviceCategoriesEnabled={serviceCategoriesEnabled}
                 serviceCategoryLookup={serviceCategoryLookup()}
               />
               {isEmptySearch && (
                 <div className="flex flex-col items-center justify-center py-8">
-                  <p className="text-muted-foreground">No services found matching your filters</p>
+                  <p className="text-muted-foreground">{t("noMatch")}</p>
                 </div>
               )}
               {pagination && services.length > 0 && (
                 <div className="flex items-center justify-between border-t pt-4 mt-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                    {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} services
+                    {tp("showing", {
+                      from: (pagination.page - 1) * pagination.limit + 1,
+                      to: Math.min(pagination.page * pagination.limit, pagination.total),
+                      total: pagination.total,
+                    })}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={!pagination.hasPrevPage}>
-                      <ChevronLeft className="h-4 w-4 mr-1" />Previous
+                      <ChevronLeft className="h-4 w-4 mr-1" />{tp("previous")}
                     </Button>
-                    <span className="text-sm text-muted-foreground px-2">Page {pagination.page} of {pagination.totalPages}</span>
+                    <span className="text-sm text-muted-foreground px-2">
+                      {tp("pageOf", { page: pagination.page, totalPages: pagination.totalPages })}
+                    </span>
                     <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={!pagination.hasNextPage}>
-                      Next<ChevronRight className="h-4 w-4 ml-1" />
+                      {tp("next")}<ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>
                 </div>

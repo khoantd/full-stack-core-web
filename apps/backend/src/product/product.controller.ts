@@ -17,8 +17,12 @@ export class ProductController {
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
-  create(@Body() dto: CreateProductDto, @CurrentTenant() tenantId: string) {
-    return this.productService.create(dto, tenantId);
+  create(
+    @Body() dto: CreateProductDto,
+    @CurrentTenant() tenantId: string,
+    @Query('locale') locale: string | undefined,
+  ) {
+    return this.productService.create(dto, tenantId, locale);
   }
 
   @Post('bulk-import')
@@ -29,8 +33,12 @@ export class ProductController {
 
   @Get()
   @UsePipes(new ValidationPipe({ transform: true }))
-  findAll(@Query() queryDto: QueryProductDto, @CurrentTenant() tenantId: string) {
-    return this.productService.findAll(queryDto, tenantId);
+  findAll(
+    @Query() queryDto: QueryProductDto,
+    @CurrentTenant() tenantId: string,
+    @Query('locale') locale: string | undefined,
+  ) {
+    return this.productService.findAll(queryDto, tenantId, locale);
   }
 
   @Get('low-stock')
@@ -39,14 +47,23 @@ export class ProductController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.productService.findOne(id, tenantId);
+  findOne(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @Query('locale') locale: string | undefined,
+  ) {
+    return this.productService.findOne(id, tenantId, locale);
   }
 
   @Put(':id')
   @UsePipes(new ValidationPipe({ transform: true }))
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto, @CurrentTenant() tenantId: string) {
-    return this.productService.update(id, dto, tenantId);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @CurrentTenant() tenantId: string,
+    @Query('locale') locale: string | undefined,
+  ) {
+    return this.productService.update(id, dto, tenantId, locale);
   }
 
   @Delete(':id')

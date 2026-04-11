@@ -1,0 +1,172 @@
+{
+  "nav": {
+    "sections": {
+      "overview": "Overview",
+      "content": "Content",
+      "catalog": "Catalog",
+      "finance": "Finance",
+      "system": "System"
+    },
+    "items": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "blogs": "Blogs",
+      "services": "Services",
+      "serviceCategories": "Service Categories",
+      "events": "Events",
+      "mediaLibrary": "Media Library",
+      "pricings": "Pricings",
+      "categories": "Categories",
+      "products": "Products",
+      "automakers": "Automakers",
+      "payments": "Payments",
+      "auditLog": "Audit Log",
+      "settings": "Settings"
+    },
+    "tenant": {
+      "organizations": "Organizations",
+      "manageOrganizations": "Manage Organizations"
+    }
+  },
+  "settings": {
+    "features": {
+      "title": "Features",
+      "subtitle": "Enable or disable features for your organization. Disabled features are hidden from the sidebar.",
+      "save": "Save Changes",
+      "saved": "Features updated",
+      "noTenant": "No organization ID in your session. Sign out and sign in again so your account is linked to a tenant.",
+      "loadError": "Could not load tenants.",
+      "updateFailed": "Update failed",
+      "featureMeta": {
+        "categories": {
+          "label": "Categories",
+          "description": "Manage product categories and hierarchies."
+        },
+        "products": {
+          "label": "Products",
+          "description": "Product catalog with inventory management."
+        },
+        "automakers": {
+          "label": "Automakers",
+          "description": "Vehicle brands and manufacturer data."
+        },
+        "pricings": {
+          "label": "Pricings",
+          "description": "Tiered pricing catalog with multi-currency support."
+        },
+        "events": {
+          "label": "Events",
+          "description": "Create and manage events and schedules."
+        },
+        "services": {
+          "label": "Services",
+          "description": "Service listings and offerings."
+        },
+        "serviceCategories": {
+          "label": "Service Categories",
+          "description": "Organize services into categories."
+        },
+        "blogs": {
+          "label": "Blogs",
+          "description": "Blog posts and content publishing."
+        },
+        "payments": {
+          "label": "Payments",
+          "description": "Payment processing and transaction history."
+        }
+      }
+    }
+  },
+  "pages": {
+    "blogs": {
+      "title": "Blogs",
+      "addNew": "Add New Blog",
+      "loading": "Loading blogs...",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All Statuses",
+      "noYetTitle": "No blogs yet",
+      "noYetSubtitle": "Create your first blog post to get started.",
+      "create": "Create Blog",
+      "noMatch": "No blogs found matching your filters",
+      "tryAgain": "Try Again",
+      "versionHistory": {
+        "title": "Version History",
+        "description": "View and restore previous versions of \"{title}\"",
+        "loading": "Loading versions...",
+        "empty": "No versions found",
+        "current": "Current",
+        "restore": "Restore",
+        "restored": "Version restored",
+        "restoreFailed": "Failed to restore version"
+      },
+      "pagination": {
+        "showing": "Showing {from} to {to} of {total} blogs",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {totalPages}"
+      }
+    },
+    "services": {
+      "title": "Services",
+      "manageCategories": "Manage Categories",
+      "addNew": "Add New Service",
+      "loading": "Loading services...",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All Statuses",
+      "noYetTitle": "No services yet",
+      "noYetSubtitle": "Create your first service to get started.",
+      "create": "Create Service",
+      "noMatch": "No services found matching your filters",
+      "tryAgain": "Try Again",
+      "pagination": {
+        "showing": "Showing {from} to {to} of {total} services",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {totalPages}"
+      }
+    },
+    "pricings": {
+      "title": "Pricings",
+      "add": "Add Pricing",
+      "loading": "Loading pricings...",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All Statuses",
+      "noYetTitle": "No pricings yet",
+      "noYetSubtitle": "Create your first pricing catalog entry to get started.",
+      "create": "Create Pricing",
+      "noMatch": "No pricings found matching your filters",
+      "tryAgain": "Try Again",
+      "created": "Pricing created successfully",
+      "createFailed": "Failed to create pricing",
+      "updated": "Pricing updated successfully",
+      "updateFailed": "Failed to update pricing",
+      "deleted": "Pricing deleted successfully",
+      "deleteFailed": "Failed to delete pricing",
+      "pagination": {
+        "showing": "Showing {from} to {to} of {total} pricings",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {totalPages}"
+      }
+    },
+    "products": {
+      "title": "Products",
+      "subtitle": "Manage your product catalog",
+      "add": "Add Product",
+      "errorTitle": "Error",
+      "errorSubtitle": "Failed to load products. Please try again later.",
+      "filterByCategory": "Filter by category",
+      "allCategories": "All Categories",
+      "noneFound": "No products found",
+      "adjustFilters": "Try adjusting your filters",
+      "getStarted": "Get started by creating your first product",
+      "loading": "Loading products...",
+      "created": "Product created successfully",
+      "updated": "Product updated successfully",
+      "deleted": "Product deleted successfully",
+      "deleteFailed": "Failed to delete product",
+      "createOrUpdateFailed": "Failed to {action} product"
+    }
+  }
+}
+

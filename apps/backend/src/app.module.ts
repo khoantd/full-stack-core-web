@@ -7,7 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config/config';
 import { FriendModule } from './auth/socket/friend.module';
-import { MinioModule } from './minio/minio.module';
+import { MediaModule } from './media/media.module';
 import { UserModule } from './user/user.module';
 import { BlogModule } from './blog/blog.module';
 import { CategoryProductModule } from './category-product/category-product.module';
@@ -53,7 +53,7 @@ import { PricingModule } from './pricing/pricing.module';
       // secret: '123',
     }),
     AuthModule,
-    MinioModule,
+    MediaModule,
     UserModule,
     BlogModule,
     CategoryProductModule,

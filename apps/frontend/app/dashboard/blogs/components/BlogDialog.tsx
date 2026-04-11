@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Loader2, ImageIcon, Calendar, FileText } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import {
   Dialog,
@@ -87,10 +88,11 @@ interface BlogDetailDialogProps {
 }
 
 export function BlogDetailDialog({ open, onOpenChange, blog }: BlogDetailDialogProps) {
+  const locale = useLocale();
   if (!blog) return null;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -263,7 +265,7 @@ export function DeleteBlogDialog({ open, onOpenChange, blog, onSuccess }: Delete
           <AlertDialogTitle>Delete Blog?</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">"{blog.title}"</span>? This action
+            <span className="font-semibold text-foreground">&quot;{blog.title}&quot;</span>? This action
             cannot be undone and will permanently remove the blog from the system.
           </AlertDialogDescription>
         </AlertDialogHeader>

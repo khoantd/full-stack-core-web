@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { type Translations } from '../../common/i18n/translations';
 
 export enum ServiceStatus {
   DRAFT = 'Draft',
@@ -12,6 +13,16 @@ export type ServiceContentBlock =
   | { type: 'paragraph'; text: string }
   | { type: 'bullets'; items: string[] }
   | { type: 'image'; url: string; alt?: string };
+
+export type ServiceTranslatableFields = {
+  title: string;
+  description: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  duration?: string;
+  category?: string;
+  content?: ServiceContentBlock[];
+};
 
 @Schema({ collection: 'services', timestamps: true })
 export class Service extends Document {
@@ -50,6 +61,9 @@ export class Service extends Document {
 
   @Prop({ type: [Object], default: undefined })
   content?: ServiceContentBlock[];
+
+  @Prop({ type: Object, default: undefined })
+  translations?: Translations<ServiceTranslatableFields>;
 
   createdAt: Date;
   updatedAt: Date;

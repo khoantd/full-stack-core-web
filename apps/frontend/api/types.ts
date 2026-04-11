@@ -98,7 +98,7 @@ export interface UsersQueryParams {
   role?: string; // ObjectId to filter by role
 }
 
-// File Upload types (MinIO)
+// File Upload types (media API)
 export interface FileUploadResponse {
   url: string;
 }

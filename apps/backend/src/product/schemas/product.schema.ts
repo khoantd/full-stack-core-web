@@ -1,7 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { type Translations } from '../../common/i18n/translations';
 
 export type ProductDocument = Product & Document;
+
+export type ProductTranslatableFields = {
+  name: string;
+  description: string;
+};
 
 @Schema({ timestamps: true })
 export class Product {
@@ -34,6 +40,9 @@ export class Product {
 
   @Prop({ default: false })
   isOutOfStock: boolean;
+
+  @Prop({ type: Object, default: undefined })
+  translations?: Translations<ProductTranslatableFields>;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

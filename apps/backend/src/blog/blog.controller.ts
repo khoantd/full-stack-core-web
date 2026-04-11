@@ -20,19 +20,28 @@ export class BlogController {
   async getAllBlogs(
     @Query() query: QueryBlogDto,
     @CurrentTenant() tenantId: string,
+    @Query('locale') locale?: string,
   ): Promise<PaginationResult> {
-    return this.blogService.findAll(query, tenantId);
+    return this.blogService.findAll(query, tenantId, locale);
   }
 
   @Get(':id')
-  async getBlogById(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.blogService.findById(id, tenantId);
+  async getBlogById(
+    @Param('id') id: string,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.blogService.findById(id, tenantId, locale);
   }
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async createBlog(@Body() dto: CreateBlogDto, @CurrentTenant() tenantId: string) {
-    return this.blogService.create(dto, tenantId);
+  async createBlog(
+    @Body() dto: CreateBlogDto,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.blogService.create(dto, tenantId, locale);
   }
 
   @Put(':id')
@@ -40,9 +49,10 @@ export class BlogController {
   async updateBlog(
     @Param('id') id: string,
     @Body() dto: UpdateBlogDto,
+    @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
   ) {
-    return this.blogService.update(id, dto, tenantId);
+    return this.blogService.update(id, dto, tenantId, locale);
   }
 
   @Delete(':id')

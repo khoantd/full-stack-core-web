@@ -114,7 +114,7 @@ export default function ApiKeysPage() {
               className="mt-3 cursor-pointer"
               onClick={() => setNewKey(null)}
             >
-              I've saved it
+              I&apos;ve saved it
             </Button>
           </CardContent>
         </Card>

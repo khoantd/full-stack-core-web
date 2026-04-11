@@ -44,3 +44,6 @@ docker-compose.yml
 
 # typescript
 *.tsbuildinfo
+
+# local media uploads (backend MEDIA_PROVIDER_LOCAL)
+apps/backend/uploads/

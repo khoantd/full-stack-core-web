@@ -218,3 +218,15 @@ See `.github/workflows/README-SECRETS.md` for deployment secrets, including:
 - Update `.env.example` files when adding new required config.
 - Avoid introducing new global redirects in Next.js unless necessary.
 
+## i18n rule (default for all future features)
+
+All new features must be built **i18n-first** across **frontend and backend**. This is a hard requirement to avoid shipping untranslated UI and inconsistent API messaging.
+
+- **No hardcoded user-facing strings (frontend)**: any UI copy (labels, buttons, errors, empty states, toasts, confirmations) must come from translation messages.
+- **No hardcoded user-facing strings (backend)**: controllers/services must not embed end-user text in thrown errors or responses; return **error codes / i18n keys** (and optional params) that the frontend can translate, or use the backend i18n utilities when already established.
+- **Ship both locales (frontend)**: when adding a new message key, update **both** `apps/frontend/messages/en.json` and `apps/frontend/messages/vi.json` in the same change.
+- **Ship both locales (backend)**: when adding backend-facing message keys, update the backend translation source (see `apps/backend/src/common/i18n/translations.ts`, if present in the repo) for all supported locales.
+- **Keys over prose**: use stable, namespaced keys (feature + screen + component) and reuse existing keys when meaning matches.
+- **Validation errors**: DTO / schema validation errors should be surfaced as codes/keys rather than raw English strings where feasible.
+- **Definition of done**: a feature is not complete until it renders correctly in all supported locales and has no missing translation keys at runtime.
+

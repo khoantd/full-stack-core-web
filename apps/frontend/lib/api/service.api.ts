@@ -9,6 +9,8 @@ import type {
   DeleteServiceResponse,
 } from "@/types/service.type";
 
+export type ServiceLocale = "en" | "vi";
+
 export const serviceApi = {
   getServices: async (params: ServicesQueryParams = {}): Promise<ServicesResponse> => {
     const { page = 1, limit = 10, search, status, category, categoryIds } = params;
@@ -22,18 +24,24 @@ export const serviceApi = {
     };
   },
 
-  getServiceById: async (id: string): Promise<Service> => {
-    const response = await axiosClient.get<Service>(`/services/${id}`);
+  getServiceById: async (id: string, opts?: { locale?: ServiceLocale }): Promise<Service> => {
+    const response = await axiosClient.get<Service>(`/services/${id}`, {
+      params: { ...(opts?.locale ? { locale: opts.locale } : {}) },
+    });
     return mapApiService(response.data);
   },
 
-  createService: async (data: CreateServiceRequest): Promise<Service> => {
-    const response = await axiosClient.post<Service>("/services", data);
+  createService: async (data: CreateServiceRequest, opts?: { locale?: ServiceLocale }): Promise<Service> => {
+    const response = await axiosClient.post<Service>("/services", data, {
+      params: { ...(opts?.locale ? { locale: opts.locale } : {}) },
+    });
     return mapApiService(response.data);
   },
 
-  updateService: async (id: string, data: UpdateServiceRequest): Promise<Service> => {
-    const response = await axiosClient.put<Service>(`/services/${id}`, data);
+  updateService: async (id: string, data: UpdateServiceRequest, opts?: { locale?: ServiceLocale }): Promise<Service> => {
+    const response = await axiosClient.put<Service>(`/services/${id}`, data, {
+      params: { ...(opts?.locale ? { locale: opts.locale } : {}) },
+    });
     return mapApiService(response.data);
   },
 

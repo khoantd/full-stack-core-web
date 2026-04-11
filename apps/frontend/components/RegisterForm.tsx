@@ -213,7 +213,7 @@ export function RegisterForm() {
       <div className="flex flex-col items-center gap-5 py-8 text-center">
         <CheckCircleIcon />
         <div className="space-y-1.5">
-          <h2 className="text-xl font-semibold text-foreground">You're all set!</h2>
+          <h2 className="text-xl font-semibold text-foreground">You&apos;re all set!</h2>
           <p className="text-sm text-muted-foreground max-w-xs">
             We sent a verification link to{" "}
             <span className="font-medium text-foreground">{email}</span>.
@@ -281,7 +281,7 @@ export function RegisterForm() {
           value={confirmPassword} onChange={setConfirmPassword} disabled={isLoading}
         />
         {confirmPassword.length > 0 && password !== confirmPassword && (
-          <p className="mt-1 text-xs text-destructive">Passwords don't match</p>
+          <p className="mt-1 text-xs text-destructive">Passwords don&apos;t match</p>
         )}
       </div>
 

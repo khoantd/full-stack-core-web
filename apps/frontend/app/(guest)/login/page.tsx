@@ -35,7 +35,7 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             <blockquote className="text-xl font-medium leading-snug max-w-sm">
-              "The platform that keeps our entire team aligned and moving fast."
+              &ldquo;The platform that keeps our entire team aligned and moving fast.&rdquo;
             </blockquote>
             <p className="text-sm text-white/70">— A happy customer</p>
           </div>

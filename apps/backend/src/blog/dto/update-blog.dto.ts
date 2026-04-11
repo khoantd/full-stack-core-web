@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsEnum, ValidateIf } from 'class-validator';
 import { BlogStatus } from '../schemas/blog.schema';
 
 export class UpdateBlogDto {
@@ -11,8 +11,9 @@ export class UpdateBlogDto {
   description?: string;
 
   @IsOptional()
+  @ValidateIf((_, v) => v != null)
   @IsString({ message: 'Image must be a string' })
-  image?: string;
+  image?: string | null;
 
   @IsOptional()
   @IsEnum(BlogStatus)

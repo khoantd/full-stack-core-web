@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import axiosClient from "@/api/axiosClient";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { routing, type AppLocale } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import {
   Select,
   SelectContent,
@@ -63,6 +66,9 @@ export default function ProfileSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     axiosClient
@@ -91,6 +97,19 @@ export default function ProfileSettingsPage() {
 
   const set = <K extends keyof Preferences>(key: K, value: Preferences[K]) =>
     setPrefs((p) => ({ ...p, [key]: value }));
+
+  const setLanguage = (lang: string) => {
+    set("language", lang);
+
+    // UI locale comes from the URL prefix (next-intl). Changing the preference
+    // alone won't re-render translations. For supported locales, update route.
+    if ((routing.locales as readonly string[]).includes(lang)) {
+      const locale = lang as AppLocale;
+      const query = searchParams?.toString();
+      const target = `${pathname}${query ? `?${query}` : ""}`;
+      router.replace(target as any, { locale });
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -146,7 +165,7 @@ export default function ProfileSettingsPage() {
         <CardContent className="space-y-5">
           <div className="space-y-1.5">
             <Label htmlFor="pref-language">Language</Label>
-            <Select value={prefs.language} onValueChange={(v) => set("language", v)}>
+            <Select value={prefs.language} onValueChange={setLanguage}>
               <SelectTrigger id="pref-language" className="max-w-xs">
                 <SelectValue />
               </SelectTrigger>

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Loader2, ImageIcon, Calendar, DollarSign, Clock, Tag } from "lucide-react";
+import { useLocale } from "next-intl";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -70,11 +71,12 @@ export function ServiceDetailDialog({ open, onOpenChange, service }: ServiceDeta
     { enabled: serviceCategoriesEnabled }
   );
   const categories = categoriesResp?.data ?? [];
+  const locale = useLocale();
 
   if (!service) return null;
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    new Date(d).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
   const statusColors: Record<string, string> = {
     Draft: "bg-gray-100 text-gray-700",
@@ -288,7 +290,7 @@ export function DeleteServiceDialog({ open, onOpenChange, service, onSuccess }: 
           <AlertDialogTitle>Delete Service?</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold text-foreground">"{service.title}"</span>? This action cannot be undone.
+            <span className="font-semibold text-foreground">&quot;{service.title}&quot;</span>? This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

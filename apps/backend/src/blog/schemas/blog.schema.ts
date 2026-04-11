@@ -1,11 +1,20 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { type Translations } from '../../common/i18n/translations';
 
 export enum BlogStatus {
   DRAFT = 'Draft',
   PUBLISHED = 'Published',
   ARCHIVED = 'Archived',
 }
+
+export type BlogTranslatableFields = {
+  title: string;
+  description: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  author?: string;
+};
 
 @Schema({ collection: 'blogs', timestamps: true })
 export class Blog extends Document {
@@ -35,6 +44,9 @@ export class Blog extends Document {
 
   @Prop()
   seoDescription?: string;
+
+  @Prop({ type: Object, default: undefined })
+  translations?: Translations<BlogTranslatableFields>;
 
   createdAt: Date;
   updatedAt: Date;

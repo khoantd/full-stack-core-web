@@ -124,7 +124,7 @@ export function DeleteServiceCategoryDialog({
           <AlertDialogTitle>Delete service category?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete{" "}
-            <span className="font-semibold text-foreground">\"{category.name}\"</span>. This action cannot be undone.
+            <span className="font-semibold text-foreground">&quot;{category.name}&quot;</span>. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

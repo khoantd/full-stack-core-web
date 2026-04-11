@@ -68,7 +68,7 @@ export default function BankAccountsPage() {
       <div>
         <h1 className="text-2xl font-semibold">Bank Accounts</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure your tenant's bank accounts for VietQR payment generation.
+          Configure your tenant&apos;s bank accounts for VietQR payment generation.
         </p>
       </div>
 

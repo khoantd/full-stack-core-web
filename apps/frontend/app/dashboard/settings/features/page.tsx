@@ -22,23 +22,25 @@ import { getTenantIdFromToken } from "@/lib/jwt";
 import { ALL_FEATURES, type FeatureKey } from "@/types/tenant.type";
 import { checkDependencies, validateFeatureSet, type PendingToggle } from "./feature-dependencies";
 import { DependencyWarningDialog } from "./DependencyWarningDialog";
+import { useTranslations } from "next-intl";
 
-const FEATURE_META: Record<FeatureKey, { label: string; description: string; icon: React.ElementType }> = {
-  categories: { label: "Categories", description: "Manage product categories and hierarchies.", icon: IconCategory },
-  products: { label: "Products", description: "Product catalog with inventory management.", icon: IconBox },
-  automakers: { label: "Automakers", description: "Vehicle brands and manufacturer data.", icon: IconCar },
-  pricings: { label: "Pricings", description: "Tiered pricing catalog with multi-currency support.", icon: IconTag },
-  events: { label: "Events", description: "Create and manage events and schedules.", icon: IconCalendar },
-  services: { label: "Services", description: "Service listings and offerings.", icon: IconBriefcase },
-  serviceCategories: { label: "Service Categories", description: "Organize services into categories.", icon: IconCategory },
-  blogs: { label: "Blogs", description: "Blog posts and content publishing.", icon: IconNews },
-  payments: { label: "Payments", description: "Payment processing and transaction history.", icon: IconCreditCard },
+const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
+  categories: IconCategory,
+  products: IconBox,
+  automakers: IconCar,
+  pricings: IconTag,
+  events: IconCalendar,
+  services: IconBriefcase,
+  serviceCategories: IconCategory,
+  blogs: IconNews,
+  payments: IconCreditCard,
 };
 
 export default function FeaturesPage() {
+  const t = useTranslations();
   const { data: tenants, isLoading, isError, error } = useTenants();
   const updateFeatures = useUpdateTenantFeatures();
-  const [enabled, setEnabled] = useState<Set<FeatureKey> | null>(null);
+  const [localEnabled, setLocalEnabled] = useState<Set<FeatureKey> | null>(null);
   const [dirty, setDirty] = useState(false);
   const [pendingToggle, setPendingToggle] = useState<PendingToggle | null>(null);
 
@@ -47,24 +49,21 @@ export default function FeaturesPage() {
     ? getTenantIdFromToken(getStoredToken() ?? "")
     : null;
 
-  // Sync from server once on load (and after save resets dirty).
-  // If the current org is not in GET /tenants (e.g. ID format mismatch), still initialize
-  // from defaults so the page is usable; PATCH /tenants/my/features uses JWT tenantId.
-  useEffect(() => {
-    if (tenants === undefined || dirty) return;
-    if (!tenantId) {
-      setEnabled(null);
-      return;
-    }
-    const tenant = tenants.find((t) => String(t._id) === String(tenantId));
-    const features = tenant?.enabledFeatures?.length
-      ? tenant.enabledFeatures
-      : [...ALL_FEATURES];
-    setEnabled(new Set(features));
-  }, [tenants, tenantId, dirty]);
+  const serverEnabled = (() => {
+    if (!tenantId) return null;
+    const tenant = tenants?.find((t) => String(t._id) === String(tenantId));
+    const features = tenant?.enabledFeatures?.length ? tenant.enabledFeatures : [...ALL_FEATURES];
+    return new Set<FeatureKey>(features);
+  })();
+
+  const enabled = dirty ? localEnabled : serverEnabled;
 
   const toggle = (feature: FeatureKey) => {
     if (!enabled) return;
+    if (!dirty) {
+      setLocalEnabled(new Set(enabled));
+      setDirty(true);
+    }
     const nextState = !enabled.has(feature);
     const result = checkDependencies(enabled, feature, nextState);
     if (result.requiresWarning) {
@@ -80,7 +79,7 @@ export default function FeaturesPage() {
     willAlsoDisable: FeatureKey[],
     willAlsoEnable: FeatureKey[]
   ) => {
-    setEnabled((prev) => {
+    setLocalEnabled((prev) => {
       const next = new Set(prev);
       nextState ? next.add(feature) : next.delete(feature);
       willAlsoDisable.forEach((f) => next.delete(f));
@@ -103,25 +102,28 @@ export default function FeaturesPage() {
 
   const save = () => {
     if (!enabled) return;
-    const error = validateFeatureSet(enabled, (key) => FEATURE_META[key].label);
+    const error = validateFeatureSet(enabled, (key) =>
+      t(`settings.features.featureMeta.${key}.label`),
+    );
     if (error) {
       toast.error(error);
       return;
     }
     updateFeatures.mutate([...enabled], {
       onSuccess: () => {
-        toast.success("Features updated");
+        toast.success(t("settings.features.saved"));
         setDirty(false);
+        setLocalEnabled(null);
       },
       onError: (err: any) =>
-        toast.error(err?.response?.data?.message ?? "Update failed"),
+        toast.error(err?.response?.data?.message ?? t("settings.features.updateFailed")),
     });
   };
 
   if (isError) {
     const message =
       (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-      "Could not load tenants.";
+      t("settings.features.loadError");
     return (
       <p className="text-sm text-destructive" role="alert">
         {message}
@@ -132,10 +134,14 @@ export default function FeaturesPage() {
   if (!tenantId) {
     return (
       <p className="text-sm text-muted-foreground">
-        No organization ID in your session. Sign out and sign in again so your account is linked to a tenant.
+        {t("settings.features.noTenant")}
       </p>
     );
   }
+
+  const featureMetaForDialog: Record<FeatureKey, { label: string }> = Object.fromEntries(
+    ALL_FEATURES.map((key) => [key, { label: t(`settings.features.featureMeta.${key}.label`) }]),
+  ) as Record<FeatureKey, { label: string }>;
 
   if (isLoading || enabled === null) {
     return (
@@ -148,17 +154,16 @@ export default function FeaturesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium">Features</h3>
+        <h3 className="text-lg font-medium">{t("settings.features.title")}</h3>
         <p className="text-sm text-muted-foreground">
-          Enable or disable features for your organization. Disabled features are hidden from the sidebar.
+          {t("settings.features.subtitle")}
         </p>
       </div>
       <Separator />
 
       <div className="space-y-4">
         {ALL_FEATURES.map((feature) => {
-          const meta = FEATURE_META[feature];
-          const Icon = meta.icon;
+          const Icon = FEATURE_ICONS[feature];
           return (
             <div key={feature} className="flex items-center justify-between rounded-lg border p-4">
               <div className="flex items-center gap-3">
@@ -166,8 +171,12 @@ export default function FeaturesPage() {
                   <Icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{meta.label}</p>
-                  <p className="text-xs text-muted-foreground">{meta.description}</p>
+                  <p className="text-sm font-medium">
+                    {t(`settings.features.featureMeta.${feature}.label`)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(`settings.features.featureMeta.${feature}.description`)}
+                  </p>
                 </div>
               </div>
               <Switch
@@ -186,13 +195,13 @@ export default function FeaturesPage() {
         className="cursor-pointer"
       >
         {updateFeatures.isPending && <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />}
-        Save Changes
+        {t("settings.features.save")}
       </Button>
 
       <DependencyWarningDialog
         open={pendingToggle !== null}
         pending={pendingToggle}
-        featureMeta={FEATURE_META}
+        featureMeta={featureMetaForDialog}
         onConfirm={handleConfirm}
         onCancel={handleCancel}
       />

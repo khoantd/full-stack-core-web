@@ -1,42 +1,53 @@
 import axiosClient from "@/api/axiosClient";
 import type { FileUploadResponse, FileUploadResult } from "@/api/types";
+import type { MediaProviderId } from "@/types/media.type";
+import { buildMediaUrl } from "@/lib/media-url";
+import { compressImageFileIfNeeded } from "@/lib/compress-upload-image";
 
-// Domain prefix for MinIO images
-const MINIO_BASE_URL = "https://seyeuthuong.org";
+export type UploadPhase = "compressing" | "uploading";
 
-/**
- * Build full URL from MinIO response
- * API returns: { url: "/imagefolder/1771248988154-quan-ao.png" }
- * Result: "https://seyeuthuong.org/imagefolder/1771248988154-quan-ao.png"
- */
-function buildFullUrl(relativePath: string): string {
-  // If already has domain, return as is
-  if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) {
-    return relativePath;
-  }
-  // Ensure path starts with /
-  const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
-  return `${MINIO_BASE_URL}${path}`;
+export interface UploadFileOptions {
+  onPhase?: (phase: UploadPhase) => void;
+  /** 0–100 while uploading */
+  onUploadProgress?: (percent: number) => void;
 }
 
 export const fileService = {
   /**
-   * Upload file to MinIO server
-   * @param file - File to upload
-   * @returns FileUploadResult with full URL
+   * Upload file via media API (MinIO or local provider).
    */
-  uploadFile: async (file: File): Promise<FileUploadResult> => {
-    const formData = new FormData();
-    formData.append("file", file);
+  uploadFile: async (
+    file: File,
+    provider: MediaProviderId = "minio",
+    options?: UploadFileOptions,
+  ): Promise<FileUploadResult> => {
+    options?.onPhase?.("compressing");
+    const toUpload = await compressImageFileIfNeeded(file);
+    options?.onPhase?.("uploading");
+    options?.onUploadProgress?.(0);
 
-    const response = await axiosClient.post<FileUploadResponse>("/minio/file", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
+    const formData = new FormData();
+    formData.append("file", toUpload);
+
+    const response = await axiosClient.post<FileUploadResponse>(
+      `/media/file?provider=${encodeURIComponent(provider)}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (ev) => {
+          const total = ev.total;
+          if (total && total > 0) {
+            const pct = Math.min(100, Math.round((ev.loaded * 100) / total));
+            options?.onUploadProgress?.(pct);
+          }
+        },
       },
-    });
+    );
 
     const originalUrl = response.data.url;
-    const fullUrl = buildFullUrl(originalUrl);
+    const fullUrl = buildMediaUrl(originalUrl);
 
     return {
       url: fullUrl,
@@ -44,13 +55,13 @@ export const fileService = {
     };
   },
 
-  /**
-   * Upload multiple files to MinIO server
-   * @param files - Array of files to upload
-   * @returns Array of FileUploadResult with full URLs
-   */
-  uploadFiles: async (files: File[]): Promise<FileUploadResult[]> => {
-    const uploadPromises = files.map((file) => fileService.uploadFile(file));
+  uploadFiles: async (
+    files: File[],
+    provider: MediaProviderId = "minio",
+  ): Promise<FileUploadResult[]> => {
+    const uploadPromises = files.map((file) =>
+      fileService.uploadFile(file, provider),
+    );
     return Promise.all(uploadPromises);
   },
 };

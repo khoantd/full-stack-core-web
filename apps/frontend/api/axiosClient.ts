@@ -1,5 +1,6 @@
 import axios, { type AxiosError } from "axios";
 import { syncAuthSessionCookies } from "@/lib/auth-cookies";
+import { routing } from "@/i18n/routing";
 
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -37,6 +38,14 @@ const axiosClient = axios.create({
   },
 });
 
+function getLocaleFromPathname(pathname: string): string | undefined {
+  const match = /^\/([^/]+)(\/.*)?$/.exec(pathname);
+  const maybeLocale = match?.[1];
+  if (!maybeLocale) return undefined;
+  if ((routing.locales as readonly string[]).includes(maybeLocale)) return maybeLocale;
+  return undefined;
+}
+
 // Request interceptor - tự động gắn Authorization header (chỉ dùng khi token là string hợp lệ)
 axiosClient.interceptors.request.use(
   (config) => {
@@ -44,6 +53,20 @@ axiosClient.interceptors.request.use(
     if (token && typeof token === "string" && !token.includes("[object Object]")) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Propagate active locale to backend so translated fields can be overlaid
+    // consistently (blogs/products/services already accept `?locale=`).
+    if (typeof window !== "undefined") {
+      const locale = getLocaleFromPathname(window.location.pathname);
+      if (locale) {
+        const prevParams = (config.params ?? {}) as Record<string, unknown>;
+        // Preserve explicit per-request locale overrides (e.g. admin bilingual editor).
+        if (prevParams.locale === undefined) {
+          config.params = { ...prevParams, locale };
+        }
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

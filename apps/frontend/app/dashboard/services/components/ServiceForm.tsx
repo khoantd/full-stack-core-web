@@ -7,10 +7,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, ArrowUp, ArrowDown, ChevronsUpDown, Check } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -20,6 +22,7 @@ import { useCreateService, useUpdateService } from "@/hooks/useService";
 import { normalizeServiceStatus } from "@/lib/normalize-service-status";
 import { useCreateServiceCategory, useServiceCategories } from "@/hooks/useServiceCategory";
 import { useFeatureEnabled } from "@/hooks/useFeatureEnabled";
+import { serviceApi } from "@/lib/api/service.api";
 import type { Service, ServiceContentBlock, ServiceStatus } from "@/types/service.type";
 
 const serviceContentBlockSchema: z.ZodType<ServiceContentBlock> = z.union([
@@ -43,7 +46,7 @@ const serviceContentBlockSchema: z.ZodType<ServiceContentBlock> = z.union([
   }),
 ]);
 
-const serviceFormSchema = z.object({
+const serviceFormSchemaEn = z.object({
   title: z.string().min(1, "Title is required").max(200),
   description: z.string().min(1, "Description is required"),
   image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -57,9 +60,20 @@ const serviceFormSchema = z.object({
   content: z.array(serviceContentBlockSchema).optional(),
 });
 
-type ServiceFormValues = z.infer<typeof serviceFormSchema>;
+const serviceFormSchemaVi = z.object({
+  title: z.string().max(200).optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  duration: z.string().optional().or(z.literal("")),
+  category: z.string().optional().or(z.literal("")),
+  seoTitle: z.string().optional().or(z.literal("")),
+  seoDescription: z.string().optional().or(z.literal("")),
+  content: z.array(serviceContentBlockSchema).optional(),
+});
 
-const emptyFormValues: ServiceFormValues = {
+type ServiceFormValuesEn = z.infer<typeof serviceFormSchemaEn>;
+type ServiceFormValuesVi = z.infer<typeof serviceFormSchemaVi>;
+
+const emptyFormValuesEn: ServiceFormValuesEn = {
   title: "",
   description: "",
   image: "",
@@ -73,6 +87,16 @@ const emptyFormValues: ServiceFormValues = {
   content: [],
 };
 
+const emptyFormValuesVi: ServiceFormValuesVi = {
+  title: "",
+  description: "",
+  duration: "",
+  category: "",
+  seoTitle: "",
+  seoDescription: "",
+  content: [],
+};
+
 interface ServiceFormProps {
   service?: Service | null;
   onSuccess?: () => void;
@@ -81,6 +105,7 @@ interface ServiceFormProps {
 
 export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFormProps) {
   const isEditMode = !!service;
+  const [activeLang, setActiveLang] = React.useState<"en" | "vi">("en");
   const createService = useCreateService();
   const updateService = useUpdateService();
   const serviceCategoriesEnabled = useFeatureEnabled("serviceCategories");
@@ -98,8 +123,8 @@ export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFor
    * from that sync. The dialog remounts this component when opened (key), so these defaults stay
    * aligned with the service being edited.
    */
-  const defaultValues = React.useMemo((): ServiceFormValues => {
-    if (!service) return emptyFormValues;
+  const defaultValuesEn = React.useMemo((): ServiceFormValuesEn => {
+    if (!service) return emptyFormValuesEn;
     return {
       title: service.title || "",
       description: service.description || "",
@@ -115,39 +140,136 @@ export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFor
     };
   }, [service]);
 
-  const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(serviceFormSchema),
-    defaultValues,
+  const formEn = useForm<ServiceFormValuesEn>({
+    resolver: zodResolver(serviceFormSchemaEn),
+    defaultValues: defaultValuesEn,
   });
 
-  const contentArray = useFieldArray({
-    control: form.control,
+  const formVi = useForm<ServiceFormValuesVi>({
+    resolver: zodResolver(serviceFormSchemaVi),
+    defaultValues: emptyFormValuesVi,
+  });
+
+  const contentArrayEn = useFieldArray({
+    control: formEn.control,
     name: "content",
   });
 
-  const onSubmit = async (values: ServiceFormValues) => {
-    try {
-      const submitData = {
-        title: values.title,
-        description: values.description,
-        status: values.status as ServiceStatus,
-        ...(values.image ? { image: values.image } : {}),
-        ...(values.price !== "" && values.price != null ? { price: Number(values.price) } : {}),
-        ...(values.duration ? { duration: values.duration } : {}),
-        ...(values.category ? { category: values.category } : {}),
-        ...(values.categoryIds && values.categoryIds.length > 0 ? { categoryIds: values.categoryIds } : {}),
-        ...(values.seoTitle ? { seoTitle: values.seoTitle } : {}),
-        ...(values.seoDescription ? { seoDescription: values.seoDescription } : {}),
-        ...(values.content && values.content.length > 0 ? { content: values.content } : {}),
-      };
+  const contentArrayVi = useFieldArray({
+    control: formVi.control,
+    name: "content",
+  });
 
-      if (isEditMode && service) {
-        await updateService.mutateAsync({ id: service._id, data: submitData });
+  const { data: serviceEn } = useQuery({
+    queryKey: ["service", service?._id, "en"],
+    queryFn: () => serviceApi.getServiceById(service!._id, { locale: "en" }),
+    enabled: !!service?._id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: serviceVi } = useQuery({
+    queryKey: ["service", service?._id, "vi"],
+    queryFn: () => serviceApi.getServiceById(service!._id, { locale: "vi" }),
+    enabled: !!service?._id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  React.useEffect(() => {
+    if (!isEditMode) return;
+    if (!serviceEn) return;
+    formEn.reset({
+      title: serviceEn.title || "",
+      description: serviceEn.description || "",
+      image: serviceEn.image || "",
+      status: normalizeServiceStatus(serviceEn.status),
+      price: serviceEn.price ?? "",
+      duration: serviceEn.duration ?? "",
+      category: serviceEn.category ?? "",
+      categoryIds: serviceEn.categoryIds ?? [],
+      seoTitle: serviceEn.seoTitle ?? "",
+      seoDescription: serviceEn.seoDescription ?? "",
+      content: serviceEn.content ?? [],
+    });
+  }, [isEditMode, serviceEn, formEn]);
+
+  React.useEffect(() => {
+    if (!isEditMode) return;
+    if (!serviceVi) return;
+    formVi.reset({
+      title: serviceVi.title || "",
+      description: serviceVi.description || "",
+      duration: serviceVi.duration ?? "",
+      category: serviceVi.category ?? "",
+      seoTitle: serviceVi.seoTitle ?? "",
+      seoDescription: serviceVi.seoDescription ?? "",
+      content: serviceVi.content ?? [],
+    });
+  }, [isEditMode, serviceVi, formVi]);
+
+  const buildSubmitDataEn = (values: ServiceFormValuesEn) => {
+    return {
+      title: values.title,
+      description: values.description,
+      status: values.status as ServiceStatus,
+      ...(values.image ? { image: values.image } : {}),
+      ...(values.price !== "" && values.price != null ? { price: Number(values.price) } : {}),
+      ...(values.duration ? { duration: values.duration } : {}),
+      ...(values.category ? { category: values.category } : {}),
+      ...(values.categoryIds && values.categoryIds.length > 0 ? { categoryIds: values.categoryIds } : {}),
+      ...(values.seoTitle ? { seoTitle: values.seoTitle } : {}),
+      ...(values.seoDescription ? { seoDescription: values.seoDescription } : {}),
+      ...(values.content && values.content.length > 0 ? { content: values.content } : {}),
+    };
+  };
+
+  const buildSubmitDataVi = (values: ServiceFormValuesVi) => {
+    const payload: Record<string, unknown> = {};
+    if (typeof values.title === "string" && values.title.trim()) payload.title = values.title.trim();
+    if (typeof values.description === "string" && values.description.trim()) payload.description = values.description;
+    if (typeof values.duration === "string" && values.duration.trim()) payload.duration = values.duration.trim();
+    if (typeof values.category === "string" && values.category.trim()) payload.category = values.category.trim();
+    if (typeof values.seoTitle === "string" && values.seoTitle.trim()) payload.seoTitle = values.seoTitle.trim();
+    if (typeof values.seoDescription === "string" && values.seoDescription.trim()) payload.seoDescription = values.seoDescription.trim();
+    if (Array.isArray(values.content) && values.content.length > 0) payload.content = values.content;
+    return payload;
+  };
+
+  const hasViPayload = (values: ServiceFormValuesVi) => Object.keys(buildSubmitDataVi(values)).length > 0;
+
+  const handleSave = async () => {
+    try {
+      const isEnValid = await formEn.trigger();
+      const isViValid = await formVi.trigger();
+
+      if (!isEnValid) {
+        setActiveLang("en");
+        return;
+      }
+
+      if (!isViValid) {
+        setActiveLang("vi");
+        return;
+      }
+
+      const submitDataEn = buildSubmitDataEn(formEn.getValues());
+      const viValues = formVi.getValues();
+      const submitDataVi = buildSubmitDataVi(viValues);
+      const shouldSaveVi = Object.keys(submitDataVi).length > 0 && hasViPayload(viValues);
+
+      if (isEditMode && service?._id) {
+        await updateService.mutateAsync({ id: service._id, data: submitDataEn, locale: "en" });
+        if (shouldSaveVi) {
+          await updateService.mutateAsync({ id: service._id, data: submitDataVi as any, locale: "vi" });
+        }
         toast.success("Service updated successfully");
       } else {
-        await createService.mutateAsync(submitData);
+        const created = await createService.mutateAsync({ data: submitDataEn, locale: "en" } as any);
+        if (created?._id && shouldSaveVi) {
+          await updateService.mutateAsync({ id: created._id, data: submitDataVi as any, locale: "vi" });
+        }
         toast.success("Service created successfully");
       }
+
       onSuccess?.();
     } catch {
       toast.error(isEditMode ? "Failed to update service" : "Failed to create service");
@@ -155,283 +277,384 @@ export default function ServiceForm({ service, onSuccess, onCancel }: ServiceFor
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField control={form.control} name="title" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
-            <FormControl><Input placeholder="Enter service title" disabled={isLoading} {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+    <div className="space-y-4">
+      <Tabs value={activeLang} onValueChange={(v) => setActiveLang(v as "en" | "vi")}>
+        <TabsList>
+          <TabsTrigger value="en">EN</TabsTrigger>
+          <TabsTrigger value="vi">VI</TabsTrigger>
+        </TabsList>
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="status" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select
-                key={service ? `${service._id}-${defaultValues.status}` : "create-status"}
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={isLoading}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Draft">Draft</SelectItem>
-                  <SelectItem value="Published">Published</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+        <TabsContent value="en">
+          <Form {...formEn}>
+            <div className="space-y-4">
+              <FormField control={formEn.control} name="title" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title <span className="text-destructive">*</span></FormLabel>
+                  <FormControl><Input placeholder="Enter service title" disabled={isLoading} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
-          <FormField control={form.control} name="category" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Massage" disabled={isLoading} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-
-        {serviceCategoriesEnabled && (
-          <FormField control={form.control} name="categoryIds" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Service Categories</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      role="combobox"
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formEn.control} name="status" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      key={service ? `${service._id}-${defaultValuesEn.status}` : "create-status"}
+                      onValueChange={field.onChange}
+                      value={field.value}
                       disabled={isLoading}
-                      className={cn("w-full justify-between", (!field.value || field.value.length === 0) && "text-muted-foreground")}
                     >
-                      {field.value && field.value.length > 0 ? `${field.value.length} selected` : "Select categories"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search categories..." />
-                    <CommandList>
-                      <CommandEmpty>No categories found.</CommandEmpty>
-                      <CommandGroup>
-                        {categories.map((c) => {
-                          const selected = (field.value ?? []).includes(c._id);
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                        <SelectItem value="Published">Published</SelectItem>
+                        <SelectItem value="Archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={formEn.control} name="category" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Massage" disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              {serviceCategoriesEnabled && (
+                <FormField control={formEn.control} name="categoryIds" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Categories</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            disabled={isLoading}
+                            className={cn("w-full justify-between", (!field.value || field.value.length === 0) && "text-muted-foreground")}
+                          >
+                            {field.value && field.value.length > 0 ? `${field.value.length} selected` : "Select categories"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search categories..." />
+                          <CommandList>
+                            <CommandEmpty>No categories found.</CommandEmpty>
+                            <CommandGroup>
+                              {categories.map((c) => {
+                                const selected = (field.value ?? []).includes(c._id);
+                                return (
+                                  <CommandItem
+                                    key={c._id}
+                                    value={c.name}
+                                    onSelect={() => {
+                                      const next = selected
+                                        ? (field.value ?? []).filter((id) => id !== c._id)
+                                        : [...(field.value ?? []), c._id];
+                                      field.onChange(next);
+                                    }}
+                                  >
+                                    <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                                    <span className="flex-1">{c.name}</span>
+                                    <span className="text-xs text-muted-foreground">{c.status}</span>
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                            <div className="border-t p-2">
+                              <QuickCreateCategory
+                                disabled={isLoading || createCategory.isPending}
+                                onCreate={async (name) => {
+                                  const slug = name
+                                    .trim()
+                                    .toLowerCase()
+                                    .replace(/['"]/g, "")
+                                    .replace(/[^a-z0-9]+/g, "-")
+                                    .replace(/^-+|-+$/g, "")
+                                    .slice(0, 160);
+                                  const created = await createCategory.mutateAsync({ name, slug, status: "Published", sortOrder: 0 });
+                                  field.onChange([...(field.value ?? []), created._id]);
+                                }}
+                              />
+                            </div>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {field.value && field.value.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {field.value.map((id) => {
+                          const c = categories.find((x) => x._id === id);
                           return (
-                            <CommandItem
-                              key={c._id}
-                              value={c.name}
-                              onSelect={() => {
-                                const next = selected
-                                  ? (field.value ?? []).filter((id) => id !== c._id)
-                                  : [...(field.value ?? []), c._id];
-                                field.onChange(next);
-                              }}
-                            >
-                              <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
-                              <span className="flex-1">{c.name}</span>
-                              <span className="text-xs text-muted-foreground">{c.status}</span>
-                            </CommandItem>
+                            <Badge key={id} variant="secondary" className="cursor-pointer" onClick={() => field.onChange((field.value ?? []).filter((x) => x !== id))}>
+                              {c?.name ?? "Category"}
+                              <span className="ml-1 text-muted-foreground">×</span>
+                            </Badge>
                           );
                         })}
-                      </CommandGroup>
-                      <div className="border-t p-2">
-                        <QuickCreateCategory
-                          disabled={isLoading || createCategory.isPending}
-                          onCreate={async (name) => {
-                            const slug = name
-                              .trim()
-                              .toLowerCase()
-                              .replace(/['"]/g, "")
-                              .replace(/[^a-z0-9]+/g, "-")
-                              .replace(/^-+|-+$/g, "")
-                              .slice(0, 160);
-                            const created = await createCategory.mutateAsync({ name, slug, status: "Published", sortOrder: 0 });
-                            field.onChange([...(field.value ?? []), created._id]);
-                          }}
-                        />
                       </div>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              {field.value && field.value.length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-2">
-                  {field.value.map((id) => {
-                    const c = categories.find((x) => x._id === id);
-                    return (
-                      <Badge key={id} variant="secondary" className="cursor-pointer" onClick={() => field.onChange((field.value ?? []).filter((x) => x !== id))}>
-                        {c?.name ?? "Category"}
-                        <span className="ml-1 text-muted-foreground">×</span>
-                      </Badge>
-                    );
-                  })}
-                </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )} />
               )}
-              <FormMessage />
-            </FormItem>
-          )} />
-        )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="price" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price ($)</FormLabel>
-              <FormControl><Input type="number" min="0" placeholder="0.00" disabled={isLoading} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formEn.control} name="price" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price ($)</FormLabel>
+                    <FormControl><Input type="number" min="0" placeholder="0.00" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
 
-          <FormField control={form.control} name="duration" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Duration</FormLabel>
-              <FormControl><Input placeholder="e.g. 2 hours" disabled={isLoading} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+                <FormField control={formEn.control} name="duration" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration</FormLabel>
+                    <FormControl><Input placeholder="e.g. 2 hours" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={formEn.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description <span className="text-destructive">*</span></FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Describe the service" disabled={isLoading} className="min-h-[120px] resize-y" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <RichBlocksEditor
+                title="Rich content blocks"
+                subtitle="Optional structured content to supplement the description."
+                disabled={isLoading}
+                control={formEn.control as unknown as Control<Record<string, unknown>>}
+                contentArray={contentArrayEn}
+              />
+
+              <FormField control={formEn.control} name="image" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Image URL</FormLabel>
+                  <FormControl><Input type="url" placeholder="https://example.com/image.jpg" disabled={isLoading} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formEn.control} name="seoTitle" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Title</FormLabel>
+                    <FormControl><Input placeholder="SEO title" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={formEn.control} name="seoDescription" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Description</FormLabel>
+                    <FormControl><Input placeholder="SEO description" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+          </Form>
+        </TabsContent>
+
+        <TabsContent value="vi">
+          <Form {...formVi}>
+            <div className="space-y-4">
+              <FormField control={formVi.control} name="title" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title (VI)</FormLabel>
+                  <FormControl><Input placeholder="Nhập tiêu đề dịch vụ" disabled={isLoading} {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formVi.control} name="category" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category (VI)</FormLabel>
+                    <FormControl><Input placeholder="VD: Massage" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={formVi.control} name="duration" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (VI)</FormLabel>
+                    <FormControl><Input placeholder="VD: 2 giờ" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <FormField control={formVi.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (VI)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Mô tả dịch vụ" disabled={isLoading} className="min-h-[120px] resize-y" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              <RichBlocksEditor
+                title="Rich content blocks (VI)"
+                subtitle="Nội dung chi tiết (tuỳ chọn)."
+                disabled={isLoading}
+                control={formVi.control as unknown as Control<Record<string, unknown>>}
+                contentArray={contentArrayVi}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField control={formVi.control} name="seoTitle" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Title (VI)</FormLabel>
+                    <FormControl><Input placeholder="SEO title" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={formVi.control} name="seoDescription" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SEO Description (VI)</FormLabel>
+                    <FormControl><Input placeholder="SEO description" disabled={isLoading} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+            </div>
+          </Form>
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
+        <Button type="button" disabled={isLoading} onClick={handleSave}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isEditMode ? "Update Service" : "Create Service"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function RichBlocksEditor({
+  title,
+  subtitle,
+  disabled,
+  control,
+  contentArray,
+}: {
+  title: string;
+  subtitle: string;
+  disabled?: boolean;
+  control: Control<Record<string, unknown>>;
+  contentArray: ReturnType<typeof useFieldArray<any, "content", "id">>;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">{title}</p>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={disabled}
+          onClick={() => contentArray.append({ type: "paragraph", text: "" } as ServiceContentBlock)}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add block
+        </Button>
+      </div>
 
-        <FormField control={form.control} name="description" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description <span className="text-destructive">*</span></FormLabel>
-            <FormControl>
-              <Textarea placeholder="Describe the service" disabled={isLoading} className="min-h-[120px] resize-y" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Rich content blocks</p>
-              <p className="text-xs text-muted-foreground">Optional structured content to supplement the description.</p>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={isLoading}
-              onClick={() => contentArray.append({ type: "paragraph", text: "" } as ServiceContentBlock)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add block
-            </Button>
-          </div>
-
-          {contentArray.fields.length === 0 ? (
-            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-              No blocks yet. Click “Add block” to start.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {contentArray.fields.map((f, index) => (
-                <div key={f.id} className="rounded-md border p-3 space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <FormField
-                        control={form.control}
-                        name={`content.${index}.type`}
-                        render={({ field }) => (
-                          <FormItem className="w-[180px]">
-                            <FormControl>
-                              <Select
-                                onValueChange={(v) => {
-                                  if (v === "heading") contentArray.update(index, { type: "heading", text: "Heading", level: 2 } as any);
-                                  if (v === "paragraph") contentArray.update(index, { type: "paragraph", text: "" } as any);
-                                  if (v === "bullets") contentArray.update(index, { type: "bullets", items: [""] } as any);
-                                  if (v === "image") contentArray.update(index, { type: "image", url: "", alt: "" } as any);
-                                  field.onChange(v);
-                                }}
-                                value={String(field.value)}
-                                disabled={isLoading}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Block type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="heading">Heading</SelectItem>
-                                  <SelectItem value="paragraph">Paragraph</SelectItem>
-                                  <SelectItem value="bullets">Bullets</SelectItem>
-                                  <SelectItem value="image">Image</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <div className="flex items-center gap-1">
-                        <Button type="button" size="icon" variant="outline" disabled={isLoading || index === 0} onClick={() => contentArray.move(index, index - 1)}>
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          disabled={isLoading || index === contentArray.fields.length - 1}
-                          onClick={() => contentArray.move(index, index + 1)}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <Button type="button" size="icon" variant="ghost" disabled={isLoading} onClick={() => contentArray.remove(index)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
+      {contentArray.fields.length === 0 ? (
+        <div className="rounded-md border p-4 text-sm text-muted-foreground">
+          No blocks yet. Click “Add block” to start.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {contentArray.fields.map((f, index) => (
+            <div key={f.id} className="rounded-md border p-3 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <FormField
+                    control={control}
+                    name={`content.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem className="w-[180px]">
+                        <FormControl>
+                          <Select
+                            onValueChange={(v) => {
+                              if (v === "heading") contentArray.update(index, { type: "heading", text: "Heading", level: 2 } as any);
+                              if (v === "paragraph") contentArray.update(index, { type: "paragraph", text: "" } as any);
+                              if (v === "bullets") contentArray.update(index, { type: "bullets", items: [""] } as any);
+                              if (v === "image") contentArray.update(index, { type: "image", url: "", alt: "" } as any);
+                              field.onChange(v);
+                            }}
+                            value={String(field.value)}
+                            disabled={disabled}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Block type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="heading">Heading</SelectItem>
+                              <SelectItem value="paragraph">Paragraph</SelectItem>
+                              <SelectItem value="bullets">Bullets</SelectItem>
+                              <SelectItem value="image">Image</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex items-center gap-1">
+                    <Button type="button" size="icon" variant="outline" disabled={disabled || index === 0} onClick={() => contentArray.move(index, index - 1)}>
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      disabled={disabled || index === contentArray.fields.length - 1}
+                      onClick={() => contentArray.move(index, index + 1)}
+                    >
+                      <ArrowDown className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  <BlockEditor control={form.control as unknown as Control<Record<string, unknown>>} index={index} disabled={isLoading} />
                 </div>
-              ))}
+                <Button type="button" size="icon" variant="ghost" disabled={disabled} onClick={() => contentArray.remove(index)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+
+              <BlockEditor control={control} index={index} disabled={disabled} />
             </div>
-          )}
+          ))}
         </div>
-
-        <FormField control={form.control} name="image" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Image URL</FormLabel>
-            <FormControl><Input type="url" placeholder="https://example.com/image.jpg" disabled={isLoading} {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="seoTitle" render={({ field }) => (
-            <FormItem>
-              <FormLabel>SEO Title</FormLabel>
-              <FormControl><Input placeholder="SEO title" disabled={isLoading} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="seoDescription" render={({ field }) => (
-            <FormItem>
-              <FormLabel>SEO Description</FormLabel>
-              <FormControl><Input placeholder="SEO description" disabled={isLoading} {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>Cancel</Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode ? "Update Service" : "Create Service"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+      )}
+    </div>
   );
 }
 

@@ -20,19 +20,28 @@ export class ServiceController {
   async getAll(
     @Query() query: QueryServiceDto,
     @CurrentTenant() tenantId: string,
+    @Query('locale') locale?: string,
   ): Promise<PaginationResult> {
-    return this.serviceService.findAll(query, tenantId);
+    return this.serviceService.findAll(query, tenantId, locale);
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.serviceService.findById(id, tenantId);
+  async getById(
+    @Param('id') id: string,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.serviceService.findById(id, tenantId, locale);
   }
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async create(@Body() dto: CreateServiceDto, @CurrentTenant() tenantId: string) {
-    return this.serviceService.create(dto, tenantId);
+  async create(
+    @Body() dto: CreateServiceDto,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.serviceService.create(dto, tenantId, locale);
   }
 
   @Put(':id')
@@ -40,9 +49,10 @@ export class ServiceController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateServiceDto,
+    @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
   ) {
-    return this.serviceService.update(id, dto, tenantId);
+    return this.serviceService.update(id, dto, tenantId, locale);
   }
 
   @Delete(':id')

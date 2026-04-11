@@ -1,6 +1,21 @@
+import createMiddleware from 'next-intl/middleware';
+import {routing} from './i18n/routing';
+
+export const config = {
+  matcher: [
+    '/',
+    // Match all pathnames except for
+    // - … if they start with `/api`, `/trpc`, `/_next` or `/_vercel`
+    // - … the ones containing a dot (e.g. `favicon.ico`)
+    '/((?!api|trpc|_next|_vercel|.*\\..*).*)'
+  ]
+};
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { tenantSlugFromRequest } from '@/lib/tenant-slug-from-host';
+
+const intlMiddleware = createMiddleware(routing);
 
 // Routes that require authentication
 const PROTECTED_PREFIXES = ['/dashboard'];
@@ -13,21 +28,80 @@ function extractSubdomain(request: NextRequest): string | null {
   return tenantSlugFromRequest(host, request.url);
 }
 
+function mergeIntlHeaders(target: NextResponse, intlResponse: NextResponse) {
+  intlResponse.headers.forEach((value, key) => {
+    // Preserve multiple Set-Cookie headers, if any.
+    if (key.toLowerCase() === 'set-cookie') {
+      target.headers.append(key, value);
+      return;
+    }
+
+    if (!target.headers.has(key)) {
+      target.headers.set(key, value);
+    }
+  });
+}
+
 export function proxy(request: NextRequest) {
+  // 1) Let next-intl handle locale redirects/rewrites first.
+  // If it wants to redirect/rewrite, we must return immediately.
+  const pathnameBeforeIntl = request.nextUrl.pathname;
+  const intlResponse = intlMiddleware(request);
+  const hasIntlRedirect = intlResponse.headers.has('location');
+  const hasIntlRewrite = intlResponse.headers.has('x-middleware-rewrite');
+  if (hasIntlRedirect || hasIntlRewrite) {
+    return intlResponse;
+  }
+
+  // Otherwise it returned "next" and may include headers we should preserve.
+  const locales = routing.locales as readonly string[];
+  const segments = pathnameBeforeIntl.split('/').filter(Boolean);
+
+  // 2) Filesystem routes do not include a `[locale]` segment. When a locale is
+  // present in the URL (e.g. `/vi/...`), we must rewrite to the internal path
+  // (e.g. `/...`) while keeping the locale for next-intl (cookie/header).
+  //
+  // next-intl middleware can also do this, but with the current routing setup
+  // it may return "next" for already-prefixed URLs. This keeps locale routing
+  // working without breaking translations.
+  const hasAnyLocalePrefix = segments.length >= 1 && locales.includes(segments[0]);
+  const hasDoubleLocalePrefix =
+    segments.length >= 2 && locales.includes(segments[0]) && locales.includes(segments[1]);
+
+  if (hasAnyLocalePrefix) {
+    const locale = segments[0];
+    let i = 0;
+    while (i < segments.length && locales.includes(segments[i])) i++;
+    const rest = segments.slice(i).join('/');
+    const internalPath = rest ? `/${rest}` : '/';
+
+    // Always rewrite locale-prefixed URLs to the internal filesystem route.
+    const res = NextResponse.rewrite(new URL(internalPath, request.url));
+    // Preserve next-intl headers/cookies (and ensure locale cookie is present).
+    mergeIntlHeaders(res, intlResponse);
+    res.cookies.set('NEXT_LOCALE', locale);
+    return res;
+  }
+
   const { pathname } = request.nextUrl;
   const subdomain = extractSubdomain(request);
 
   if (subdomain) {
     if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      const res = NextResponse.redirect(new URL('/dashboard', request.url));
+      mergeIntlHeaders(res, intlResponse);
+      return res;
     }
 
     if (pathname === '/') {
-      return NextResponse.rewrite(new URL(`/dashboard`, request.url));
+      const res = NextResponse.rewrite(new URL(`/dashboard`, request.url));
+      mergeIntlHeaders(res, intlResponse);
+      return res;
     }
 
     const response = NextResponse.next();
     response.headers.set('x-tenant-slug', subdomain);
+    mergeIntlHeaders(response, intlResponse);
     return response;
   }
 
@@ -41,18 +115,22 @@ export function proxy(request: NextRequest) {
   if (isProtected && !token) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    mergeIntlHeaders(res, intlResponse);
+    return res;
   }
 
   if (isGuestOnly && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const res = NextResponse.redirect(new URL('/dashboard', request.url));
+    mergeIntlHeaders(res, intlResponse);
+    return res;
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  mergeIntlHeaders(res, intlResponse);
+  return res;
 }
 
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-};
+export default function middleware(request: NextRequest) {
+  return proxy(request);
+}

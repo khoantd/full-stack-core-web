@@ -168,7 +168,7 @@ export function DeletePricingDialog({ open, onOpenChange, pricing, onConfirm, is
           <AlertDialogTitle>Delete Pricing?</AlertDialogTitle>
           <AlertDialogDescription>
             This will permanently delete{" "}
-            <span className="font-semibold text-foreground">\"{pricing.title}\"</span>. This action cannot be undone.
+            <span className="font-semibold text-foreground">&quot;{pricing.title}&quot;</span>. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
