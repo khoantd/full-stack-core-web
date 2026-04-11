@@ -17,10 +17,21 @@ export interface PricingTier {
   order: number;
 }
 
+export interface PricingFaqItem {
+  q: string;
+  a: string;
+}
+
 /** Localized fields stored per locale (API merges via ?locale=). */
 export type PricingTranslatableFields = {
   title: string;
   tiers: PricingTier[];
+  faqEyebrow?: string;
+  faqTitle?: string;
+  faqs?: PricingFaqItem[];
+  homeFaqEyebrow?: string;
+  homeFaqTitle?: string;
+  homeFaqs?: PricingFaqItem[];
 };
 
 export interface Pricing {
@@ -29,6 +40,12 @@ export interface Pricing {
   slug?: string;
   status: PricingStatus;
   tiers: PricingTier[];
+  faqEyebrow?: string;
+  faqTitle?: string;
+  faqs?: PricingFaqItem[];
+  homeFaqEyebrow?: string;
+  homeFaqTitle?: string;
+  homeFaqs?: PricingFaqItem[];
   translations?: Partial<Record<string, Partial<PricingTranslatableFields>>>;
   createdAt: string;
   updatedAt: string;
@@ -53,6 +70,17 @@ export interface PricingQueryParams {
   status?: PricingStatus;
 }
 
-export type CreatePricingRequest = Pick<Pricing, "title" | "slug" | "status" | "tiers">;
+export type CreatePricingRequest = Pick<
+  Pricing,
+  "title" | "slug" | "status" | "tiers"
+> & {
+  faqEyebrow?: string;
+  faqTitle?: string;
+  faqs?: PricingFaqItem[];
+  homeFaqEyebrow?: string;
+  homeFaqTitle?: string;
+  homeFaqs?: PricingFaqItem[];
+  translations?: Pricing["translations"];
+};
 export type UpdatePricingRequest = Partial<CreatePricingRequest>;
 

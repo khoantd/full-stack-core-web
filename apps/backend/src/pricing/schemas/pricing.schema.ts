@@ -14,6 +14,15 @@ export enum PricingCurrency {
 }
 
 @Schema({ _id: false })
+export class PricingFaqItem {
+  @Prop({ required: true, trim: true })
+  q: string;
+
+  @Prop({ required: true, trim: true })
+  a: string;
+}
+
+@Schema({ _id: false })
 export class PricingTier {
   @Prop({ required: true, trim: true })
   name: string;
@@ -43,6 +52,12 @@ export class PricingTier {
 export type PricingTranslatableFields = {
   title: string;
   tiers: PricingTier[];
+  faqEyebrow?: string;
+  faqTitle?: string;
+  faqs?: PricingFaqItem[];
+  homeFaqEyebrow?: string;
+  homeFaqTitle?: string;
+  homeFaqs?: PricingFaqItem[];
 };
 
 export type PricingDocument = Pricing & Document;
@@ -63,6 +78,24 @@ export class Pricing extends Document {
 
   @Prop({ type: [PricingTier], default: [] })
   tiers: PricingTier[];
+
+  @Prop({ trim: true })
+  faqEyebrow?: string;
+
+  @Prop({ trim: true })
+  faqTitle?: string;
+
+  @Prop({ type: [PricingFaqItem], default: undefined })
+  faqs?: PricingFaqItem[];
+
+  @Prop({ trim: true })
+  homeFaqEyebrow?: string;
+
+  @Prop({ trim: true })
+  homeFaqTitle?: string;
+
+  @Prop({ type: [PricingFaqItem], default: undefined })
+  homeFaqs?: PricingFaqItem[];
 
   @Prop({ type: Object, default: undefined })
   translations?: Translations<PricingTranslatableFields>;

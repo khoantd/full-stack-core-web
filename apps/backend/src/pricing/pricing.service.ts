@@ -107,6 +107,12 @@ export class PricingService {
           title: payload.title,
           tiers: payload.tiers,
         };
+        if (payload.faqEyebrow !== undefined) patch.faqEyebrow = payload.faqEyebrow;
+        if (payload.faqTitle !== undefined) patch.faqTitle = payload.faqTitle;
+        if (payload.faqs !== undefined) patch.faqs = payload.faqs;
+        if (payload.homeFaqEyebrow !== undefined) patch.homeFaqEyebrow = payload.homeFaqEyebrow;
+        if (payload.homeFaqTitle !== undefined) patch.homeFaqTitle = payload.homeFaqTitle;
+        if (payload.homeFaqs !== undefined) patch.homeFaqs = payload.homeFaqs;
         payload.translations = upsertTranslation<PricingTranslatableFields>(
           payload.translations,
           locale,
@@ -138,6 +144,12 @@ export class PricingService {
         const patch: Partial<PricingTranslatableFields> = {};
         if (dto.title !== undefined) patch.title = pricing.title;
         if (dto.tiers !== undefined) patch.tiers = pricing.tiers as any;
+        if (dto.faqEyebrow !== undefined) patch.faqEyebrow = dto.faqEyebrow;
+        if (dto.faqTitle !== undefined) patch.faqTitle = dto.faqTitle;
+        if (dto.faqs !== undefined) patch.faqs = dto.faqs as any;
+        if (dto.homeFaqEyebrow !== undefined) patch.homeFaqEyebrow = dto.homeFaqEyebrow;
+        if (dto.homeFaqTitle !== undefined) patch.homeFaqTitle = dto.homeFaqTitle;
+        if (dto.homeFaqs !== undefined) patch.homeFaqs = dto.homeFaqs as any;
 
         if (Object.keys(patch).length > 0) {
           pricing.translations = upsertTranslation<PricingTranslatableFields>(

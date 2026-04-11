@@ -10,7 +10,7 @@ async function bootstrap() {
   app.enableCors({
     origin: '*', // Cho phép tất cả các domain
     methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Authorization',
+    allowedHeaders: 'Content-Type, Authorization, x-api-key',
     credentials: false, // Tắt cookie nếu không cần
   });
 
