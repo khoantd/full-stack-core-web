@@ -20,6 +20,7 @@ import {
   IconLayout,
   IconHelp,
   IconMessageCircle,
+  IconClockHour4,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -79,6 +80,7 @@ const FEATURE_NAV_DEF: Record<FeatureKey, { url: string; icon: Icon }> = {
   services: { url: "/dashboard/services", icon: IconBriefcase },
   serviceCategories: { url: "/dashboard/service-categories", icon: IconCategory },
   events: { url: "/dashboard/events", icon: IconCalendar },
+  appointments: { url: "/dashboard/appointments", icon: IconClockHour4 },
   categories: { url: "/dashboard/category-products", icon: IconCategory },
   products: { url: "/dashboard/products", icon: IconBox },
   automakers: { url: "/dashboard/automakers", icon: IconCar },
@@ -246,6 +248,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               : []),
             ...(enabledFeatures.has("events")
               ? [{ title: t("nav.items.events"), ...FEATURE_NAV_DEF.events }]
+              : []),
+            ...(enabledFeatures.has("appointments")
+              ? [{ title: t("nav.items.appointments"), ...FEATURE_NAV_DEF.appointments }]
               : []),
             ...(enabledFeatures.has("faqs")
               ? [{ title: t("nav.items.faqs"), ...FEATURE_NAV_DEF.faqs }]

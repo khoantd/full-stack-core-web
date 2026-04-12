@@ -16,6 +16,7 @@
       "services": "Dịch vụ",
       "serviceCategories": "Danh mục dịch vụ",
       "events": "Sự kiện",
+      "appointments": "Lịch hẹn",
       "mediaLibrary": "Thư viện media",
       "pricings": "Bảng giá",
       "faqs": "FAQ",
@@ -70,6 +71,10 @@
           "label": "Sự kiện",
           "description": "Tạo và quản lý sự kiện và lịch trình."
         },
+        "appointments": {
+          "label": "Lịch hẹn",
+          "description": "Lên lịch và quản lý lịch hẹn khách hàng và yêu cầu đặt chỗ."
+        },
         "services": {
           "label": "Dịch vụ",
           "description": "Danh sách và gói dịch vụ."
@@ -98,6 +103,94 @@
     }
   },
   "pages": {
+    "appointments": {
+      "title": "Lịch hẹn",
+      "addNew": "Thêm lịch hẹn",
+      "loading": "Đang tải lịch hẹn...",
+      "filterByStatus": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "noYetTitle": "Chưa có lịch hẹn",
+      "noYetSubtitle": "Tạo lịch hẹn hoặc chia sẻ liên kết đặt chỗ công khai để khách gửi yêu cầu.",
+      "create": "Tạo lịch hẹn",
+      "noMatch": "Không có lịch hẹn phù hợp với bộ lọc",
+      "tryAgain": "Thử lại",
+      "searchPlaceholder": "Tìm theo tiêu đề, tên hoặc email",
+      "detailTitle": "Chi tiết lịch hẹn",
+      "detailCreated": "Tạo lúc",
+      "detailUpdated": "Cập nhật",
+      "customer": "Khách hàng",
+      "source": "Nguồn",
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Đã xác nhận",
+        "cancelled": "Đã hủy",
+        "completed": "Hoàn thành"
+      },
+      "pagination": {
+        "showing": "Hiển thị {count} / {total} lịch hẹn",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "pageOf": "Trang {page} / {totalPages}"
+      },
+      "deleteTitle": "Xóa lịch hẹn?",
+      "deleteDescription": "Hành động này sẽ xóa vĩnh viễn lịch hẹn này.",
+      "cancel": "Hủy",
+      "confirmDelete": "Xóa",
+      "actions": "Thao tác",
+      "view": "Xem chi tiết",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "form": {
+        "createTitle": "Tạo lịch hẹn",
+        "editTitle": "Sửa lịch hẹn",
+        "createDescription": "Thêm thời gian và thông tin khách hàng.",
+        "editDescription": "Cập nhật lịch hẹn bên dưới.",
+        "titleLabel": "Tiêu đề",
+        "titlePlaceholder": "VD: Tư vấn",
+        "startLabel": "Bắt đầu",
+        "endLabel": "Kết thúc",
+        "customerName": "Tên khách hàng",
+        "customerEmail": "Email",
+        "customerPhone": "Điện thoại (tùy chọn)",
+        "notesLabel": "Ghi chú nội bộ",
+        "notesPlaceholder": "Ghi chú chỉ team bạn thấy",
+        "statusLabel": "Trạng thái",
+        "cancel": "Hủy",
+        "save": "Lưu"
+      },
+      "toasts": {
+        "created": "Đã tạo lịch hẹn",
+        "updated": "Đã cập nhật lịch hẹn",
+        "deleted": "Đã xóa lịch hẹn",
+        "createFailed": "Không thể tạo lịch hẹn",
+        "updateFailed": "Không thể cập nhật lịch hẹn",
+        "deleteFailed": "Không thể xóa lịch hẹn",
+        "loadFailed": "Không tải được lịch hẹn"
+      }
+    },
+    "book": {
+      "title": "Đặt lịch hẹn",
+      "subtitle": "Chọn thời gian và để lại thông tin liên hệ. Chúng tôi sẽ xác nhận yêu cầu.",
+      "tenantMissing": "Không xác định được tổ chức để đặt lịch. Mở trang từ liên kết mời hoặc thêm ?tenant=slug vào URL.",
+      "startLabel": "Bắt đầu",
+      "endLabel": "Kết thúc",
+      "titleLabel": "Lý do (tùy chọn)",
+      "titlePlaceholder": "VD: Tư vấn lần đầu",
+      "nameLabel": "Họ và tên",
+      "emailLabel": "Email",
+      "phoneLabel": "Điện thoại (tùy chọn)",
+      "notesLabel": "Tin nhắn (tùy chọn)",
+      "notesPlaceholder": "Thông tin thêm?",
+      "submit": "Gửi yêu cầu",
+      "submitting": "Đang gửi...",
+      "successTitle": "Đã nhận yêu cầu",
+      "successDescription": "Yêu cầu đặt lịch đã được gửi. Đội ngũ sẽ liên hệ qua email.",
+      "bookAnother": "Đặt thêm",
+      "errorGeneric": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+      "validation": {
+        "endAfterStart": "Thời gian kết thúc phải sau thời gian bắt đầu"
+      }
+    },
     "blogs": {
       "title": "Bài viết",
       "addNew": "Thêm bài viết",

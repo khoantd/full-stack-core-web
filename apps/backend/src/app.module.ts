@@ -31,6 +31,7 @@ import { LandingPageModule } from './landing-page/landing-page.module';
 import { FaqSectionModule } from './faq-section/faq-section.module';
 import { TestimonialSectionModule } from './testimonial-section/testimonial-section.module';
 import { BlogCategoryModule } from './blog-category/blog-category.module';
+import { AppointmentModule } from './appointment/appointment.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { BlogCategoryModule } from './blog-category/blog-category.module';
     CategoryProductModule,
     ProductModule,
     EventModule,
+    AppointmentModule,
     PaymentModule,
     AutomakerModule,
     TelegramModule,

@@ -14,6 +14,7 @@ export const routing = defineRouting({
     '/register': '/register',
     '/forgot-password': '/forgot-password',
     '/reset-password': '/reset-password',
+    '/book': '/book',
 
     // App
     '/dashboard': '/dashboard',
@@ -24,6 +25,7 @@ export const routing = defineRouting({
     '/dashboard/service-categories': '/dashboard/service-categories',
     '/dashboard/events': '/dashboard/events',
     '/dashboard/events/[id]/attendees': '/dashboard/events/[id]/attendees',
+    '/dashboard/appointments': '/dashboard/appointments',
     '/dashboard/media': '/dashboard/media',
     '/dashboard/pricings': '/dashboard/pricings',
     '/dashboard/faq-sections': '/dashboard/faq-sections',

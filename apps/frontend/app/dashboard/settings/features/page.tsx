@@ -15,6 +15,7 @@ import {
   IconLayout,
   IconHelp,
   IconMessageCircle,
+  IconClockHour4,
 } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +36,7 @@ const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
   faqs: IconHelp,
   testimonials: IconMessageCircle,
   events: IconCalendar,
+  appointments: IconClockHour4,
   services: IconBriefcase,
   serviceCategories: IconCategory,
   blogs: IconNews,

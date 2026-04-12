@@ -3,6 +3,7 @@ export const ALL_FEATURES = [
   'products',
   'automakers',
   'events',
+  'appointments',
   'services',
   'serviceCategories',
   'blogs',

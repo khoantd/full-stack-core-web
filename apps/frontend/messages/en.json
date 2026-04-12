@@ -16,6 +16,7 @@
       "services": "Services",
       "serviceCategories": "Service Categories",
       "events": "Events",
+      "appointments": "Appointments",
       "mediaLibrary": "Media Library",
       "pricings": "Pricings",
       "faqs": "FAQ",
@@ -70,6 +71,10 @@
           "label": "Events",
           "description": "Create and manage events and schedules."
         },
+        "appointments": {
+          "label": "Appointments",
+          "description": "Schedule and manage customer appointments and booking requests."
+        },
         "services": {
           "label": "Services",
           "description": "Service listings and offerings."
@@ -98,6 +103,94 @@
     }
   },
   "pages": {
+    "appointments": {
+      "title": "Appointments",
+      "addNew": "Add appointment",
+      "loading": "Loading appointments...",
+      "filterByStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "noYetTitle": "No appointments yet",
+      "noYetSubtitle": "Create an appointment or share your public booking link so customers can request a time.",
+      "create": "Create appointment",
+      "noMatch": "No appointments match your filters",
+      "tryAgain": "Try again",
+      "searchPlaceholder": "Search by title, name, or email",
+      "detailTitle": "Appointment details",
+      "detailCreated": "Created",
+      "detailUpdated": "Last updated",
+      "customer": "Customer",
+      "source": "Source",
+      "status": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "cancelled": "Cancelled",
+        "completed": "Completed"
+      },
+      "pagination": {
+        "showing": "Showing {count} of {total} appointments",
+        "previous": "Previous",
+        "next": "Next",
+        "pageOf": "Page {page} of {totalPages}"
+      },
+      "deleteTitle": "Delete appointment?",
+      "deleteDescription": "This will permanently remove this appointment. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirmDelete": "Delete",
+      "actions": "Actions",
+      "view": "View details",
+      "edit": "Edit",
+      "delete": "Delete",
+      "form": {
+        "createTitle": "Create appointment",
+        "editTitle": "Edit appointment",
+        "createDescription": "Add a scheduled time and customer details.",
+        "editDescription": "Update the appointment below.",
+        "titleLabel": "Title",
+        "titlePlaceholder": "e.g. Consultation",
+        "startLabel": "Start",
+        "endLabel": "End",
+        "customerName": "Customer name",
+        "customerEmail": "Email",
+        "customerPhone": "Phone (optional)",
+        "notesLabel": "Internal notes",
+        "notesPlaceholder": "Notes visible only to your team",
+        "statusLabel": "Status",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "toasts": {
+        "created": "Appointment created",
+        "updated": "Appointment updated",
+        "deleted": "Appointment deleted",
+        "createFailed": "Could not create appointment",
+        "updateFailed": "Could not update appointment",
+        "deleteFailed": "Could not delete appointment",
+        "loadFailed": "Failed to load appointments"
+      }
+    },
+    "book": {
+      "title": "Book an appointment",
+      "subtitle": "Choose a time and leave your contact details. We will confirm your request.",
+      "tenantMissing": "We could not determine which organization to book with. Open this page from your invite link or add ?tenant=your-slug to the URL.",
+      "startLabel": "Start time",
+      "endLabel": "End time",
+      "titleLabel": "Reason (optional)",
+      "titlePlaceholder": "e.g. Initial consultation",
+      "nameLabel": "Full name",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone (optional)",
+      "notesLabel": "Message (optional)",
+      "notesPlaceholder": "Anything we should know?",
+      "submit": "Request appointment",
+      "submitting": "Sending...",
+      "successTitle": "Request received",
+      "successDescription": "Your appointment request has been submitted. The team will follow up by email.",
+      "bookAnother": "Book another",
+      "errorGeneric": "Something went wrong. Please try again.",
+      "validation": {
+        "endAfterStart": "End time must be after start time"
+      }
+    },
     "blogs": {
       "title": "Blogs",
       "addNew": "Add New Blog",
