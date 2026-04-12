@@ -26,6 +26,7 @@ import { VietQRModule } from './vietqr/vietqr.module';
 import { ApiKeyModule } from './api-key/api-key.module';
 import { SeedModule } from './seed/seed.module';
 import { PricingModule } from './pricing/pricing.module';
+import { LandingPageModule } from './landing-page/landing-page.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { PricingModule } from './pricing/pricing.module';
     VietQRModule,
     ApiKeyModule,
     PricingModule,
+    LandingPageModule,
     SeedModule,
   ],
   controllers: [AppController],

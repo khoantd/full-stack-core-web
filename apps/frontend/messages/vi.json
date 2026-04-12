@@ -11,6 +11,7 @@
       "dashboard": "Bảng điều khiển",
       "users": "Người dùng",
       "blogs": "Bài viết",
+      "landingPages": "Trang đích",
       "services": "Dịch vụ",
       "serviceCategories": "Danh mục dịch vụ",
       "events": "Sự kiện",
@@ -73,6 +74,10 @@
         "payments": {
           "label": "Thanh toán",
           "description": "Xử lý thanh toán và lịch sử giao dịch."
+        },
+        "landingPages": {
+          "label": "Trang đích",
+          "description": "Tạo trang marketing với các khối nội dung (hero, tính năng, FAQ, v.v.)."
         }
       }
     }
@@ -120,6 +125,99 @@
       "tryAgain": "Thử lại",
       "pagination": {
         "showing": "Hiển thị {from} đến {to} trong tổng số {total} dịch vụ",
+        "previous": "Trước",
+        "next": "Sau",
+        "pageOf": "Trang {page} / {totalPages}"
+      }
+    },
+    "landings": {
+      "title": "Trang đích",
+      "addNew": "Trang đích mới",
+      "loading": "Đang tải trang đích...",
+      "filterByStatus": "Lọc theo trạng thái",
+      "allStatuses": "Tất cả trạng thái",
+      "noYetTitle": "Chưa có trang đích",
+      "noYetSubtitle": "Tạo trang và thêm các khối để giới thiệu dịch vụ trên web.",
+      "create": "Tạo trang đích",
+      "save": "Lưu",
+      "formDescription": "Đặt slug URL, bản dịch, SEO và các khối nội dung cho trang này.",
+      "featureDisabled": "Trang đích đang tắt cho tổ chức này.",
+      "goToFeatures": "Mở cài đặt Tính năng",
+      "actionsMenu": "Thao tác",
+      "searchPlaceholder": "Tìm theo tiêu đề hoặc slug",
+      "updatedColumn": "Cập nhật",
+      "edit": "Chỉnh sửa",
+      "noMatch": "Không có trang đích phù hợp với bộ lọc",
+      "tryAgain": "Thử lại",
+      "deleteTitle": "Xóa trang đích?",
+      "deleteDescription": "Thao tác này sẽ xóa vĩnh viễn \"{title}\". Không thể hoàn tác.",
+      "cancel": "Hủy",
+      "confirmDelete": "Xóa",
+      "deleted": "Đã xóa trang đích",
+      "deleteFailed": "Không thể xóa trang đích",
+      "saved": "Đã lưu trang đích",
+      "saveFailed": "Không thể lưu trang đích",
+      "slug": "Đường dẫn (slug)",
+      "slugHint": "Chữ thường, số và dấu gạch ngang. Dùng trong URL trang.",
+      "pageTitle": "Tiêu đề trang",
+      "status": "Trạng thái",
+      "defaultPage": "Trang chính",
+      "defaultPageHint": "Đánh dấu đây là trang đích chính (chỉ một trang tại một thời điểm).",
+      "seoTitle": "Tiêu đề SEO",
+      "seoDescription": "Mô tả SEO",
+      "localeEn": "Tiếng Anh",
+      "localeVi": "Tiếng Việt",
+      "sectionsTitle": "Khối nội dung",
+      "addSection": "Thêm khối",
+      "sectionEmpty": "Chưa có khối nào. Thêm khối để xây dựng trang.",
+      "moveUp": "Lên trên",
+      "moveDown": "Xuống dưới",
+      "removeSection": "Xóa khối",
+      "sectionTypes": {
+        "hero": "Hero",
+        "features": "Tính năng",
+        "cta": "Kêu gọi hành động",
+        "stats": "Thống kê",
+        "faq": "FAQ",
+        "paragraph": "Đoạn văn"
+      },
+      "hero": {
+        "headline": "Tiêu đề chính",
+        "subheadline": "Phụ đề",
+        "image": "URL hình ảnh",
+        "primaryCtaLabel": "Nút chính (nhãn)",
+        "primaryCtaHref": "Nút chính (liên kết)",
+        "secondaryCtaLabel": "Nút phụ (nhãn)",
+        "secondaryCtaHref": "Nút phụ (liên kết)"
+      },
+      "features": {
+        "heading": "Tiêu đề mục",
+        "itemTitle": "Tiêu đề",
+        "itemDescription": "Mô tả",
+        "itemIcon": "URL biểu tượng",
+        "addItem": "Thêm mục"
+      },
+      "cta": {
+        "title": "Tiêu đề",
+        "body": "Nội dung",
+        "buttonLabel": "Nhãn nút",
+        "buttonHref": "Liên kết nút"
+      },
+      "stats": {
+        "label": "Nhãn",
+        "value": "Giá trị",
+        "addItem": "Thêm chỉ số"
+      },
+      "faq": {
+        "question": "Câu hỏi",
+        "answer": "Trả lời",
+        "addItem": "Thêm câu hỏi"
+      },
+      "paragraph": {
+        "body": "Nội dung"
+      },
+      "pagination": {
+        "showing": "Hiển thị {from} đến {to} trong tổng số {total} trang",
         "previous": "Trước",
         "next": "Sau",
         "pageOf": "Trang {page} / {totalPages}"

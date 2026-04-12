@@ -12,6 +12,7 @@ import {
   IconBriefcase,
   IconLoader2,
   IconTag,
+  IconLayout,
 } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -34,6 +35,7 @@ const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
   serviceCategories: IconCategory,
   blogs: IconNews,
   payments: IconCreditCard,
+  landingPages: IconLayout,
 };
 
 export default function FeaturesPage() {

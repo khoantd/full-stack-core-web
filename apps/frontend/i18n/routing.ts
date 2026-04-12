@@ -19,6 +19,7 @@ export const routing = defineRouting({
     '/dashboard': '/dashboard',
     '/dashboard/users': '/dashboard/users',
     '/dashboard/blogs': '/dashboard/blogs',
+    '/dashboard/landings': '/dashboard/landings',
     '/dashboard/services': '/dashboard/services',
     '/dashboard/service-categories': '/dashboard/service-categories',
     '/dashboard/events': '/dashboard/events',

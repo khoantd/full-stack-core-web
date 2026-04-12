@@ -17,6 +17,7 @@ import {
   IconChevronDown,
   IconCar,
   IconTag,
+  IconLayout,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main"
@@ -80,6 +81,7 @@ const FEATURE_NAV_DEF: Record<FeatureKey, { url: string; icon: Icon }> = {
   automakers: { url: "/dashboard/automakers", icon: IconCar },
   payments: { url: "/dashboard/payments", icon: IconCreditCard },
   pricings: { url: "/dashboard/pricings", icon: IconTag },
+  landingPages: { url: "/dashboard/landings", icon: IconLayout },
 };
 
 function useCurrentUser() {
@@ -219,6 +221,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items: [
             ...(enabledFeatures.has("blogs")
               ? [{ title: t("nav.items.blogs"), ...FEATURE_NAV_DEF.blogs }]
+              : []),
+            ...(enabledFeatures.has("landingPages")
+              ? [{ title: t("nav.items.landingPages"), ...FEATURE_NAV_DEF.landingPages }]
               : []),
             ...(enabledFeatures.has("services")
               ? [{ title: t("nav.items.services"), ...FEATURE_NAV_DEF.services }]
