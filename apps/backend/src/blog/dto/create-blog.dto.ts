@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsEnum, IsMongoId } from 'class-validator';
 import { BlogStatus } from '../schemas/blog.schema';
 
 export class CreateBlogDto {
@@ -29,4 +29,8 @@ export class CreateBlogDto {
   @IsOptional()
   @IsString()
   seoDescription?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  categoryId?: string;
 }

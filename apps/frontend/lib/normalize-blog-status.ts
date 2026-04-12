@@ -33,6 +33,7 @@ export function mapApiBlog(raw: unknown): Blog {
       r.seoDescription != null && r.seoDescription !== ""
         ? String(r.seoDescription)
         : undefined,
+    categoryId: r.categoryId != null && r.categoryId !== "" ? String(r.categoryId) : null,
     createdAt: String(r.createdAt ?? ""),
     updatedAt: String(r.updatedAt ?? ""),
   };

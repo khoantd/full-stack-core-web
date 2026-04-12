@@ -43,6 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { Blog } from "@/types/blog.type";
+import type { BlogCategory } from "@/types/blog-category.type";
 
 // Action handlers type
 export interface BlogTableActions {
@@ -53,7 +54,10 @@ export interface BlogTableActions {
 }
 
 // Factory function to create columns with action handlers
-export const createColumns = (actions?: BlogTableActions, options?: { locale?: string }): ColumnDef<Blog>[] => [
+export const createColumns = (
+  actions?: BlogTableActions,
+  options?: { locale?: string; categories?: BlogCategory[] },
+): ColumnDef<Blog>[] => [
   {
     accessorKey: "_id",
     header: "#",
@@ -160,6 +164,16 @@ export const createColumns = (actions?: BlogTableActions, options?: { locale?: s
     cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.getValue("author") || "—"}</span>,
   },
   {
+    accessorKey: "categoryId",
+    header: "Category",
+    cell: ({ row }) => {
+      const categoryId = row.getValue("categoryId") as string | undefined;
+      if (!categoryId) return <span className="text-muted-foreground text-sm">—</span>;
+      const cat = options?.categories?.find((c) => c._id === categoryId);
+      return <span className="text-sm">{cat?.name ?? categoryId.slice(-6)}</span>;
+    },
+  },
+  {
     accessorKey: "createdAt",
     header: ({ column }) => (
       <Button
@@ -255,6 +269,7 @@ interface BlogTableProps {
   actions?: BlogTableActions;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  categories?: BlogCategory[];
 }
 
 export default function BlogTable({
@@ -262,6 +277,7 @@ export default function BlogTable({
   actions,
   searchValue = "",
   onSearchChange,
+  categories,
 }: BlogTableProps) {
   const locale = useLocale();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -270,7 +286,10 @@ export default function BlogTable({
   const [rowSelection, setRowSelection] = React.useState({});
 
   // Create columns with action handlers
-  const tableColumns = React.useMemo(() => createColumns(actions, { locale }), [actions, locale]);
+  const tableColumns = React.useMemo(
+    () => createColumns(actions, { locale, categories }),
+    [actions, locale, categories],
+  );
 
   const table = useReactTable({
     data,

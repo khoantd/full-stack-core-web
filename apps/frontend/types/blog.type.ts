@@ -11,6 +11,7 @@ export interface Blog {
   publishedAt?: string;
   seoTitle?: string;
   seoDescription?: string;
+  categoryId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,6 +37,7 @@ export interface CreateBlogRequest {
   author?: string;
   seoTitle?: string;
   seoDescription?: string;
+  categoryId?: string | null;
 }
 
 // Request payload for updating a blog
@@ -48,6 +50,8 @@ export interface UpdateBlogRequest {
   author?: string;
   seoTitle?: string;
   seoDescription?: string;
+  /** Omit to leave unchanged; `null` clears the category */
+  categoryId?: string | null;
 }
 
 // Response for delete operation
@@ -78,4 +82,5 @@ export interface BlogsQueryParams {
   limit?: number;
   search?: string;
   status?: BlogStatus;
+  categoryId?: string;
 }

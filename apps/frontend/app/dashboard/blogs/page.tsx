@@ -9,6 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useBlogs, useBlogVersions, useRestoreBlogVersion } from "@/hooks/useBlog";
+import { useBlogCategories } from "@/hooks/useBlogCategory";
 import {
   BlogTable, BlogFormDialog, BlogDetailDialog, DeleteBlogDialog,
 } from "./components";
@@ -101,6 +102,7 @@ function BlogsPageContent() {
   const limit = 10;
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const debouncedSearch = useDebounce(searchInput, 300);
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -115,7 +117,11 @@ function BlogsPageContent() {
     limit,
     search: debouncedSearch || undefined,
     status: statusFilter !== "all" ? (statusFilter as BlogStatus) : undefined,
+    categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
   });
+
+  const { data: categoriesData } = useBlogCategories({ page: "all", status: "Published" });
+  const categories = categoriesData?.data ?? [];
 
   const handleView = useCallback((blog: Blog) => { setSelectedBlog(blog); setIsDetailDialogOpen(true); }, []);
   const handleEdit = useCallback((blog: Blog) => { setSelectedBlog(blog); setIsEditDialogOpen(true); }, []);
@@ -162,8 +168,8 @@ function BlogsPageContent() {
 
   const blogs = data?.data ?? [];
   const pagination = data?.pagination;
-  const isEmpty = blogs.length === 0 && !debouncedSearch && statusFilter === "all";
-  const isEmptySearch = blogs.length === 0 && (!!debouncedSearch || statusFilter !== "all");
+  const isEmpty = blogs.length === 0 && !debouncedSearch && statusFilter === "all" && categoryFilter === "all";
+  const isEmptySearch = blogs.length === 0 && (!!debouncedSearch || statusFilter !== "all" || categoryFilter !== "all");
 
   return (
     <>
@@ -190,6 +196,26 @@ function BlogsPageContent() {
             <SelectItem value="Draft">Draft</SelectItem>
             <SelectItem value="Published">Published</SelectItem>
             <SelectItem value="Archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={categoryFilter}
+          onValueChange={(value) => {
+            setCategoryFilter(value);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat._id} value={cat._id}>
+                {cat.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -219,6 +245,7 @@ function BlogsPageContent() {
                   setSearchInput(value);
                   setPage(1);
                 }}
+                categories={categories}
               />
               {isEmptySearch && (
                 <div className="flex flex-col items-center justify-center py-8">

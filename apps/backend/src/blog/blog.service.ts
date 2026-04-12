@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Blog, BlogStatus, type BlogTranslatableFields } from './schemas/blog.schema';
 import { BlogVersion } from './schemas/blog-version.schema';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -47,6 +47,10 @@ export class BlogService {
       filter.status = query.status.trim();
     }
 
+    if (query.categoryId && query.categoryId.trim()) {
+      filter.categoryId = new Types.ObjectId(query.categoryId.trim());
+    }
+
     const total = await this.blogModel.countDocuments(filter);
 
     if (isGetAll) {
@@ -81,6 +85,7 @@ export class BlogService {
   async create(createBlogDto: CreateBlogDto, tenantId: string, locale?: string): Promise<Blog> {
     try {
       const data: any = { ...createBlogDto, tenantId };
+      if (data.categoryId) data.categoryId = new Types.ObjectId(data.categoryId);
       if (data.status === BlogStatus.PUBLISHED && !data.publishedAt) {
         data.publishedAt = new Date();
       }
@@ -118,6 +123,15 @@ export class BlogService {
           delete (blog as { image?: string }).image;
         } else {
           blog.image = image;
+        }
+      }
+
+      if (Object.prototype.hasOwnProperty.call(updateBlogDto, 'categoryId')) {
+        const cid = (updateBlogDto as any).categoryId;
+        if (cid == null) {
+          (blog as any).categoryId = null;
+        } else {
+          (blog as any).categoryId = new Types.ObjectId(cid);
         }
       }
 

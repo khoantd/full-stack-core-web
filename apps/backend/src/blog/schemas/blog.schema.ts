@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { type Translations } from '../../common/i18n/translations';
+import { BlogCategory } from '../../blog-category/schemas/blog-category.schema';
 
 export enum BlogStatus {
   DRAFT = 'Draft',
@@ -44,6 +45,9 @@ export class Blog extends Document {
 
   @Prop()
   seoDescription?: string;
+
+  @Prop({ type: Types.ObjectId, ref: BlogCategory.name, default: null })
+  categoryId?: Types.ObjectId | null;
 
   @Prop({ type: Object, default: undefined })
   translations?: Translations<BlogTranslatableFields>;

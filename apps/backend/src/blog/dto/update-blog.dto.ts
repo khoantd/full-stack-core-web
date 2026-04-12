@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum, ValidateIf } from 'class-validator';
+import { IsOptional, IsString, IsEnum, ValidateIf, IsMongoId } from 'class-validator';
 import { BlogStatus } from '../schemas/blog.schema';
 
 export class UpdateBlogDto {
@@ -30,4 +30,9 @@ export class UpdateBlogDto {
   @IsOptional()
   @IsString()
   seoDescription?: string;
+
+  @IsOptional()
+  @ValidateIf((_, v) => v != null)
+  @IsMongoId()
+  categoryId?: string | null;
 }

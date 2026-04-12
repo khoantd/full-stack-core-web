@@ -11,6 +11,7 @@
       "dashboard": "Dashboard",
       "users": "Users",
       "blogs": "Blogs",
+      "blogCategories": "Blog Categories",
       "landingPages": "Landing pages",
       "services": "Services",
       "serviceCategories": "Service Categories",
@@ -80,6 +81,10 @@
         "blogs": {
           "label": "Blogs",
           "description": "Blog posts and content publishing."
+        },
+        "blogCategories": {
+          "label": "Blog Categories",
+          "description": "Organise blog posts into categories."
         },
         "payments": {
           "label": "Payments",
@@ -598,6 +603,25 @@
         "deleting": "Deleting...",
         "deleteAction": "Delete"
       }
+    },
+    "blogCategories": {
+      "title": "Blog Categories",
+      "subtitle": "Organise your blog posts into categories",
+      "add": "Add Category",
+      "loading": "Loading categories...",
+      "categoriesLabel": "Categories",
+      "noYetTitle": "No categories yet",
+      "noYetSubtitle": "Get started by creating your first blog category",
+      "noYetSearch": "Try adjusting your search",
+      "showing": "Showing {count} of {total} categories",
+      "created": "Blog category created successfully",
+      "createFailed": "Failed to create blog category",
+      "updated": "Blog category updated successfully",
+      "updateFailed": "Failed to update blog category",
+      "deleted": "Blog category deleted successfully",
+      "deleteFailed": "Failed to delete blog category",
+      "errorTitle": "Error",
+      "errorSubtitle": "Failed to load blog categories. Please try again later."
     },
     "products": {
       "title": "Products",

@@ -19,6 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useBlog, useCreateBlog, useUpdateBlog } from "@/hooks/useBlog";
+import { useBlogCategories } from "@/hooks/useBlogCategory";
 import { normalizeBlogStatus } from "@/lib/normalize-blog-status";
 import type { Blog, BlogStatus, CreateBlogRequest, UpdateBlogRequest } from "@/types/blog.type";
 
@@ -30,6 +31,7 @@ const blogFormSchema = z.object({
   author: z.string().optional(),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
+  categoryId: z.string().optional(),
 });
 
 type BlogFormValues = z.infer<typeof blogFormSchema>;
@@ -42,6 +44,7 @@ const emptyFormValues: BlogFormValues = {
   author: "",
   seoTitle: "",
   seoDescription: "",
+  categoryId: "",
 };
 
 interface BlogFormProps {
@@ -60,6 +63,7 @@ function toFormValues(blog: Blog | null | undefined): BlogFormValues {
     author: blog.author ?? "",
     seoTitle: blog.seoTitle ?? "",
     seoDescription: blog.seoDescription ?? "",
+    categoryId: blog.categoryId ?? "",
   };
 }
 
@@ -70,10 +74,17 @@ function toSubmitPayload(
     includeImage?: boolean;
     /** Empty image: send null (persist clear) on update, or omit field on create */
     imageClearMode?: "unset-with-null" | "omit";
+    /**
+     * When false, `categoryId` is omitted from the payload.
+     * categoryId is a shared non-translatable field — only the EN form controls it,
+     * so the VI update must never send it or it will overwrite the EN change.
+     */
+    includeCategoryId?: boolean;
   },
 ): CreateBlogRequest | UpdateBlogRequest {
   const includeImage = opts?.includeImage !== false;
   const imageClearMode = opts?.imageClearMode ?? "unset-with-null";
+  const includeCategoryId = opts?.includeCategoryId !== false;
 
   const base: CreateBlogRequest | UpdateBlogRequest = {
     title: values.title,
@@ -82,6 +93,11 @@ function toSubmitPayload(
     ...(values.author ? { author: values.author } : {}),
     ...(values.seoTitle ? { seoTitle: values.seoTitle } : {}),
     ...(values.seoDescription ? { seoDescription: values.seoDescription } : {}),
+    ...(includeCategoryId
+      ? values.categoryId
+        ? { categoryId: values.categoryId }
+        : { categoryId: null }
+      : {}),
   };
 
   if (!includeImage) {
@@ -106,12 +122,18 @@ function BlogFields({
   form,
   peerForm,
   isLoading,
+  isEnTab,
 }: {
   form: UseFormReturn<BlogFormValues>;
   /** Keeps the other locale’s `image` in sync so the shared URL is not stale on save */
   peerForm?: UseFormReturn<BlogFormValues>;
   isLoading: boolean;
+  /** Category selector only shown on the EN tab (shared non-translatable field) */
+  isEnTab?: boolean;
 }) {
+  const { data: categoriesData } = useBlogCategories({ page: "all", status: "Published" }, { enabled: isEnTab });
+  const categories = categoriesData?.data ?? [];
+
   return (
     <div className="space-y-4">
       <FormField
@@ -172,6 +194,38 @@ function BlogFields({
           )}
         />
       </div>
+
+      {isEnTab && (
+        <FormField
+          control={form.control}
+          name="categoryId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <Select
+                onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}
+                value={field.value || "__none__"}
+                disabled={isLoading}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="__none__">No category</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}
@@ -324,7 +378,7 @@ export default function BlogForm({ blog, onSuccess, onCancel }: BlogFormProps) {
         includeImage: true,
         imageClearMode: isEditMode ? "unset-with-null" : "omit",
       });
-      const payloadVi = toSubmitPayload(formVi.getValues(), { includeImage: false });
+      const payloadVi = toSubmitPayload(formVi.getValues(), { includeImage: false, includeCategoryId: false });
 
       if (isEditMode && blog) {
         await updateBlogEn.mutateAsync({ id: blog._id, data: payloadEn });
@@ -354,7 +408,7 @@ export default function BlogForm({ blog, onSuccess, onCancel }: BlogFormProps) {
 
         <TabsContent value="en">
           <Form {...formEn}>
-            <BlogFields form={formEn} peerForm={formVi} isLoading={isLoading} />
+            <BlogFields form={formEn} peerForm={formVi} isLoading={isLoading} isEnTab />
           </Form>
         </TabsContent>
 

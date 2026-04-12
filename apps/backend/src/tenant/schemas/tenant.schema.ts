@@ -11,6 +11,7 @@ export const ALL_FEATURES = [
   'services',
   'serviceCategories',
   'blogs',
+  'blogCategories',
   'payments',
   'pricings',
   'faqs',

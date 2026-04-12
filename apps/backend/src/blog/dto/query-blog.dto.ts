@@ -16,4 +16,8 @@ export class QueryBlogDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

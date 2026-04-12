@@ -11,6 +11,7 @@
       "dashboard": "Bảng điều khiển",
       "users": "Người dùng",
       "blogs": "Bài viết",
+      "blogCategories": "Danh mục bài viết",
       "landingPages": "Trang đích",
       "services": "Dịch vụ",
       "serviceCategories": "Danh mục dịch vụ",
@@ -80,6 +81,10 @@
         "blogs": {
           "label": "Bài viết",
           "description": "Bài viết blog và xuất bản nội dung."
+        },
+        "blogCategories": {
+          "label": "Danh mục bài viết",
+          "description": "Tổ chức bài viết theo danh mục."
         },
         "payments": {
           "label": "Thanh toán",
@@ -598,6 +603,25 @@
         "deleting": "Đang xóa...",
         "deleteAction": "Xóa"
       }
+    },
+    "blogCategories": {
+      "title": "Danh mục bài viết",
+      "subtitle": "Tổ chức bài viết của bạn theo danh mục",
+      "add": "Thêm danh mục",
+      "loading": "Đang tải danh mục...",
+      "categoriesLabel": "Danh mục",
+      "noYetTitle": "Chưa có danh mục",
+      "noYetSubtitle": "Tạo danh mục bài viết đầu tiên của bạn",
+      "noYetSearch": "Thử điều chỉnh tìm kiếm",
+      "showing": "Hiển thị {count} trong {total} danh mục",
+      "created": "Tạo danh mục bài viết thành công",
+      "createFailed": "Không thể tạo danh mục bài viết",
+      "updated": "Cập nhật danh mục bài viết thành công",
+      "updateFailed": "Không thể cập nhật danh mục bài viết",
+      "deleted": "Xóa danh mục bài viết thành công",
+      "deleteFailed": "Không thể xóa danh mục bài viết",
+      "errorTitle": "Lỗi",
+      "errorSubtitle": "Không thể tải danh mục bài viết. Vui lòng thử lại."
     },
     "products": {
       "title": "Sản phẩm",

@@ -75,6 +75,7 @@ function buildTenantUrl(tenantSlug: string): string {
 
 const FEATURE_NAV_DEF: Record<FeatureKey, { url: string; icon: Icon }> = {
   blogs: { url: "/dashboard/blogs", icon: IconNews },
+  blogCategories: { url: "/dashboard/blog-categories", icon: IconCategory },
   services: { url: "/dashboard/services", icon: IconBriefcase },
   serviceCategories: { url: "/dashboard/service-categories", icon: IconCategory },
   events: { url: "/dashboard/events", icon: IconCalendar },
@@ -225,6 +226,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           items: [
             ...(enabledFeatures.has("blogs")
               ? [{ title: t("nav.items.blogs"), ...FEATURE_NAV_DEF.blogs }]
+              : []),
+            ...(enabledFeatures.has("blogCategories")
+              ? [{ title: t("nav.items.blogCategories"), ...FEATURE_NAV_DEF.blogCategories }]
               : []),
             ...(enabledFeatures.has("landingPages")
               ? [{ title: t("nav.items.landingPages"), ...FEATURE_NAV_DEF.landingPages }]

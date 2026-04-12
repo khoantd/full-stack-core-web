@@ -30,6 +30,7 @@ import { PricingModule } from './pricing/pricing.module';
 import { LandingPageModule } from './landing-page/landing-page.module';
 import { FaqSectionModule } from './faq-section/faq-section.module';
 import { TestimonialSectionModule } from './testimonial-section/testimonial-section.module';
+import { BlogCategoryModule } from './blog-category/blog-category.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { TestimonialSectionModule } from './testimonial-section/testimonial-sect
     LandingPageModule,
     FaqSectionModule,
     TestimonialSectionModule,
+    BlogCategoryModule,
     SeedModule,
   ],
   controllers: [AppController],

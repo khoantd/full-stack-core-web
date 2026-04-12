@@ -38,6 +38,7 @@ const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
   services: IconBriefcase,
   serviceCategories: IconCategory,
   blogs: IconNews,
+  blogCategories: IconCategory,
   payments: IconCreditCard,
   landingPages: IconLayout,
 };
