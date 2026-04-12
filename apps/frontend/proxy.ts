@@ -75,9 +75,17 @@ export function proxy(request: NextRequest) {
     const rest = segments.slice(i).join('/');
     const internalPath = rest ? `/${rest}` : '/';
 
-    // Always rewrite locale-prefixed URLs to the internal filesystem route.
-    const res = NextResponse.rewrite(new URL(internalPath, request.url));
-    // Preserve next-intl headers/cookies (and ensure locale cookie is present).
+    // Forward locale as a REQUEST header so next-intl's requestLocale receives it.
+    // Using NextResponse.rewrite(url, { request: { headers } }) is the only reliable
+    // way — setting x-middleware-request-* on the response object alone does not
+    // guarantee the header reaches the server component in Next.js 16.
+    const reqHeaders = new Headers(request.headers);
+    reqHeaders.set('x-next-intl-locale', locale);
+
+    const res = NextResponse.rewrite(new URL(internalPath, request.url), {
+      request: { headers: reqHeaders },
+    });
+    // Preserve any extra next-intl response headers/cookies.
     mergeIntlHeaders(res, intlResponse);
     res.cookies.set('NEXT_LOCALE', locale);
     return res;

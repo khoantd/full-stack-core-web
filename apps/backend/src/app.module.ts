@@ -27,6 +27,8 @@ import { ApiKeyModule } from './api-key/api-key.module';
 import { SeedModule } from './seed/seed.module';
 import { PricingModule } from './pricing/pricing.module';
 import { LandingPageModule } from './landing-page/landing-page.module';
+import { FaqSectionModule } from './faq-section/faq-section.module';
+import { TestimonialSectionModule } from './testimonial-section/testimonial-section.module';
 
 @Module({
   imports: [
@@ -73,6 +75,8 @@ import { LandingPageModule } from './landing-page/landing-page.module';
     ApiKeyModule,
     PricingModule,
     LandingPageModule,
+    FaqSectionModule,
+    TestimonialSectionModule,
     SeedModule,
   ],
   controllers: [AppController],

@@ -13,6 +13,8 @@ import {
   IconLoader2,
   IconTag,
   IconLayout,
+  IconHelp,
+  IconMessageCircle,
 } from "@tabler/icons-react";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -30,6 +32,8 @@ const FEATURE_ICONS: Record<FeatureKey, React.ElementType> = {
   products: IconBox,
   automakers: IconCar,
   pricings: IconTag,
+  faqs: IconHelp,
+  testimonials: IconMessageCircle,
   events: IconCalendar,
   services: IconBriefcase,
   serviceCategories: IconCategory,

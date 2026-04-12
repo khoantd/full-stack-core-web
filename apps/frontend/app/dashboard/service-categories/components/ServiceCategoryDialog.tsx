@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -18,33 +19,44 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { ServiceCategory } from "@/types/service-category.type";
-import { ServiceCategoryForm, type ServiceCategoryFormValues } from "./ServiceCategoryForm";
+import { ServiceCategoryForm } from "./ServiceCategoryForm";
 
 interface ServiceCategoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   category?: ServiceCategory;
-  onSubmit: (data: ServiceCategoryFormValues) => void;
-  isLoading?: boolean;
+  onSuccess?: () => void;
 }
 
 export function ServiceCategoryFormDialog({
   open,
   onOpenChange,
   category,
-  onSubmit,
-  isLoading,
+  onSuccess,
 }: ServiceCategoryFormDialogProps) {
+  const t = useTranslations("pages.serviceCategories.dialog");
+  const formKey = open ? (category ? `edit-${category._id}` : "create-new") : "closed";
+
+  const handleSuccess = () => {
+    onOpenChange(false);
+    onSuccess?.();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>{category ? "Edit Service Category" : "Create Service Category"}</DialogTitle>
+          <DialogTitle>{category ? t("editTitle") : t("createTitle")}</DialogTitle>
           <DialogDescription>
-            {category ? "Update the category fields below." : "Add a category to organize your services."}
+            {category ? t("editDescription") : t("createDescription")}
           </DialogDescription>
         </DialogHeader>
-        <ServiceCategoryForm initialData={category} onSubmit={onSubmit} isLoading={isLoading} />
+        <ServiceCategoryForm
+          key={formKey}
+          category={category}
+          onSuccess={handleSuccess}
+          onCancel={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );
@@ -57,40 +69,41 @@ interface ServiceCategoryDetailDialogProps {
 }
 
 export function ServiceCategoryDetailDialog({ open, onOpenChange, category }: ServiceCategoryDetailDialogProps) {
+  const t = useTranslations("pages.serviceCategories.dialog");
   if (!category) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Service Category Details</DialogTitle>
-          <DialogDescription>View detailed information about this category.</DialogDescription>
+          <DialogTitle>{t("detailTitle")}</DialogTitle>
+          <DialogDescription>{t("detailDescription")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-1">Name</h4>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("name")}</h4>
             <p className="text-base">{category.name}</p>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-muted-foreground mb-1">Slug</h4>
+            <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("slug")}</h4>
             <p className="text-base text-muted-foreground">{category.slug}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Status</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("status")}</h4>
               <p className="text-base">{category.status}</p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Sort order</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("sortOrder")}</h4>
               <p className="text-base">{category.sortOrder}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Created At</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("createdAt")}</h4>
               <p className="text-sm">{new Date(category.createdAt).toLocaleString()}</p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-muted-foreground mb-1">Updated At</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground mb-1">{t("updatedAt")}</h4>
               <p className="text-sm">{new Date(category.updatedAt).toLocaleString()}</p>
             </div>
           </div>
@@ -115,30 +128,29 @@ export function DeleteServiceCategoryDialog({
   onConfirm,
   isLoading,
 }: DeleteServiceCategoryDialogProps) {
+  const t = useTranslations("pages.serviceCategories.dialog");
   if (!category) return null;
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete service category?</AlertDialogTitle>
+          <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete{" "}
-            <span className="font-semibold text-foreground">&quot;{category.name}&quot;</span>. This action cannot be undone.
+            {t("deleteDescription", { name: category.name })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoading}>{t("cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             disabled={isLoading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? t("deleting") : t("deleteAction")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );
 }
-

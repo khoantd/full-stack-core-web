@@ -3,18 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { useCreateServiceCategory, useDeleteServiceCategory, useServiceCategories, useUpdateServiceCategory } from "@/hooks/useServiceCategory";
+import { useDeleteServiceCategory, useServiceCategories } from "@/hooks/useServiceCategory";
 import type { ServiceCategory } from "@/types/service-category.type";
 import { DeleteServiceCategoryDialog, ServiceCategoryDetailDialog, ServiceCategoryFormDialog, ServiceCategoryTable } from "./components";
-import type { ServiceCategoryFormValues } from "./components/ServiceCategoryForm";
 
 export default function ServiceCategoriesPage() {
+  const t = useTranslations("pages.serviceCategories");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
@@ -35,11 +36,14 @@ export default function ServiceCategoriesPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const { data, isLoading, error } = useServiceCategories({ page, limit, search: debouncedSearch });
+  const { data, isLoading, error, refetch } = useServiceCategories({ page, limit, search: debouncedSearch });
 
-  const createMutation = useCreateServiceCategory();
-  const updateMutation = useUpdateServiceCategory();
   const deleteMutation = useDeleteServiceCategory();
+
+  const handleFormDialogOpenChange = useCallback((open: boolean) => {
+    setFormDialogOpen(open);
+    if (!open) setToEdit(undefined);
+  }, []);
 
   const handleCreate = () => {
     setToEdit(undefined);
@@ -61,32 +65,23 @@ export default function ServiceCategoriesPage() {
     setDeleteDialogOpen(true);
   };
 
-  const handleFormSubmit = async (values: ServiceCategoryFormValues) => {
-    try {
-      const payload = { ...values, sortOrder: Number(values.sortOrder) };
-      if (toEdit) {
-        await updateMutation.mutateAsync({ id: toEdit._id, data: payload });
-        toast.success("Service category updated successfully");
-      } else {
-        await createMutation.mutateAsync(payload);
-        toast.success("Service category created successfully");
-      }
-      setFormDialogOpen(false);
-      setToEdit(undefined);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || `Failed to ${toEdit ? "update" : "create"} service category`);
-    }
-  };
+  const handleFormSuccess = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const handleDeleteConfirm = async () => {
     if (!selected) return;
     try {
       await deleteMutation.mutateAsync(selected._id);
-      toast.success("Service category deleted successfully");
+      toast.success(t("deleted"));
       setDeleteDialogOpen(false);
       setSelected(null);
-    } catch (e: any) {
-      toast.error(e?.response?.data?.message || "Failed to delete service category");
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      toast.error(msg || t("deleteFailed"));
     }
   };
 
@@ -99,8 +94,8 @@ export default function ServiceCategoriesPage() {
       <div className="flex items-center justify-center h-[400px]">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Error</CardTitle>
-            <CardDescription>Failed to load service categories. Please try again later.</CardDescription>
+            <CardTitle>{t("errorTitle")}</CardTitle>
+            <CardDescription>{t("errorSubtitle")}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -114,20 +109,22 @@ export default function ServiceCategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Service Categories</h1>
-          <p className="text-muted-foreground">Manage your service categories</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Category
+          {t("add")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
+          <CardTitle>{t("categoriesLabel")}</CardTitle>
           <CardDescription>
-            {pagination ? `Showing ${categories.length} of ${pagination.total} categories` : "Loading categories..."}
+            {pagination
+              ? t("showing", { count: categories.length, total: pagination.total })
+              : t("loading")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,14 +135,14 @@ export default function ServiceCategoriesPage() {
             </div>
           ) : categories.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[400px] text-center">
-              <p className="text-lg font-medium text-muted-foreground mb-2">No categories found</p>
+              <p className="text-lg font-medium text-muted-foreground mb-2">{t("noYetTitle")}</p>
               <p className="text-sm text-muted-foreground mb-4">
-                {search ? "Try adjusting your search" : "Get started by creating your first service category"}
+                {search ? t("noYetSearch") : t("noYetSubtitle")}
               </p>
               {!search && (
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Category
+                  {t("add")}
                 </Button>
               )}
             </div>
@@ -198,10 +195,9 @@ export default function ServiceCategoriesPage() {
 
       <ServiceCategoryFormDialog
         open={formDialogOpen}
-        onOpenChange={setFormDialogOpen}
+        onOpenChange={handleFormDialogOpenChange}
         category={toEdit}
-        onSubmit={handleFormSubmit}
-        isLoading={createMutation.isPending || updateMutation.isPending}
+        onSuccess={handleFormSuccess}
       />
 
       <ServiceCategoryDetailDialog
@@ -220,4 +216,3 @@ export default function ServiceCategoriesPage() {
     </div>
   );
 }
-

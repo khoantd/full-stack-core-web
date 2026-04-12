@@ -31,11 +31,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useLocale, useTranslations } from "next-intl";
 import type { Pricing, PricingTier } from "@/types/pricing.type";
 
-function formatTierPrice(tier: PricingTier): string {
+function formatTierPrice(tier: PricingTier, locale: string): string {
   const amount = tier.currency === "USD" ? tier.unitAmount / 100 : tier.unitAmount;
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: tier.currency }).format(amount);
+  return new Intl.NumberFormat(locale, { style: "currency", currency: tier.currency }).format(amount);
 }
 
 function getCheapestTier(pricing: Pricing): PricingTier | null {
@@ -56,6 +57,9 @@ interface PricingTableProps {
 }
 
 export function PricingTable({ data, actions, searchValue, onSearchChange }: PricingTableProps) {
+  const t = useTranslations("pages.pricings.table");
+  const ts = useTranslations("pages.pricings");
+  const locale = useLocale();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -65,7 +69,7 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
       accessorKey: "title",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Title
+          {t("title")}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
@@ -73,7 +77,7 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: t("status"),
       cell: ({ row }) => {
         const status = row.getValue("status") as string;
         const colors: Record<string, string> = {
@@ -81,16 +85,24 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
           Published: "bg-green-100 text-green-700",
           Archived: "bg-yellow-100 text-yellow-700",
         };
+        const label =
+          status === "Draft"
+            ? ts("statusDraft")
+            : status === "Published"
+              ? ts("statusPublished")
+              : status === "Archived"
+                ? ts("statusArchived")
+                : status;
         return (
           <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-700"}`}>
-            {status}
+            {label}
           </span>
         );
       },
     },
     {
       id: "tiers",
-      header: "Tiers",
+      header: t("tiers"),
       cell: ({ row }) => {
         const pricing = row.original;
         return <div>{pricing.tiers?.length ?? 0}</div>;
@@ -98,21 +110,23 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
     },
     {
       id: "startingAt",
-      header: "Starting at",
+      header: t("startingAt"),
       cell: ({ row }) => {
         const cheapest = getCheapestTier(row.original);
-        return <div className="font-medium">{cheapest ? formatTierPrice(cheapest) : "—"}</div>;
+        return <div className="font-medium">{cheapest ? formatTierPrice(cheapest, locale) : "—"}</div>;
       },
     },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
         <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Created
+          {t("created")}
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => <div>{new Date(row.getValue("createdAt")).toLocaleDateString()}</div>,
+      cell: ({ row }) => (
+        <div>{new Date(row.getValue("createdAt")).toLocaleDateString(locale)}</div>
+      ),
     },
     {
       id: "actions",
@@ -123,21 +137,21 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">{t("openMenu")}</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => actions.onView(pricing)}>
-                <Eye className="mr-2 h-4 w-4" /> View
+                <Eye className="mr-2 h-4 w-4" /> {t("view")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => actions.onEdit(pricing)}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
+                <Pencil className="mr-2 h-4 w-4" /> {t("edit")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => actions.onDelete(pricing)} className="text-destructive">
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4" /> {t("delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -162,7 +176,7 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Search pricings..."
+          placeholder={t("searchPlaceholder")}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           className="max-w-sm"
@@ -195,7 +209,7 @@ export function PricingTable({ data, actions, searchValue, onSearchChange }: Pri
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {t("noResults")}
                 </TableCell>
               </TableRow>
             )}

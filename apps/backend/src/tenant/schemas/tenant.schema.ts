@@ -13,6 +13,8 @@ export const ALL_FEATURES = [
   'blogs',
   'payments',
   'pricings',
+  'faqs',
+  'testimonials',
   'landingPages',
 ] as const;
 

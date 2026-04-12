@@ -230,3 +230,51 @@ All new features must be built **i18n-first** across **frontend and backend**. T
 - **Validation errors**: DTO / schema validation errors should be surfaced as codes/keys rather than raw English strings where feasible.
 - **Definition of done**: a feature is not complete until it renders correctly in all supported locales and has no missing translation keys at runtime.
 
+## i18n architecture — lessons learned
+
+### next-intl middleware lives in `proxy.ts`, NOT `middleware.ts`
+
+This project runs on **Next.js 16**, which replaces `middleware.ts` with **`proxy.ts`**. Both files cannot coexist — Next.js will throw `"Both middleware file and proxy file are detected"` and break the app.
+
+`apps/frontend/proxy.ts` already integrates next-intl:
+- Calls `createMiddleware(routing)` on every request.
+- Rewrites locale-prefixed URLs (`/en/…`, `/vi/…`) to internal paths.
+- Merges next-intl headers/cookies into all responses.
+
+**Never create `middleware.ts` in this project.** All middleware logic (auth guards, subdomain routing, locale handling) belongs in `proxy.ts`.
+
+### In `proxy.ts`, locale must be forwarded via `{ request: { headers } }` on the rewrite
+
+`requestLocale` in `i18n/request.ts` reads the `x-next-intl-locale` **request** header that reaches the page handler. In Next.js 16 proxy/middleware, setting `x-middleware-request-x-next-intl-locale` directly on the rewrite response object (e.g. via `mergeIntlHeaders`) does **not** reliably reach the server component.
+
+The correct pattern in `proxy.ts` for any manual `NextResponse.rewrite()`:
+
+```ts
+const reqHeaders = new Headers(request.headers);
+reqHeaders.set('x-next-intl-locale', locale);
+
+const res = NextResponse.rewrite(new URL(internalPath, request.url), {
+  request: { headers: reqHeaders },   // ← this is what makes requestLocale work
+});
+```
+
+Without the `{ request: { headers } }` option, `requestLocale` is `undefined` and the locale falls back to `defaultLocale` (`'en'`), so all pages render in English regardless of the URL.
+
+### Locale switching must use a hard navigation (`window.location.href`), not `router.replace`
+
+This app does **not** use a `[locale]` dynamic segment in the app directory (routes live directly under `app/`). next-intl middleware rewrites `/vi/dashboard/…` → `/dashboard/…` before Next.js routing sees it.
+
+Consequence: `router.replace(path, { locale })` (soft client-side nav) does not trigger a re-render of the root `layout.tsx`, so `getLocale()` / `getMessages()` are never re-called and `NextIntlClientProvider` keeps the original locale's messages — **the UI text never changes**.
+
+**Rule**: when switching locale programmatically, always do a hard navigation:
+
+```ts
+window.location.href = `/${newLocale}${pathname}${query ? `?${query}` : ""}`;
+```
+
+This forces a full server round-trip, middleware runs, the root layout re-executes, and `NextIntlClientProvider` is hydrated with the correct messages.
+
+### Keep the `LANGUAGES` list in sync with `routing.locales`
+
+`apps/frontend/app/dashboard/settings/profile-form.tsx` lists language options for the Settings UI. Only locales that exist in `routing.locales` (`apps/frontend/i18n/routing.ts`) will trigger a navigation; unsupported codes are silently ignored. When adding a new locale, update **both** `routing.locales` and the `LANGUAGES` array (and ship the matching `messages/<locale>.json` file).
+

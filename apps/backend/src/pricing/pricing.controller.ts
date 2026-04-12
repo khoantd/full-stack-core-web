@@ -29,19 +29,28 @@ export class PricingController {
   async getAll(
     @Query() query: QueryPricingDto,
     @CurrentTenant() tenantId: string,
+    @Query('locale') locale?: string,
   ) {
-    return this.pricingService.findAll(query, tenantId);
+    return this.pricingService.findAll(query, tenantId, locale);
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.pricingService.findById(id, tenantId);
+  async getById(
+    @Param('id') id: string,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.pricingService.findById(id, tenantId, locale);
   }
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  async create(@Body() dto: CreatePricingDto, @CurrentTenant() tenantId: string) {
-    return this.pricingService.create(dto, tenantId);
+  async create(
+    @Body() dto: CreatePricingDto,
+    @Query('locale') locale: string | undefined,
+    @CurrentTenant() tenantId: string,
+  ) {
+    return this.pricingService.create(dto, tenantId, locale);
   }
 
   @Put(':id')
@@ -49,9 +58,10 @@ export class PricingController {
   async update(
     @Param('id') id: string,
     @Body() dto: UpdatePricingDto,
+    @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
   ) {
-    return this.pricingService.update(id, dto, tenantId);
+    return this.pricingService.update(id, dto, tenantId, locale);
   }
 
   @Delete(':id')
