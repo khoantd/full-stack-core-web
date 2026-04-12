@@ -6,6 +6,7 @@ import { ApiKeyController } from './api-key.controller';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
 import { ApiKeyGuard } from '../guards/api-key.guard';
+import { PublicIntegrationAuthGuard } from '../guards/public-integration-auth.guard';
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { ApiKeyGuard } from '../guards/api-key.guard';
     TenantModule,
   ],
   controllers: [ApiKeyController],
-  providers: [ApiKeyService, TenantGuard, ApiKeyGuard],
-  exports: [ApiKeyService, ApiKeyGuard],
+  providers: [ApiKeyService, TenantGuard, ApiKeyGuard, PublicIntegrationAuthGuard],
+  exports: [ApiKeyService, ApiKeyGuard, PublicIntegrationAuthGuard],
 })
 export class ApiKeyModule {}

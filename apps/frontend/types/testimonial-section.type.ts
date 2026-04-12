@@ -4,6 +4,8 @@ export interface TestimonialItem {
   text: string;
   name: string;
   role: string;
+  /** 1–5; omitted on legacy documents (treat as 5 in UI). */
+  rating?: number;
   order: number;
 }
 

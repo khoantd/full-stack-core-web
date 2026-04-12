@@ -11,6 +11,29 @@ import {
 } from './schemas/testimonial-section.schema';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
 
+function normalizeTestimonialItem(
+  item: { order?: number; rating?: number },
+  idx: number,
+): { order: number; rating: number } & typeof item {
+  let rating = 5;
+  if (typeof item.rating === 'number' && !Number.isNaN(item.rating)) {
+    rating = Math.min(5, Math.max(1, Math.round(item.rating)));
+  }
+  return {
+    ...item,
+    order: typeof item.order === 'number' ? item.order : idx,
+    rating,
+  };
+}
+
+function normalizeTestimonialItems(
+  items: { order?: number; rating?: number }[],
+): ReturnType<typeof normalizeTestimonialItem>[] {
+  return items
+    .map((item, idx) => normalizeTestimonialItem(item, idx))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
 export interface PaginationResult<T> {
   data: T[];
   pagination: {
@@ -122,9 +145,9 @@ export class TestimonialSectionService {
     try {
       const payload: Record<string, unknown> = { ...dto, tenantId };
       if (Array.isArray(payload.items)) {
-        payload.items = (payload.items as { order?: number }[])
-          .map((item, idx) => ({ ...item, order: typeof item.order === 'number' ? item.order : idx }))
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        payload.items = normalizeTestimonialItems(
+          payload.items as { order?: number; rating?: number }[],
+        );
       }
       if (locale) {
         const patch: Partial<TestimonialSectionTranslatableFields> = {
@@ -157,9 +180,9 @@ export class TestimonialSectionService {
 
       const payload: Record<string, unknown> = { ...dto };
       if (payload.items) {
-        payload.items = (payload.items as { order?: number }[])
-          .map((item, idx) => ({ ...item, order: typeof item.order === 'number' ? item.order : idx }))
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        payload.items = normalizeTestimonialItems(
+          payload.items as { order?: number; rating?: number }[],
+        );
       }
 
       Object.assign(section, payload);

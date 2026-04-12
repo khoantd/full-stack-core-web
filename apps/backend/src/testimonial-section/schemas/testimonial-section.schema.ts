@@ -19,6 +19,9 @@ export class TestimonialItem {
   @Prop({ required: true, trim: true })
   role: string;
 
+  @Prop({ default: 5, min: 1, max: 5 })
+  rating: number;
+
   @Prop({ default: 0, min: 0 })
   order: number;
 }

@@ -12,7 +12,7 @@ import { ApiKeyModule } from '../api-key/api-key.module';
   imports: [
     MongooseModule.forFeature([{ name: TestimonialSection.name, schema: TestimonialSectionSchema }]),
     TenantModule,
-    ApiKeyModule,
+    ApiKeyModule, // PublicIntegrationAuthGuard + ApiKeyService
   ],
   controllers: [TestimonialSectionController, TestimonialSectionPublicController],
   providers: [TestimonialSectionService, TenantGuard],

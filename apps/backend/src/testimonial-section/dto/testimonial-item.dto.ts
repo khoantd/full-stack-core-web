@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class TestimonialItemDto {
   @IsNotEmpty()
@@ -13,6 +13,13 @@ export class TestimonialItemDto {
   @IsNotEmpty()
   @IsString()
   role: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  rating?: number;
 
   @IsOptional()
   @Type(() => Number)

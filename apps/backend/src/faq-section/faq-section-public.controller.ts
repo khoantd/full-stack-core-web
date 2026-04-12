@@ -7,7 +7,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiKeyGuard } from 'src/guards/api-key.guard';
+import { PublicIntegrationAuthGuard } from 'src/guards/public-integration-auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
 import { QueryFaqSectionDto } from './dto/query-faq-section.dto';
@@ -15,9 +15,9 @@ import { FaqSectionService } from './faq-section.service';
 
 /**
  * Read-only FAQ sections for integrations (e.g. marketing site, server-side fetch).
- * Authenticate with `x-api-key` (tenant-scoped API key from Dashboard → API keys).
+ * Authenticate with `Authorization: Bearer <JWT>` or `x-api-key` (Dashboard → API keys).
  */
-@UseGuards(ApiKeyGuard, TenantGuard)
+@UseGuards(PublicIntegrationAuthGuard, TenantGuard)
 @Controller('public/faq-sections')
 export class FaqSectionPublicController {
   constructor(private readonly faqSectionService: FaqSectionService) {}

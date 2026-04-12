@@ -1,6 +1,8 @@
 "use client";
 
+import { Star } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -78,6 +80,7 @@ export function TestimonialSectionDetailDialog({
 }: TestimonialSectionDetailDialogProps) {
   const t = useTranslations("pages.testimonialSections.dialog");
   const ts = useTranslations("pages.testimonialSections");
+  const tf = useTranslations("pages.testimonialSections.form");
   const locale = useLocale();
   if (!section) return null;
   const items = [...(section.items ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
@@ -120,13 +123,35 @@ export function TestimonialSectionDetailDialog({
               <p className="text-sm text-muted-foreground">{t("noItems")}</p>
             ) : (
               <ol className="list-decimal pl-5 space-y-3">
-                {items.map((it, idx) => (
+                {items.map((it, idx) => {
+                  const stars = typeof it.rating === "number" && !Number.isNaN(it.rating)
+                    ? Math.min(5, Math.max(1, Math.round(it.rating)))
+                    : 5;
+                  return (
                   <li key={`${it.name}-${idx}`} className="rounded-md border p-3">
                     <p className="text-sm whitespace-pre-wrap">&ldquo;{it.text}&rdquo;</p>
+                    <div
+                      className="flex flex-wrap items-center gap-2 mt-2"
+                      aria-label={`${tf("rating")}: ${stars}/5`}
+                    >
+                      <span className="text-xs text-muted-foreground">{tf("rating")}</span>
+                      <span className="flex gap-0.5" role="img" aria-hidden>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star
+                            key={n}
+                            className={cn(
+                              "h-4 w-4",
+                              n <= stars ? "fill-primary text-primary" : "text-muted-foreground",
+                            )}
+                          />
+                        ))}
+                      </span>
+                    </div>
                     <p className="font-medium mt-2">{it.name}</p>
                     <p className="text-xs text-muted-foreground">{it.role}</p>
                   </li>
-                ))}
+                  );
+                })}
               </ol>
             )}
           </div>

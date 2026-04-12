@@ -17,6 +17,8 @@ export interface MediaFilesResponse {
 
 export interface MediaFilesParams {
   provider?: MediaProviderId;
+  /** When false, the list query does not run (e.g. until /media/providers has been loaded). */
+  enabled?: boolean;
   type?: string;
   limit?: number;
   continuationToken?: string;

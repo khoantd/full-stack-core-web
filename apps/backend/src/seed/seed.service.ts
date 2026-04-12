@@ -10,8 +10,48 @@ import { Service } from '../service/schemas/service.schema';
 import { Role } from '../auth/schemas/role.schema';
 import { User } from '../auth/schemas/user.schema';
 import { TenantMembership, TenantMembershipDocument } from '../tenant-membership/schemas/tenant-membership.schema';
+import {
+  TestimonialSection,
+  TestimonialSectionDocument,
+  TestimonialSectionStatus,
+} from '../testimonial-section/schemas/testimonial-section.schema';
 
 const SEED_ROLES = ['admin', 'user', 'staff'];
+
+const SEED_TESTIMONIAL_SECTION_SLUG = 'home-testimonials';
+
+const SEED_TESTIMONIAL_SECTION = {
+  eyebrow: 'Testimonials',
+  title: 'What Our Clients Say',
+  slug: SEED_TESTIMONIAL_SECTION_SLUG,
+  status: TestimonialSectionStatus.PUBLISHED,
+  items: [
+    {
+      name: 'Hannah Morales',
+      role: 'Business Manager',
+      text:
+        'After just a few sessions, I noticed a dramatic shift in my sleep quality. I feel more rested and present than I have in years.',
+      rating: 5,
+      order: 0,
+    },
+    {
+      name: 'Kurt Thompson',
+      role: 'Software Engineer',
+      text:
+        'The sound healing sessions were transformative. I went from waking up multiple times a night to sleeping through peacefully.',
+      rating: 4,
+      order: 1,
+    },
+    {
+      name: 'Drew Feig',
+      role: 'Teacher',
+      text:
+        'I was skeptical at first, but the gentle, personalized approach won me over. Truly life-changing therapy.',
+      rating: 3,
+      order: 2,
+    },
+  ],
+};
 
 const SEED_CATEGORIES = [
   { name: 'Engine Parts', description: 'High-performance engine components for all makes and models.' },
@@ -102,6 +142,8 @@ export class SeedService implements OnModuleInit {
     @InjectModel(Role.name) private roleModel: Model<Role>,
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(TenantMembership.name) private membershipModel: Model<TenantMembershipDocument>,
+    @InjectModel(TestimonialSection.name)
+    private testimonialSectionModel: Model<TestimonialSectionDocument>,
   ) {}
 
   async onModuleInit() {
@@ -127,6 +169,7 @@ export class SeedService implements OnModuleInit {
     await this.seedProducts(tenantId, categoryMap);
     await this.seedBlogs(tenantId);
     await this.seedServices(tenantId);
+    await this.seedTestimonialSections(tenantId);
 
     this.logger.log('Demo seed complete.');
   }
@@ -268,5 +311,18 @@ export class SeedService implements OnModuleInit {
       await this.serviceModel.create({ ...s, tenantId });
       this.logger.log(`  + Service: ${s.title}`);
     }
+  }
+
+  private async seedTestimonialSections(tenantId: string) {
+    const exists = await this.testimonialSectionModel
+      .findOne({ tenantId, slug: SEED_TESTIMONIAL_SECTION_SLUG })
+      .exec();
+    if (exists) return;
+
+    await this.testimonialSectionModel.create({
+      ...SEED_TESTIMONIAL_SECTION,
+      tenantId: new Types.ObjectId(tenantId),
+    });
+    this.logger.log(`  + TestimonialSection: ${SEED_TESTIMONIAL_SECTION.title} (${SEED_TESTIMONIAL_SECTION_SLUG})`);
   }
 }

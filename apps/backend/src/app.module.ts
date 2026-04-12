@@ -22,6 +22,7 @@ import { LeadSparkModule } from './leadspark/leadspark.module';
 import { ServiceModule } from './service/service.module';
 import { ServiceCategoryModule } from './service-category/service-category.module';
 import { TenantModule } from './tenant/tenant.module';
+import { TenantPublicModule } from './tenant/tenant-public.module';
 import { VietQRModule } from './vietqr/vietqr.module';
 import { ApiKeyModule } from './api-key/api-key.module';
 import { SeedModule } from './seed/seed.module';
@@ -71,6 +72,7 @@ import { TestimonialSectionModule } from './testimonial-section/testimonial-sect
     ServiceModule,
     ServiceCategoryModule,
     TenantModule,
+    TenantPublicModule,
     VietQRModule,
     ApiKeyModule,
     PricingModule,

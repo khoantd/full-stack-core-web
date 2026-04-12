@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -38,8 +39,16 @@ type ItemForm = {
   text: string;
   name: string;
   role: string;
+  rating: number;
   order: number;
 };
+
+function clampRating(value: unknown): number {
+  if (typeof value === "number" && !Number.isNaN(value)) {
+    return Math.min(5, Math.max(1, Math.round(value)));
+  }
+  return 5;
+}
 
 type TestimonialSchemaMessages = {
   eyebrowRequired: string;
@@ -55,6 +64,7 @@ function createTestimonialSectionSchema(msgs: TestimonialSchemaMessages) {
     text: z.string().min(1, msgs.textRequired),
     name: z.string().min(1, msgs.nameRequired),
     role: z.string().min(1, msgs.roleRequired),
+    rating: z.number().int().min(1).max(5),
     order: z.number().min(0),
   });
 
@@ -75,6 +85,7 @@ function itemsToForm(items: TestimonialItem[] | undefined): ItemForm[] {
     text: it.text ?? "",
     name: it.name ?? "",
     role: it.role ?? "",
+    rating: clampRating(it.rating),
     order: typeof it.order === "number" ? it.order : idx,
   }));
 }
@@ -92,6 +103,7 @@ function formToPayload(
         text: it.text.trim(),
         name: it.name.trim(),
         role: it.role.trim(),
+        rating: clampRating(it.rating),
         order: typeof it.order === "number" ? it.order : idx,
       }))
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -133,6 +145,7 @@ function syncEnStructureIntoVi(
     text: viItems[i]?.text ?? "",
     name: viItems[i]?.name ?? "",
     role: viItems[i]?.role ?? "",
+    rating: ei.rating,
     order: ei.order,
   }));
   formVi.setValue("items", next);
@@ -148,7 +161,7 @@ function toFormValues(
       title: "",
       slug: "",
       status: "Draft",
-      items: [{ text: "", name: defaultName, role: "", order: 0 }],
+      items: [{ text: "", name: defaultName, role: "", rating: 5, order: 0 }],
     };
   }
   return {
@@ -158,7 +171,7 @@ function toFormValues(
     status: (section.status as TestimonialSectionStatus) ?? "Draft",
     items: section.items?.length
       ? itemsToForm(section.items)
-      : [{ text: "", name: defaultName, role: "", order: 0 }],
+      : [{ text: "", name: defaultName, role: "", rating: 5, order: 0 }],
   };
 }
 
@@ -167,8 +180,50 @@ const emptyFormValues = (defaultName: string): TestimonialSectionFormValues => (
   title: "",
   slug: "",
   status: "Draft",
-  items: [{ text: "", name: defaultName, role: "", order: 0 }],
+  items: [{ text: "", name: defaultName, role: "", rating: 5, order: 0 }],
 });
+
+function StarRatingInput({
+  value,
+  onChange,
+  disabled,
+  label,
+  ariaSetRating,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+  disabled?: boolean;
+  label: string;
+  ariaSetRating: (n: number) => string;
+}) {
+  return (
+    <div className="space-y-1.5" role="group" aria-label={label}>
+      <div className="flex flex-wrap items-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(n)}
+            className={cn(
+              "rounded-sm p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              disabled && "cursor-not-allowed opacity-50",
+            )}
+            aria-label={ariaSetRating(n)}
+            aria-pressed={n <= value}
+          >
+            <Star
+              className={cn(
+                "h-5 w-5",
+                n <= value ? "fill-primary text-primary" : "text-muted-foreground",
+              )}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function TestimonialSectionFields({
   form,
@@ -267,6 +322,7 @@ function TestimonialSectionFields({
               text: "",
               name: t("newItemName", { number: fields.length + 1 }),
               role: "",
+              rating: 5,
               order: fields.length,
             })
           }
@@ -320,6 +376,27 @@ function TestimonialSectionFields({
                   <FormLabel>{t("quote")}</FormLabel>
                   <FormControl>
                     <Textarea placeholder={t("placeholderQuote")} rows={4} {...field} disabled={isLoading} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name={`items.${index}.rating`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("rating")}</FormLabel>
+                  <p className="text-xs text-muted-foreground -mt-1 mb-1">{t("ratingHint")}</p>
+                  <FormControl>
+                    <StarRatingInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={isLoading}
+                      label={t("rating")}
+                      ariaSetRating={(n) => t("ariaSetRating", { count: n })}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

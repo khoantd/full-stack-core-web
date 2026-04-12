@@ -11,6 +11,7 @@ import { Role, RoleSchema } from '../auth/schemas/role.schema';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 import { TenantMembershipModule } from '../tenant-membership/tenant-membership.module';
 import { TenantMembership, TenantMembershipSchema } from '../tenant-membership/schemas/tenant-membership.schema';
+import { TestimonialSection, TestimonialSectionSchema } from '../testimonial-section/schemas/testimonial-section.schema';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TenantMembership, TenantMembershipSchema } from '../tenant-membership/s
       { name: Role.name, schema: RoleSchema },
       { name: User.name, schema: UserSchema },
       { name: TenantMembership.name, schema: TenantMembershipSchema },
+      { name: TestimonialSection.name, schema: TestimonialSectionSchema },
     ]),
   ],
   providers: [SeedService],

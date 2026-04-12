@@ -7,7 +7,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiKeyGuard } from 'src/guards/api-key.guard';
+import { PublicIntegrationAuthGuard } from 'src/guards/public-integration-auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
 import { QueryTestimonialSectionDto } from './dto/query-testimonial-section.dto';
@@ -15,9 +15,9 @@ import { TestimonialSectionService } from './testimonial-section.service';
 
 /**
  * Read-only testimonial sections for integrations (e.g. marketing site, server-side fetch).
- * Authenticate with `x-api-key` (tenant-scoped API key from Dashboard → API keys).
+ * Authenticate with `Authorization: Bearer <JWT>` or `x-api-key` (Dashboard → API keys).
  */
-@UseGuards(ApiKeyGuard, TenantGuard)
+@UseGuards(PublicIntegrationAuthGuard, TenantGuard)
 @Controller('public/testimonial-sections')
 export class TestimonialSectionPublicController {
   constructor(private readonly testimonialSectionService: TestimonialSectionService) {}

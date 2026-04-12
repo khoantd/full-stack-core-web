@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import {
   Search, Upload, Trash2, Copy, Image, FileText, Video, File, ChevronLeft, ChevronRight, Loader2,
@@ -50,6 +50,18 @@ export default function MediaLibraryPage() {
 
   const { data: providersData, isLoading: providersLoading } = useMediaProviders();
 
+  const enabledProviders = useMemo(
+    () => providersData?.providers.filter(p => p.enabled) ?? [],
+    [providersData],
+  );
+
+  /** Resolved synchronously from /media/providers so we never list with a disabled default (e.g. minio). */
+  const activeProvider = useMemo((): MediaProviderId | null => {
+    if (!providersData) return null;
+    if (enabledProviders.length === 0) return null;
+    return enabledProviders.some(p => p.id === provider) ? provider : enabledProviders[0].id;
+  }, [providersData, enabledProviders, provider]);
+
   useEffect(() => {
     const enabled = providersData?.providers.filter(p => p.enabled) ?? [];
     if (enabled.length === 0) return;
@@ -62,7 +74,8 @@ export default function MediaLibraryPage() {
     type: type !== "all" ? type : undefined,
     limit: PAGE_SIZE,
     continuationToken: currentToken,
-    provider,
+    provider: activeProvider ?? "minio",
+    enabled: activeProvider !== null,
   });
 
   const deleteMutation = useDeleteMediaFile();
@@ -75,8 +88,6 @@ export default function MediaLibraryPage() {
     onError: () => toast.error("Upload failed"),
   });
   const { phase: uploadPhase, uploadProgress } = uploadMutation;
-
-  const enabledProviders = providersData?.providers.filter(p => p.enabled) ?? [];
 
   const files = (data?.data ?? []).filter(f =>
     !search || f.key.toLowerCase().includes(search.toLowerCase()),
@@ -110,7 +121,8 @@ export default function MediaLibraryPage() {
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    uploadMutation.mutate({ file, provider });
+    if (!activeProvider) return;
+    uploadMutation.mutate({ file, provider: activeProvider });
     e.target.value = "";
   };
 
@@ -123,7 +135,8 @@ export default function MediaLibraryPage() {
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteMutation.mutateAsync({ key: deleteTarget.key, provider });
+      if (!activeProvider) return;
+      await deleteMutation.mutateAsync({ key: deleteTarget.key, provider: activeProvider });
       toast.success("File deleted");
       setDeleteTarget(null);
     } catch {
@@ -135,7 +148,8 @@ export default function MediaLibraryPage() {
   const hasNext = data?.isTruncated && !!data?.nextContinuationToken;
 
   const providerLabel =
-    enabledProviders.find(p => p.id === provider)?.label ?? provider;
+    (activeProvider && enabledProviders.find(p => p.id === activeProvider)?.label) ??
+    provider;
 
   return (
     <div className="space-y-6">

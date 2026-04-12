@@ -16,10 +16,11 @@ export function useMediaProviders() {
 }
 
 export function useMediaFiles(params: MediaFilesParams = {}) {
-  const { type, limit = 20, continuationToken, provider = "minio" } = params;
+  const { type, limit = 20, continuationToken, provider = "minio", enabled = true } = params;
   return useQuery({
     queryKey: [MEDIA_QUERY_KEY, provider, type, limit, continuationToken],
     queryFn: () => mediaApi.listFiles({ type, limit, continuationToken, provider }),
+    enabled,
     staleTime: 30 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
