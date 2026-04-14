@@ -287,7 +287,8 @@
         "cta": "Call to action",
         "stats": "Stats",
         "faq": "FAQ",
-        "paragraph": "Paragraph"
+        "paragraph": "Paragraph",
+        "footer": "Footer"
       },
       "hero": {
         "headline": "Headline",
@@ -323,6 +324,20 @@
       },
       "paragraph": {
         "body": "Text"
+      },
+      "footer": {
+        "heading": "Heading",
+        "columns": "Columns",
+        "addColumn": "Add column",
+        "column": "Column",
+        "removeColumn": "Remove column",
+        "columnHeading": "Column heading",
+        "links": "Links",
+        "addLink": "Add link",
+        "removeLink": "Remove link",
+        "linkLabel": "Link label",
+        "linkHref": "Link URL",
+        "bottomText": "Bottom text"
       },
       "pagination": {
         "showing": "Showing {from} to {to} of {total} pages",

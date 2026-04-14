@@ -40,6 +40,16 @@ export type LandingSection =
       id: string;
       type: 'paragraph';
       body: string;
+    }
+  | {
+      id: string;
+      type: 'footer';
+      heading?: string;
+      columns: {
+        heading?: string;
+        links: { label: string; href: string }[];
+      }[];
+      bottomText?: string;
     };
 
 export interface LandingPage {

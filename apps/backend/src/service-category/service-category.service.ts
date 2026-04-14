@@ -36,7 +36,8 @@ export class ServiceCategoryService {
     locale?: string,
   ): Promise<ServiceCategory> {
     try {
-      const payload: Partial<ServiceCategory> = { ...dto, tenantId };
+      const { parent, ...rest } = dto;
+      const payload: Partial<ServiceCategory> = { ...rest, tenantId };
       if (dto.parent) payload.parent = new Types.ObjectId(dto.parent);
       if (locale) {
         payload.translations = upsertTranslation<ServiceCategoryTranslatableFields>(

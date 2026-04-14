@@ -287,7 +287,8 @@
         "cta": "Kêu gọi hành động",
         "stats": "Thống kê",
         "faq": "FAQ",
-        "paragraph": "Đoạn văn"
+        "paragraph": "Đoạn văn",
+        "footer": "Footer"
       },
       "hero": {
         "headline": "Tiêu đề chính",
@@ -323,6 +324,20 @@
       },
       "paragraph": {
         "body": "Nội dung"
+      },
+      "footer": {
+        "heading": "Tiêu đề",
+        "columns": "Cột",
+        "addColumn": "Thêm cột",
+        "column": "Cột",
+        "removeColumn": "Xóa cột",
+        "columnHeading": "Tiêu đề cột",
+        "links": "Liên kết",
+        "addLink": "Thêm liên kết",
+        "removeLink": "Xóa liên kết",
+        "linkLabel": "Nhãn liên kết",
+        "linkHref": "URL liên kết",
+        "bottomText": "Dòng cuối"
       },
       "pagination": {
         "showing": "Hiển thị {from} đến {to} trong tổng số {total} trang",

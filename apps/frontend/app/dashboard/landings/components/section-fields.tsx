@@ -50,6 +50,7 @@ export function SectionFields({
       {type === "stats" && <StatsFields index={index} form={form} />}
       {type === "faq" && <FaqFields index={index} form={form} />}
       {type === "paragraph" && <ParagraphFields index={index} form={form} />}
+      {type === "footer" && <FooterFields index={index} form={form} />}
     </div>
   );
 }
@@ -486,5 +487,191 @@ function ParagraphFields({
         </FormItem>
       )}
     />
+  );
+}
+
+function FooterFields({
+  index,
+  form,
+}: {
+  index: number;
+  form: UseFormReturn<LandingFormValues>;
+}) {
+  const t = useTranslations("pages.landings.footer");
+  const base = `sections.${index}` as const;
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: `${base}.columns`,
+  });
+
+  return (
+    <div className="space-y-3">
+      <FormField
+        control={form.control}
+        name={`${base}.heading`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t("heading")}</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-medium">{t("columns")}</div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ heading: "", links: [{ label: "", href: "" }] })}
+          >
+            <Plus className="size-4 mr-1" />
+            {t("addColumn")}
+          </Button>
+        </div>
+
+        {fields.map((col, colIndex) => (
+          <FooterColumnFields
+            key={col.id}
+            sectionIndex={index}
+            columnIndex={colIndex}
+            form={form}
+            onRemove={() => remove(colIndex)}
+            disableRemove={fields.length <= 1}
+          />
+        ))}
+      </div>
+
+      <FormField
+        control={form.control}
+        name={`${base}.bottomText`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t("bottomText")}</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+function FooterColumnFields({
+  sectionIndex,
+  columnIndex,
+  form,
+  onRemove,
+  disableRemove,
+}: {
+  sectionIndex: number;
+  columnIndex: number;
+  form: UseFormReturn<LandingFormValues>;
+  onRemove: () => void;
+  disableRemove: boolean;
+}) {
+  const t = useTranslations("pages.landings.footer");
+  const base = `sections.${sectionIndex}.columns.${columnIndex}` as const;
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: `${base}.links`,
+  });
+
+  return (
+    <div className="rounded-md border p-3 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-sm font-medium">{t("column")}</div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 text-destructive"
+          onClick={onRemove}
+          disabled={disableRemove}
+        >
+          <Trash2 className="size-4" />
+          <span className="sr-only">{t("removeColumn")}</span>
+        </Button>
+      </div>
+
+      <FormField
+        control={form.control}
+        name={`${base}.heading`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t("columnHeading")}</FormLabel>
+            <FormControl>
+              <Input {...field} value={field.value ?? ""} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-medium">{t("links")}</div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => append({ label: "", href: "" })}
+          >
+            <Plus className="size-4 mr-1" />
+            {t("addLink")}
+          </Button>
+        </div>
+
+        {fields.map((link, linkIndex) => (
+          <div key={link.id} className="grid gap-2 sm:grid-cols-5 items-start">
+            <FormField
+              control={form.control}
+              name={`${base}.links.${linkIndex}.label`}
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>{t("linkLabel")}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name={`${base}.links.${linkIndex}.href`}
+              render={({ field }) => (
+                <FormItem className="sm:col-span-3">
+                  <FormLabel>{t("linkHref")}</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="sm:col-span-5 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 text-destructive"
+                onClick={() => remove(linkIndex)}
+                disabled={fields.length <= 1}
+              >
+                <Trash2 className="size-4" />
+                <span className="sr-only">{t("removeLink")}</span>
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

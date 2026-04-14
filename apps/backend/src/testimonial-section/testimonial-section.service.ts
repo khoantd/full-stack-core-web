@@ -81,7 +81,7 @@ export class TestimonialSectionService {
       const data = await this.testimonialSectionModel.find(filter).sort({ createdAt: -1 }).lean().exec();
       return {
         data: data.map((row: Record<string, unknown>) =>
-          overlayTranslatedFields(row, row.translations as never, locale) as TestimonialSection,
+          overlayTranslatedFields(row, row.translations as never, locale) as unknown as TestimonialSection,
         ),
         pagination: {
           total: data.length,
@@ -105,7 +105,7 @@ export class TestimonialSectionService {
     const totalPages = Math.ceil(total / limit);
     return {
       data: data.map((row: Record<string, unknown>) =>
-        overlayTranslatedFields(row, row.translations as never, locale) as TestimonialSection,
+        overlayTranslatedFields(row, row.translations as never, locale) as unknown as TestimonialSection,
       ),
       pagination: {
         total,
@@ -126,7 +126,7 @@ export class TestimonialSectionService {
         doc as Record<string, unknown>,
         (doc as { translations?: unknown }).translations as never,
         locale,
-      ) as TestimonialSection;
+      ) as unknown as TestimonialSection;
     } catch (error: unknown) {
       if (error instanceof NotFoundException) throw error;
       const err = error as { name?: string };

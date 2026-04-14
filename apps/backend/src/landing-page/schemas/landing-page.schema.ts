@@ -49,6 +49,18 @@ export type LandingSection =
       id: string;
       type: 'paragraph';
       body: string;
+    }
+  | {
+      id: string;
+      type: 'footer';
+      /** Optional short text displayed above columns. */
+      heading?: string;
+      columns: {
+        heading?: string;
+        links: { label: string; href: string }[];
+      }[];
+      /** Optional bottom line text (copyright, disclaimer, etc.). */
+      bottomText?: string;
     };
 
 export type LandingPageTranslatableFields = {

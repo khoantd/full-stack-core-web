@@ -9,7 +9,13 @@ RUN apk add --no-cache ca-certificates
 COPY package.json package-lock.json ./
 
 # Install dependencies (reproducible via package-lock.json)
-RUN npm ci --legacy-peer-deps
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 600000 && \
+    npm ci --legacy-peer-deps
 
 COPY . .
 
@@ -23,7 +29,13 @@ WORKDIR /app
 
 # Copy package files and install production deps only
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev --legacy-peer-deps
+RUN --mount=type=cache,target=/root/.npm \
+    npm config set registry https://registry.npmjs.org/ && \
+    npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm config set fetch-timeout 600000 && \
+    npm ci --omit=dev --legacy-peer-deps
 
 # Copy built output from builder
 COPY --from=builder /app/dist ./dist

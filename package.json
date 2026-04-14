@@ -5,6 +5,7 @@
     "dev": "concurrently \"pnpm --dir apps/backend start:dev\" \"wait-on -t 60000 tcp:3001 && pnpm --dir apps/frontend dev\"",
     "dev:frontend": "pnpm --dir apps/frontend dev",
     "dev:backend": "pnpm --dir apps/backend start:dev",
+    "seed:landing-pages": "pnpm --dir apps/backend seed:landing-pages",
     "build:frontend": "pnpm --dir apps/frontend build",
     "build:backend": "pnpm --dir apps/backend build",
     "build": "pnpm build:frontend && pnpm build:backend"

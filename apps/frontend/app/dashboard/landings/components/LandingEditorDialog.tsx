@@ -63,6 +63,7 @@ const SECTION_TYPES: LandingFormValues["sections"][number]["type"][] = [
   "stats",
   "faq",
   "paragraph",
+  "footer",
 ];
 
 function normalizeSlugInput(raw: string): string {

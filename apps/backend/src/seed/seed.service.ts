@@ -15,6 +15,7 @@ import {
   TestimonialSectionDocument,
   TestimonialSectionStatus,
 } from '../testimonial-section/schemas/testimonial-section.schema';
+import { LandingPage, LandingPageStatus, type LandingSection } from '../landing-page/schemas/landing-page.schema';
 
 const SEED_ROLES = ['admin', 'user', 'staff'];
 
@@ -52,6 +53,53 @@ const SEED_TESTIMONIAL_SECTION = {
     },
   ],
 };
+
+const SEED_DEFAULT_LANDING_SLUG = 'home';
+
+const SEED_DEFAULT_LANDING_SECTIONS: LandingSection[] = [
+  {
+    id: 'hero',
+    type: 'hero',
+    headline: 'Welcome to our shop',
+    subheadline: 'High-quality parts, fast shipping, expert support.',
+    primaryCtaLabel: 'Shop now',
+    primaryCtaHref: '/shop',
+    secondaryCtaLabel: 'Contact',
+    secondaryCtaHref: '/contact',
+  },
+  {
+    id: 'features',
+    type: 'features',
+    heading: 'Why choose us',
+    items: [
+      { title: 'Trusted quality', description: 'Carefully sourced parts and transparent specs.' },
+      { title: 'Fast delivery', description: 'Reliable shipping with clear tracking updates.' },
+      { title: 'Expert support', description: 'We help you pick the right part the first time.' },
+    ],
+  },
+  {
+    id: 'footer',
+    type: 'footer',
+    heading: 'Get in touch',
+    columns: [
+      {
+        heading: 'Company',
+        links: [
+          { label: 'About', href: '/about' },
+          { label: 'Contact', href: '/contact' },
+        ],
+      },
+      {
+        heading: 'Support',
+        links: [
+          { label: 'FAQs', href: '/faqs' },
+          { label: 'Policies', href: '/policies' },
+        ],
+      },
+    ],
+    bottomText: '© 2026. All rights reserved.',
+  },
+];
 
 const SEED_CATEGORIES = [
   { name: 'Engine Parts', description: 'High-performance engine components for all makes and models.' },
@@ -144,6 +192,8 @@ export class SeedService implements OnModuleInit {
     @InjectModel(TenantMembership.name) private membershipModel: Model<TenantMembershipDocument>,
     @InjectModel(TestimonialSection.name)
     private testimonialSectionModel: Model<TestimonialSectionDocument>,
+    @InjectModel(LandingPage.name)
+    private landingPageModel: Model<LandingPage>,
   ) {}
 
   async onModuleInit() {
@@ -170,8 +220,20 @@ export class SeedService implements OnModuleInit {
     await this.seedBlogs(tenantId);
     await this.seedServices(tenantId);
     await this.seedTestimonialSections(tenantId);
+    await this.seedLandingPages(tenantId);
 
     this.logger.log('Demo seed complete.');
+  }
+
+  async seedLandingPagesOnly(): Promise<void> {
+    const tenant = await this.tenantModel.findOne().sort({ createdAt: 1 }).exec();
+    if (!tenant) {
+      this.logger.warn('No tenant found — skipping landing page seed.');
+      return;
+    }
+    const tenantId = (tenant._id as Types.ObjectId).toString();
+    this.logger.log(`Seeding landing pages for tenant: ${tenant.name} (${tenantId})`);
+    await this.seedLandingPages(tenantId);
   }
 
   private async seedRoles() {
@@ -324,5 +386,22 @@ export class SeedService implements OnModuleInit {
       tenantId: new Types.ObjectId(tenantId),
     });
     this.logger.log(`  + TestimonialSection: ${SEED_TESTIMONIAL_SECTION.title} (${SEED_TESTIMONIAL_SECTION_SLUG})`);
+  }
+
+  private async seedLandingPages(tenantId: string) {
+    const exists = await this.landingPageModel
+      .findOne({ tenantId: new Types.ObjectId(tenantId), slug: SEED_DEFAULT_LANDING_SLUG })
+      .exec();
+    if (exists) return;
+
+    await this.landingPageModel.create({
+      tenantId: new Types.ObjectId(tenantId),
+      slug: SEED_DEFAULT_LANDING_SLUG,
+      title: 'Home',
+      status: LandingPageStatus.PUBLISHED,
+      isDefault: true,
+      sections: SEED_DEFAULT_LANDING_SECTIONS,
+    });
+    this.logger.log(`  + LandingPage: Home (${SEED_DEFAULT_LANDING_SLUG})`);
   }
 }

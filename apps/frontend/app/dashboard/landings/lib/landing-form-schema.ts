@@ -68,6 +68,28 @@ const paragraphSchema = z.object({
   body: z.string().min(1),
 });
 
+const footerSchema = z.object({
+  id: z.string(),
+  type: z.literal('footer'),
+  heading: z.string().optional(),
+  columns: z
+    .array(
+      z.object({
+        heading: z.string().optional(),
+        links: z
+          .array(
+            z.object({
+              label: z.string().min(1),
+              href: z.string().min(1),
+            }),
+          )
+          .min(1),
+      }),
+    )
+    .min(1),
+  bottomText: z.string().optional(),
+});
+
 const sectionSchema = z.discriminatedUnion('type', [
   heroSchema,
   featuresSchema,
@@ -75,6 +97,7 @@ const sectionSchema = z.discriminatedUnion('type', [
   statsSchema,
   faqSchema,
   paragraphSchema,
+  footerSchema,
 ]);
 
 export const landingFormSchema = z.object({
@@ -113,5 +136,13 @@ export function createEmptySection(
       return { id, type: 'faq', items: [{ question: '', answer: '' }] };
     case 'paragraph':
       return { id, type: 'paragraph', body: '' };
+    case 'footer':
+      return {
+        id,
+        type: 'footer',
+        heading: '',
+        columns: [{ heading: '', links: [{ label: '', href: '' }] }],
+        bottomText: '',
+      };
   }
 }

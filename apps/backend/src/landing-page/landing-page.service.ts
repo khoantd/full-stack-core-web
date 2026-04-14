@@ -59,6 +59,10 @@ function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return v != null && typeof v === 'object' && !Array.isArray(v);
+}
+
 @Injectable()
 export class LandingPageService {
   constructor(
@@ -199,8 +203,61 @@ export class LandingPageService {
         out.push({ id, type: 'paragraph', body: String(s.body).trim() });
         continue;
       }
+      if (type === 'footer') {
+        const columnsRaw = s.columns;
+        if (!Array.isArray(columnsRaw) || columnsRaw.length === 0) {
+          throw new BadRequestException(`sections[${i}].columns must be a non-empty array`);
+        }
+
+        const columns: { heading?: string; links: { label: string; href: string }[] }[] = [];
+        for (let j = 0; j < columnsRaw.length; j++) {
+          const colRaw = columnsRaw[j];
+          if (!isRecord(colRaw)) {
+            throw new BadRequestException(`sections[${i}].columns[${j}] must be an object`);
+          }
+          const linksRaw = colRaw.links;
+          if (!Array.isArray(linksRaw) || linksRaw.length === 0) {
+            throw new BadRequestException(
+              `sections[${i}].columns[${j}].links must be a non-empty array`,
+            );
+          }
+
+          const links: { label: string; href: string }[] = [];
+          for (let k = 0; k < linksRaw.length; k++) {
+            const linkRaw = linksRaw[k];
+            if (!isRecord(linkRaw)) {
+              throw new BadRequestException(
+                `sections[${i}].columns[${j}].links[${k}] must be an object`,
+              );
+            }
+            if (!isNonEmptyString(linkRaw.label) || !isNonEmptyString(linkRaw.href)) {
+              throw new BadRequestException(
+                `sections[${i}].columns[${j}].links[${k}].label and href are required`,
+              );
+            }
+            links.push({
+              label: String(linkRaw.label).trim(),
+              href: String(linkRaw.href).trim(),
+            });
+          }
+
+          columns.push({
+            heading: colRaw.heading != null ? String(colRaw.heading) : undefined,
+            links,
+          });
+        }
+
+        out.push({
+          id,
+          type: 'footer',
+          heading: s.heading != null ? String(s.heading) : undefined,
+          columns,
+          bottomText: s.bottomText != null ? String(s.bottomText) : undefined,
+        });
+        continue;
+      }
       throw new BadRequestException(
-        `sections[${i}].type must be one of: hero, features, cta, stats, faq, paragraph`,
+        `sections[${i}].type must be one of: hero, features, cta, stats, faq, paragraph, footer`,
       );
     }
     return out;

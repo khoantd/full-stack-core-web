@@ -12,6 +12,7 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
 import { TenantMembershipModule } from '../tenant-membership/tenant-membership.module';
 import { TenantMembership, TenantMembershipSchema } from '../tenant-membership/schemas/tenant-membership.schema';
 import { TestimonialSection, TestimonialSectionSchema } from '../testimonial-section/schemas/testimonial-section.schema';
+import { LandingPage, LandingPageSchema } from '../landing-page/schemas/landing-page.schema';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { TestimonialSection, TestimonialSectionSchema } from '../testimonial-sec
       { name: User.name, schema: UserSchema },
       { name: TenantMembership.name, schema: TenantMembershipSchema },
       { name: TestimonialSection.name, schema: TestimonialSectionSchema },
+      { name: LandingPage.name, schema: LandingPageSchema },
     ]),
   ],
   providers: [SeedService],
