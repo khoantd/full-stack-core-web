@@ -1,7 +1,10 @@
 # --- Stage 1: Build app ---
-FROM node:20 AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
+
+# Needed by some deps (and good default TLS bundle)
+RUN apk add --no-cache libc6-compat ca-certificates
 
 # Next.js reads NEXT_PUBLIC_* at build time.
 ARG NEXT_PUBLIC_API_URL=http://localhost:3001
@@ -13,7 +16,8 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 COPY package.json package-lock.json ./
 
 # Install dependencies (reproducible via package-lock.json)
-RUN npm ci --legacy-peer-deps
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps
 
 # Copy toàn bộ project
 COPY . .
@@ -23,14 +27,22 @@ RUN npm run build
 
 
 # --- Stage 2: Production runtime ---
-FROM node:20 AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Chỉ copy output đã build (giảm dung lượng)
-COPY --from=build /app ./
-
 ENV NODE_ENV=production
+
+# Run as non-root
+RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+
+# Copy only the standalone output (small + fast)
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next/static ./.next/static
+COPY --from=build /app/.next/standalone ./
+
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+USER nextjs
+
+CMD ["node", "server.js"]

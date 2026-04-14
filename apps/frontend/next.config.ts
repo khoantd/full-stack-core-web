@@ -8,6 +8,7 @@ function trimTrailingSlashes(s: string): string {
 }
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   /**
    * Proxy public local media through this host (e.g. https://cms.brainspark.app/media/public/...).
    * Set PUBLIC_MEDIA_BASE_URL_LOCAL / PUBLIC_MEDIA_BASE_URL on the API to the same CMS origin.
