@@ -2,6 +2,9 @@ import { Injectable, NotFoundException, BadRequestException, OnModuleInit } from
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { SystemSettings } from './system-settings.schema';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 const DEFAULTS: Array<{ key: string; value: any; group: string; description: string }> = [
   { key: 'site_name', value: 'My CMS', group: 'general', description: 'Site display name' },
@@ -21,6 +24,7 @@ export class SystemSettingsService implements OnModuleInit {
   constructor(
     @InjectModel(SystemSettings.name)
     private readonly settingsModel: Model<SystemSettings>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async onModuleInit() {
@@ -53,17 +57,32 @@ export class SystemSettingsService implements OnModuleInit {
     return setting;
   }
 
-  async update(key: string, value: any) {
+  async update(key: string, value: any, actor: ActorContext) {
+    const existing = await this.settingsModel.findOne({ key }).lean();
     const setting = await this.settingsModel.findOneAndUpdate(
       { key },
       { value },
       { new: true, upsert: true },
     );
+
+    const before = (existing ?? { key, value: undefined }) as unknown as Record<string, unknown>;
+    const after = (setting?.toObject ? (setting as any).toObject() : setting) as unknown as Record<string, unknown>;
+    await this.auditLogService.create({
+      tenantId: actor.tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'UPDATE',
+      entity: 'SystemSettings',
+      entityId: key,
+      diff: buildUpdateDiff({ before, after, patch: { value } }),
+      description: `Updated system setting ${key}`,
+    });
+
     return setting;
   }
 
-  async updateBulk(entries: Array<{ key: string; value: any }>) {
-    const results = await Promise.all(entries.map((e) => this.update(e.key, e.value)));
+  async updateBulk(entries: Array<{ key: string; value: any }>, actor: ActorContext) {
+    const results = await Promise.all(entries.map((e) => this.update(e.key, e.value, actor)));
     return { updated: results.length, settings: results };
   }
 }

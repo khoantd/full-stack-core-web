@@ -10,6 +10,9 @@ import {
   type FaqSectionTranslatableFields,
 } from './schemas/faq-section.schema';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 export interface PaginationResult<T> {
   data: T[];
@@ -28,6 +31,7 @@ export class FaqSectionService {
   constructor(
     @InjectModel(FaqSection.name)
     private readonly faqSectionModel: Model<FaqSectionDocument>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async findAll(
@@ -110,7 +114,7 @@ export class FaqSectionService {
     }
   }
 
-  async create(dto: CreateFaqSectionDto, tenantId: string, locale?: string): Promise<FaqSection> {
+  async create(dto: CreateFaqSectionDto, tenantId: string, actor: ActorContext, locale?: string): Promise<FaqSection> {
     try {
       const payload: Record<string, unknown> = { ...dto, tenantId };
       if (Array.isArray(payload.items)) {
@@ -131,7 +135,20 @@ export class FaqSectionService {
         );
       }
       const created = new this.faqSectionModel(payload);
-      return await created.save();
+      const saved = await created.save();
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'FaqSection',
+        entityId: String((saved as any)._id),
+        diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+        description: `Created FAQ section ${(saved as any)._id}`,
+      });
+
+      return saved;
     } catch {
       throw new BadRequestException('Failed to create FAQ section');
     }
@@ -141,12 +158,14 @@ export class FaqSectionService {
     id: string,
     dto: UpdateFaqSectionDto,
     tenantId: string,
+    actor: ActorContext,
     locale?: string,
   ): Promise<FaqSection> {
     try {
       const section = await this.faqSectionModel.findOne({ _id: id, tenantId }).exec();
       if (!section) throw new NotFoundException(`FAQ section with ID "${id}" not found`);
 
+      const before = (section as any).toObject() as unknown as Record<string, unknown>;
       const payload: Record<string, unknown> = { ...dto };
       if (payload.items) {
         payload.items = (payload.items as { order?: number }[])
@@ -171,7 +190,21 @@ export class FaqSectionService {
         }
       }
 
-      return await section.save();
+      const saved = await section.save();
+      const after = (saved as any).toObject() as unknown as Record<string, unknown>;
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'FaqSection',
+        entityId: String(id),
+        diff: buildUpdateDiff({ before, after, patch: dto as unknown as Record<string, unknown> }),
+        description: `Updated FAQ section ${id}`,
+      });
+
+      return saved;
     } catch (error: unknown) {
       if (error instanceof NotFoundException) throw error;
       const err = error as { name?: string };
@@ -182,10 +215,24 @@ export class FaqSectionService {
     }
   }
 
-  async delete(id: string, tenantId: string): Promise<{ message: string; id: string }> {
+  async delete(id: string, tenantId: string, actor: ActorContext): Promise<{ message: string; id: string }> {
     try {
-      const deleted = await this.faqSectionModel.findOneAndDelete({ _id: id, tenantId }).exec();
+      const deleted = await this.faqSectionModel.findOneAndDelete({ _id: id, tenantId }).lean().exec();
       if (!deleted) throw new NotFoundException(`FAQ section with ID "${id}" not found`);
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'DELETE',
+        entity: 'FaqSection',
+        entityId: String(id),
+        diff: buildDeleteDiff(deleted as unknown as Record<string, unknown>, {
+          allowlist: ['_id', 'title', 'eyebrow', 'status'],
+        }),
+        description: `Deleted FAQ section ${id}`,
+      });
+
       return { message: 'FAQ section deleted successfully', id };
     } catch (error: unknown) {
       if (error instanceof NotFoundException) throw error;

@@ -7,10 +7,12 @@ import { Role, RoleSchema } from '../auth/schemas/role.schema';
 import { AuthGuard } from '../guards/auth.guard';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
     TenantModule,
+    AuditLogModule,
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Role.name, schema: RoleSchema },

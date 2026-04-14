@@ -10,6 +10,9 @@ import {
   type TestimonialSectionTranslatableFields,
 } from './schemas/testimonial-section.schema';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 function normalizeTestimonialItem(
   item: { order?: number; rating?: number },
@@ -51,6 +54,7 @@ export class TestimonialSectionService {
   constructor(
     @InjectModel(TestimonialSection.name)
     private readonly testimonialSectionModel: Model<TestimonialSectionDocument>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async findAll(
@@ -140,6 +144,7 @@ export class TestimonialSectionService {
   async create(
     dto: CreateTestimonialSectionDto,
     tenantId: string,
+    actor: ActorContext,
     locale?: string,
   ): Promise<TestimonialSection> {
     try {
@@ -162,7 +167,20 @@ export class TestimonialSectionService {
         );
       }
       const created = new this.testimonialSectionModel(payload);
-      return await created.save();
+      const saved = await created.save();
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'TestimonialSection',
+        entityId: String((saved as any)._id),
+        diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+        description: `Created testimonial section ${(saved as any)._id}`,
+      });
+
+      return saved;
     } catch {
       throw new BadRequestException('Failed to create testimonial section');
     }
@@ -172,12 +190,14 @@ export class TestimonialSectionService {
     id: string,
     dto: UpdateTestimonialSectionDto,
     tenantId: string,
+    actor: ActorContext,
     locale?: string,
   ): Promise<TestimonialSection> {
     try {
       const section = await this.testimonialSectionModel.findOne({ _id: id, tenantId }).exec();
       if (!section) throw new NotFoundException(`Testimonial section with ID "${id}" not found`);
 
+      const before = (section as any).toObject() as unknown as Record<string, unknown>;
       const payload: Record<string, unknown> = { ...dto };
       if (payload.items) {
         payload.items = normalizeTestimonialItems(
@@ -202,7 +222,21 @@ export class TestimonialSectionService {
         }
       }
 
-      return await section.save();
+      const saved = await section.save();
+      const after = (saved as any).toObject() as unknown as Record<string, unknown>;
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'TestimonialSection',
+        entityId: String(id),
+        diff: buildUpdateDiff({ before, after, patch: dto as unknown as Record<string, unknown> }),
+        description: `Updated testimonial section ${id}`,
+      });
+
+      return saved;
     } catch (error: unknown) {
       if (error instanceof NotFoundException) throw error;
       const err = error as { name?: string };
@@ -213,10 +247,24 @@ export class TestimonialSectionService {
     }
   }
 
-  async delete(id: string, tenantId: string): Promise<{ message: string; id: string }> {
+  async delete(id: string, tenantId: string, actor: ActorContext): Promise<{ message: string; id: string }> {
     try {
-      const deleted = await this.testimonialSectionModel.findOneAndDelete({ _id: id, tenantId }).exec();
+      const deleted = await this.testimonialSectionModel.findOneAndDelete({ _id: id, tenantId }).lean().exec();
       if (!deleted) throw new NotFoundException(`Testimonial section with ID "${id}" not found`);
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'DELETE',
+        entity: 'TestimonialSection',
+        entityId: String(id),
+        diff: buildDeleteDiff(deleted as unknown as Record<string, unknown>, {
+          allowlist: ['_id', 'title', 'eyebrow', 'status'],
+        }),
+        description: `Deleted testimonial section ${id}`,
+      });
+
       return { message: 'Testimonial section deleted successfully', id };
     } catch (error: unknown) {
       if (error instanceof NotFoundException) throw error;

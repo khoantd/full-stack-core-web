@@ -7,12 +7,14 @@ import { Appointment, AppointmentSchema } from './schemas/appointment.schema';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
 import { ApiKeyModule } from '../api-key/api-key.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Appointment.name, schema: AppointmentSchema }]),
     TenantModule,
     ApiKeyModule,
+    AuditLogModule,
   ],
   controllers: [AppointmentController, AppointmentPublicController],
   providers: [AppointmentService, TenantGuard],

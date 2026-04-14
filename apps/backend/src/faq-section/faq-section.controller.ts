@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { CreateFaqSectionDto } from './dto/create-faq-section.dto';
 import { QueryFaqSectionDto } from './dto/query-faq-section.dto';
 import { UpdateFaqSectionDto } from './dto/update-faq-section.dto';
@@ -49,8 +50,10 @@ export class FaqSectionController {
     @Body() dto: CreateFaqSectionDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.faqSectionService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.faqSectionService.create(dto, tenantId, actor, locale);
   }
 
   @Put(':id')
@@ -60,12 +63,19 @@ export class FaqSectionController {
     @Body() dto: UpdateFaqSectionDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.faqSectionService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.faqSectionService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.faqSectionService.delete(id, tenantId);
+  async delete(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.faqSectionService.delete(id, tenantId, actor);
   }
 }

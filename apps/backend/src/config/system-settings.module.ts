@@ -4,6 +4,7 @@ import { SystemSettings, SystemSettingsSchema } from './system-settings.schema';
 import { SystemSettingsService } from './system-settings.service';
 import { SystemSettingsController } from './system-settings.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JwtModule } from '@nestjs/jwt';
       secret: process.env.JWT_SECRET || 'default-secret',
       signOptions: { expiresIn: '15m' },
     }),
+    AuditLogModule,
   ],
   controllers: [SystemSettingsController],
   providers: [SystemSettingsService],

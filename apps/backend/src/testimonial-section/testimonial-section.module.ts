@@ -7,12 +7,14 @@ import { TestimonialSection, TestimonialSectionSchema } from './schemas/testimon
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
 import { ApiKeyModule } from '../api-key/api-key.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: TestimonialSection.name, schema: TestimonialSectionSchema }]),
     TenantModule,
     ApiKeyModule, // PublicIntegrationAuthGuard + ApiKeyService
+    AuditLogModule,
   ],
   controllers: [TestimonialSectionController, TestimonialSectionPublicController],
   providers: [TestimonialSectionService, TenantGuard],

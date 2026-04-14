@@ -4,10 +4,12 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { AppointmentService } from './appointment.service';
 import { Appointment } from './schemas/appointment.schema';
 import { TenantService } from '../tenant/tenant.service';
+import { AuditLogService } from '../audit-log/audit-log.service';
 
 describe('AppointmentService', () => {
   let service: AppointmentService;
   const tenantService = { findBySlug: jest.fn() };
+  const auditLogService = { create: jest.fn() };
   const saveMock = jest.fn().mockResolvedValue({ _id: 'new' });
 
   const AppointmentModelMock = jest.fn().mockImplementation(() => ({
@@ -28,6 +30,7 @@ describe('AppointmentService', () => {
         AppointmentService,
         { provide: getModelToken(Appointment.name), useValue: AppointmentModelMock },
         { provide: TenantService, useValue: tenantService },
+        { provide: AuditLogService, useValue: auditLogService },
       ],
     }).compile();
 

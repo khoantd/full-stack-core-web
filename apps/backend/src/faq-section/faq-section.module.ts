@@ -7,12 +7,14 @@ import { FaqSection, FaqSectionSchema } from './schemas/faq-section.schema';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
 import { ApiKeyModule } from '../api-key/api-key.module';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: FaqSection.name, schema: FaqSectionSchema }]),
     TenantModule,
     ApiKeyModule,
+    AuditLogModule,
   ],
   controllers: [FaqSectionController, FaqSectionPublicController],
   providers: [FaqSectionService, TenantGuard],

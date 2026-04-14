@@ -2,6 +2,9 @@ import { BadRequestException, Injectable, ServiceUnavailableException } from '@n
 import { MinioMediaStorage, MINIO_BUCKET } from './minio-media.storage';
 import { LocalMediaStorage } from './local-media.storage';
 import type { MediaProviderId, MediaFileItem } from './media.types';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 function trimSlash(s: string): string {
   return s.replace(/\/+$/, '');
@@ -22,6 +25,7 @@ export class MediaService {
   constructor(
     private readonly minioStorage: MinioMediaStorage,
     private readonly localStorage: LocalMediaStorage,
+    private readonly auditLogService: AuditLogService,
   ) {
     this.minioEnabled = parseBool(process.env.MEDIA_PROVIDER_MINIO_ENABLED, true);
     this.localEnabled = parseBool(process.env.MEDIA_PROVIDER_LOCAL_ENABLED, false);
@@ -73,14 +77,38 @@ export class MediaService {
     return `${this.localBase}/media/public/${encodeURIComponent(key)}`;
   }
 
-  async upload(provider: MediaProviderId, file: Express.Multer.File): Promise<{ url: string }> {
+  async upload(
+    provider: MediaProviderId,
+    file: Express.Multer.File,
+    actor: ActorContext,
+  ): Promise<{ url: string }> {
     this.assertProvider(provider);
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
     const storage = provider === 'minio' ? this.minioStorage : this.localStorage;
     const { key } = await storage.upload(file);
-    return { url: this.buildAbsoluteUrl(provider, key) };
+    const url = this.buildAbsoluteUrl(provider, key);
+
+    await this.auditLogService.create({
+      tenantId: actor.tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'CREATE',
+      entity: 'MediaFile',
+      entityId: key,
+      diff: buildCreateDiff({
+        provider,
+        key,
+        url,
+        size: file.size,
+        contentType: file.mimetype,
+        originalName: file.originalname,
+      }),
+      description: `Uploaded media file ${key}`,
+    });
+
+    return { url };
   }
 
   async listFiles(
@@ -126,10 +154,21 @@ export class MediaService {
     };
   }
 
-  async deleteFile(provider: MediaProviderId, key: string): Promise<void> {
+  async deleteFile(provider: MediaProviderId, key: string, actor: ActorContext): Promise<void> {
     this.assertProvider(provider);
     const storage = provider === 'minio' ? this.minioStorage : this.localStorage;
     await storage.deleteFile(key);
+
+    await this.auditLogService.create({
+      tenantId: actor.tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'DELETE',
+      entity: 'MediaFile',
+      entityId: key,
+      diff: buildDeleteDiff({ provider, key }, { allowlist: ['provider', 'key'] }),
+      description: `Deleted media file ${key}`,
+    });
   }
 
   resolveLocalFilePath(key: string): string | null {

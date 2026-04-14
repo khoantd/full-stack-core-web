@@ -18,6 +18,9 @@ import { QueryAppointmentDto } from './dto/query-appointment.dto';
 import { RequestPublicAppointmentDto } from './dto/request-public-appointment.dto';
 import { TenantService } from '../tenant/tenant.service';
 import { ALL_FEATURES, FeatureKey } from '../tenant/schemas/tenant.schema';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 const OVERLAP_STATUSES: AppointmentStatus[] = [
   AppointmentStatus.PENDING,
@@ -29,6 +32,7 @@ export class AppointmentService {
   constructor(
     @InjectModel(Appointment.name) private appointmentModel: Model<AppointmentDocument>,
     private readonly tenantService: TenantService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   private assertDateOrder(startAt: Date, endAt: Date): void {
@@ -66,6 +70,7 @@ export class AppointmentService {
   async create(
     dto: CreateAppointmentDto,
     tenantId: string,
+    actor: ActorContext,
     source: AppointmentSource = AppointmentSource.DASHBOARD,
   ): Promise<Appointment> {
     const startAt = new Date(dto.startAt);
@@ -90,7 +95,20 @@ export class AppointmentService {
       source,
       serviceId: dto.serviceId ? new Types.ObjectId(dto.serviceId) : undefined,
     });
-    return doc.save();
+    const saved = await doc.save();
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'CREATE',
+      entity: 'Appointment',
+      entityId: String((saved as any)._id),
+      diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+      description: `Created appointment ${(saved as any)._id}`,
+    });
+
+    return saved;
   }
 
   async createPublicRequest(dto: RequestPublicAppointmentDto): Promise<Appointment> {
@@ -124,7 +142,20 @@ export class AppointmentService {
       notes: dto.notes,
       source: AppointmentSource.PUBLIC,
     });
-    return doc.save();
+    const saved = await doc.save();
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: 'public',
+      userEmail: 'public',
+      action: 'CREATE',
+      entity: 'Appointment',
+      entityId: String((saved as any)._id),
+      diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+      description: `Created public appointment request ${(saved as any)._id}`,
+    });
+
+    return saved;
   }
 
   async findAll(queryDto: QueryAppointmentDto, tenantId: string) {
@@ -195,7 +226,7 @@ export class AppointmentService {
     return doc;
   }
 
-  async update(id: string, dto: UpdateAppointmentDto, tenantId: string): Promise<Appointment> {
+  async update(id: string, dto: UpdateAppointmentDto, tenantId: string, actor: ActorContext): Promise<Appointment> {
     const existing = await this.appointmentModel
       .findOne({ _id: id, tenantId: new Types.ObjectId(tenantId) })
       .exec();
@@ -223,6 +254,7 @@ export class AppointmentService {
       updatePayload.serviceId = dto.serviceId ? new Types.ObjectId(dto.serviceId) : undefined;
     }
 
+    const before = (existing as any).toObject() as unknown as Record<string, unknown>;
     const updated = await this.appointmentModel
       .findOneAndUpdate({ _id: id, tenantId: new Types.ObjectId(tenantId) }, updatePayload, {
         new: true,
@@ -231,15 +263,42 @@ export class AppointmentService {
     if (!updated) {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
+
+    const after = (updated as any).toObject() as unknown as Record<string, unknown>;
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'UPDATE',
+      entity: 'Appointment',
+      entityId: String(id),
+      diff: buildUpdateDiff({ before, after, patch: dto as unknown as Record<string, unknown> }),
+      description: `Updated appointment ${id}`,
+    });
+
     return updated;
   }
 
-  async remove(id: string, tenantId: string): Promise<void> {
+  async remove(id: string, tenantId: string, actor: ActorContext): Promise<void> {
     const res = await this.appointmentModel
       .findOneAndDelete({ _id: id, tenantId: new Types.ObjectId(tenantId) })
+      .lean()
       .exec();
     if (!res) {
       throw new NotFoundException(`Appointment with ID ${id} not found`);
     }
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'DELETE',
+      entity: 'Appointment',
+      entityId: String(id),
+      diff: buildDeleteDiff(res as unknown as Record<string, unknown>, {
+        allowlist: ['_id', 'title', 'startAt', 'endAt', 'status', 'source', 'serviceId'],
+      }),
+      description: `Deleted appointment ${id}`,
+    });
   }
 }

@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -27,8 +28,13 @@ export class AppointmentController {
 
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
-  create(@Body() dto: CreateAppointmentDto, @CurrentTenant() tenantId: string) {
-    return this.appointmentService.create(dto, tenantId, AppointmentSource.DASHBOARD);
+  create(
+    @Body() dto: CreateAppointmentDto,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.appointmentService.create(dto, tenantId, actor, AppointmentSource.DASHBOARD);
   }
 
   @Get()
@@ -48,12 +54,19 @@ export class AppointmentController {
     @Param('id') id: string,
     @Body() dto: UpdateAppointmentDto,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.appointmentService.update(id, dto, tenantId);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.appointmentService.update(id, dto, tenantId, actor);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.appointmentService.remove(id, tenantId);
+  remove(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.appointmentService.remove(id, tenantId, actor);
   }
 }

@@ -8,6 +8,9 @@ import { Model, Types } from 'mongoose';
 import { User } from '../auth/schemas/user.schema';
 import { Role } from '../auth/schemas/role.schema';
 import * as bcrypt from 'bcryptjs';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 // Helper function để loại bỏ dấu tiếng Việt
 function removeVietnameseTones(str: string): string {
@@ -33,6 +36,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectModel(Role.name) private readonly roleModel: Model<Role>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   // 🟢 Lấy tất cả users với phân trang và search (scoped to tenant)
@@ -121,7 +125,7 @@ export class UserService {
     role?: string;
     securityConfirmed?: boolean;
     tenantId?: string;
-  }) {
+  }, actor: ActorContext) {
     try {
       // Kiểm tra email đã tồn tại chưa
       const existingUser = await this.userModel.findOne({ email: data.email });
@@ -164,6 +168,17 @@ export class UserService {
 
       const savedUser = await newUser.save();
 
+      await this.auditLogService.create({
+        tenantId: actor.tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'User',
+        entityId: String((savedUser as any)._id),
+        diff: buildCreateDiff({ ...data, password: undefined } as unknown as Record<string, unknown>),
+        description: `Created user ${(savedUser as any)._id}`,
+      });
+
       // Populate role khi trả về
       return this.userModel
         .findById(savedUser._id)
@@ -192,6 +207,7 @@ export class UserService {
       securityConfirmed?: boolean;
     },
     tenantId?: string,
+    actor?: ActorContext,
   ) {
     try {
       const query: any = { _id: id };
@@ -248,7 +264,27 @@ export class UserService {
       if (data.securityConfirmed !== undefined)
         user.securityConfirmed = data.securityConfirmed;
 
+      const before = (user as any).toObject() as unknown as Record<string, unknown>;
       await user.save();
+      const after = (user as any).toObject() as unknown as Record<string, unknown>;
+
+      if (actor) {
+        await this.auditLogService.create({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          userEmail: actor.userEmail,
+          action: 'UPDATE',
+          entity: 'User',
+          entityId: String((user as any)._id),
+          diff: buildUpdateDiff({
+            before,
+            after,
+            patch: { ...data, password: data.password ? '<redacted>' : undefined } as unknown as Record<string, unknown>,
+            opts: { denylist: ['password', 'refreshToken', 'resetPasswordToken'] },
+          }),
+          description: `Updated user ${(user as any)._id}`,
+        });
+      }
 
       // Populate role khi trả về
       return this.userModel
@@ -267,7 +303,7 @@ export class UserService {
   }
 
   // 🔴 Xóa user
-  async delete(id: string, tenantId?: string) {
+  async delete(id: string, tenantId?: string, actor?: ActorContext) {
     try {
       const query: any = { _id: id };
       if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
@@ -277,7 +313,21 @@ export class UserService {
         throw new NotFoundException('Không tìm thấy user');
       }
 
+      const snapshot = (user as any).toObject() as unknown as Record<string, unknown>;
       await this.userModel.findByIdAndDelete(id);
+
+      if (actor) {
+        await this.auditLogService.create({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          userEmail: actor.userEmail,
+          action: 'DELETE',
+          entity: 'User',
+          entityId: String(id),
+          diff: buildDeleteDiff(snapshot, { allowlist: ['_id', 'email', 'name', 'role', 'status'] }),
+          description: `Deleted user ${id}`,
+        });
+      }
 
       return { message: 'Xóa user thành công', id };
     } catch (error) {
@@ -289,25 +339,53 @@ export class UserService {
   }
 
   // 🔴 Deactivate user — invalidates their session (refresh token nulled)
-  async deactivate(id: string, tenantId?: string) {
+  async deactivate(id: string, tenantId?: string, actor?: ActorContext) {
     const query: any = { _id: id };
     if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
     const user = await this.userModel.findOne(query);
     if (!user) throw new NotFoundException('Không tìm thấy user');
+    const before = (user as any).toObject() as unknown as Record<string, unknown>;
     user.status = 'inactive';
     user.refreshToken = null;
     await user.save();
+    const after = (user as any).toObject() as unknown as Record<string, unknown>;
+    if (actor) {
+      await this.auditLogService.create({
+        tenantId: actor.tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'User',
+        entityId: String((user as any)._id),
+        diff: buildUpdateDiff({ before, after, patch: { status: 'inactive' } }),
+        description: `Deactivated user ${(user as any)._id}`,
+      });
+    }
     return { message: 'User đã bị vô hiệu hóa', id };
   }
 
   // 🟢 Activate user
-  async activate(id: string, tenantId?: string) {
+  async activate(id: string, tenantId?: string, actor?: ActorContext) {
     const query: any = { _id: id };
     if (tenantId) query.tenantId = new Types.ObjectId(tenantId);
     const user = await this.userModel.findOne(query);
     if (!user) throw new NotFoundException('Không tìm thấy user');
+    const before = (user as any).toObject() as unknown as Record<string, unknown>;
     user.status = 'active';
     await user.save();
+    const after = (user as any).toObject() as unknown as Record<string, unknown>;
+    if (actor) {
+      await this.auditLogService.create({
+        tenantId: actor.tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'User',
+        entityId: String((user as any)._id),
+        diff: buildUpdateDiff({ before, after, patch: { status: 'active' } }),
+        description: `Activated user ${(user as any)._id}`,
+      });
+    }
     return { message: 'User đã được kích hoạt', id };
   }
 
@@ -380,11 +458,26 @@ export class UserService {
       emailNotifications?: boolean;
       dashboardAlerts?: boolean;
     },
+    actor?: ActorContext,
   ) {
     const user = await this.userModel.findOne({ email });
     if (!user) throw new NotFoundException('User not found');
+    const before = (user as any).toObject() as unknown as Record<string, unknown>;
     user.preferences = { ...(user.preferences ?? {}), ...prefs };
     await user.save();
+    const after = (user as any).toObject() as unknown as Record<string, unknown>;
+    if (actor) {
+      await this.auditLogService.create({
+        tenantId: actor.tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'User',
+        entityId: String((user as any)._id),
+        diff: buildUpdateDiff({ before, after, patch: { preferences: prefs } }),
+        description: `Updated preferences for user ${(user as any)._id}`,
+      });
+    }
     return { message: 'Preferences updated', data: user.preferences };
   }
 
@@ -418,6 +511,7 @@ export class UserService {
   async updateSecurityConfirm(
     email: string,
     data: { securityConfirmed: boolean },
+    actor?: ActorContext,
   ) {
     try {
       const user = await this.userModel.findOne({ email });
@@ -426,9 +520,24 @@ export class UserService {
         throw new NotFoundException('Không tìm thấy user');
       }
 
+      const before = (user as any).toObject() as unknown as Record<string, unknown>;
       // Cập nhật trạng thái (không cần verify password)
       user.securityConfirmed = data.securityConfirmed;
       await user.save();
+      const after = (user as any).toObject() as unknown as Record<string, unknown>;
+
+      if (actor) {
+        await this.auditLogService.create({
+          tenantId: actor.tenantId,
+          userId: actor.userId,
+          userEmail: actor.userEmail,
+          action: 'UPDATE',
+          entity: 'User',
+          entityId: String((user as any)._id),
+          diff: buildUpdateDiff({ before, after, patch: { securityConfirmed: data.securityConfirmed } }),
+          description: `Updated securityConfirmed for user ${(user as any)._id}`,
+        });
+      }
 
       return {
         message: data.securityConfirmed

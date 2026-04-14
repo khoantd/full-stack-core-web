@@ -4,6 +4,7 @@ import { Document } from 'mongoose';
 export type AuditLogDocument = AuditLog & Document;
 
 export type AuditLogAction = 'CREATE' | 'UPDATE' | 'DELETE';
+const AUDIT_LOG_ACTIONS: readonly AuditLogAction[] = ['CREATE', 'UPDATE', 'DELETE'] as const;
 
 export type AuditLogDiff = Record<
   string,
@@ -24,7 +25,7 @@ export class AuditLog {
   @Prop({ required: true })
   userEmail: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, type: String, enum: AUDIT_LOG_ACTIONS })
   action: AuditLogAction;
 
   @Prop({ required: true })

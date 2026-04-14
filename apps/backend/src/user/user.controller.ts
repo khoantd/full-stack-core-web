@@ -15,6 +15,7 @@ import { TenantGuard } from 'src/guards/tenant.guard';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/guards/roles.decorator';
 import { CurrentTenant, SkipTenantGuard } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { UserService } from './user.service';
 
 @UseGuards(AuthGuard, TenantGuard, RolesGuard)
@@ -49,6 +50,8 @@ export class UserController {
   @Put('me/preferences')
   async updatePreferences(
     @Req() req,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Body()
     body: {
       language?: string;
@@ -57,7 +60,8 @@ export class UserController {
       dashboardAlerts?: boolean;
     },
   ) {
-    return this.userService.updatePreferences(req.email, body);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.updatePreferences(req.email, body, actor);
   }
 
   @Get('me/security-status')
@@ -68,9 +72,12 @@ export class UserController {
   @Put('me/security-confirm')
   async updateSecurityConfirm(
     @Req() req,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Body() body: { securityConfirmed: boolean },
   ) {
-    return this.userService.updateSecurityConfirm(req.email, body);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.updateSecurityConfirm(req.email, body, actor);
   }
 
   @Get('stats/dashboard')
@@ -88,6 +95,7 @@ export class UserController {
   @Roles('admin', 'superadmin', 'manager')
   async createUser(
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Body()
     body: {
       name: string;
@@ -98,13 +106,15 @@ export class UserController {
       securityConfirmed?: boolean;
     },
   ) {
-    return this.userService.create({ ...body, tenantId });
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.create({ ...body, tenantId }, actor);
   }
 
   @Put(':id')
   async updateUser(
     @Param('id') id: string,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Body()
     body: {
       name?: string;
@@ -115,22 +125,38 @@ export class UserController {
       securityConfirmed?: boolean;
     },
   ) {
-    return this.userService.update(id, body, tenantId);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.update(id, body, tenantId, actor);
   }
 
   @Delete(':id')
-  async deleteUser(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.userService.delete(id, tenantId);
+  async deleteUser(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.delete(id, tenantId, actor);
   }
 
   @Put(':id/deactivate')
-  async deactivateUser(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.userService.deactivate(id, tenantId);
+  async deactivateUser(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.deactivate(id, tenantId, actor);
   }
 
   @Put(':id/activate')
-  async activateUser(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.userService.activate(id, tenantId);
+  async activateUser(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.userService.activate(id, tenantId, actor);
   }
 }
 

@@ -21,6 +21,7 @@ export class AppointmentPublicController {
   @UseGuards(PublicIntegrationAuthGuard, TenantGuard)
   @UsePipes(new ValidationPipe({ transform: true }))
   createIntegration(@Body() dto: CreateAppointmentDto, @CurrentTenant() tenantId: string) {
-    return this.appointmentService.create(dto, tenantId, AppointmentSource.INTEGRATION);
+    const actor = { tenantId, userId: 'integration', userEmail: 'integration' };
+    return this.appointmentService.create(dto, tenantId, actor, AppointmentSource.INTEGRATION);
   }
 }

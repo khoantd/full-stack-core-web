@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { MediaService } from './media.service';
 import { getMediaMulterOptions } from './media-upload.config';
 
@@ -31,9 +32,12 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File,
     @Query('provider') queryProvider?: string,
     @Body('provider') bodyProvider?: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
     const provider = this.mediaService.parseProvider(queryProvider || bodyProvider, 'minio');
-    return this.mediaService.upload(provider, file);
+    const tenantId = String(user?.tenantId ?? 'global');
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.mediaService.upload(provider, file, actor);
   }
 
   @Get('files')
@@ -49,9 +53,15 @@ export class MediaController {
   }
 
   @Delete('files/:key')
-  async deleteFile(@Param('key') key: string, @Query('provider') providerRaw?: string) {
+  async deleteFile(
+    @Param('key') key: string,
+    @Query('provider') providerRaw?: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
     const provider = this.mediaService.parseProvider(providerRaw, 'minio');
-    await this.mediaService.deleteFile(provider, decodeURIComponent(key));
+    const tenantId = String(user?.tenantId ?? 'global');
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    await this.mediaService.deleteFile(provider, decodeURIComponent(key), actor);
     return { message: 'File deleted successfully' };
   }
 }

@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { CreateTestimonialSectionDto } from './dto/create-testimonial-section.dto';
 import { QueryTestimonialSectionDto } from './dto/query-testimonial-section.dto';
 import { UpdateTestimonialSectionDto } from './dto/update-testimonial-section.dto';
@@ -49,8 +50,10 @@ export class TestimonialSectionController {
     @Body() dto: CreateTestimonialSectionDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.testimonialSectionService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.testimonialSectionService.create(dto, tenantId, actor, locale);
   }
 
   @Put(':id')
@@ -60,12 +63,19 @@ export class TestimonialSectionController {
     @Body() dto: UpdateTestimonialSectionDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.testimonialSectionService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.testimonialSectionService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.testimonialSectionService.delete(id, tenantId);
+  async delete(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.testimonialSectionService.delete(id, tenantId, actor);
   }
 }
