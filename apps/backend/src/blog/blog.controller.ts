@@ -5,6 +5,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { BlogService, PaginationResult } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
@@ -40,8 +41,10 @@ export class BlogController {
     @Body() dto: CreateBlogDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.blogService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.blogService.create(dto, tenantId, actor, locale);
   }
 
   @Put(':id')
@@ -51,13 +54,20 @@ export class BlogController {
     @Body() dto: UpdateBlogDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.blogService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.blogService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  async deleteBlog(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.blogService.delete(id, tenantId);
+  async deleteBlog(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.blogService.delete(id, tenantId, actor);
   }
 
   @Get(':id/versions')

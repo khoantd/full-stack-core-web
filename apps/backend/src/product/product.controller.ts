@@ -5,6 +5,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -20,9 +21,11 @@ export class ProductController {
   create(
     @Body() dto: CreateProductDto,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Query('locale') locale: string | undefined,
   ) {
-    return this.productService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.productService.create(dto, tenantId, actor, locale);
   }
 
   @Post('bulk-import')
@@ -61,13 +64,20 @@ export class ProductController {
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
     @Query('locale') locale: string | undefined,
   ) {
-    return this.productService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.productService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.productService.remove(id, tenantId);
+  remove(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.productService.remove(id, tenantId, actor);
   }
 }

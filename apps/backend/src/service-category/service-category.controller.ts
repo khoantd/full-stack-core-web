@@ -14,6 +14,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { CreateServiceCategoryDto } from './dto/create-service-category.dto';
 import { QueryServiceCategoryDto } from './dto/query-service-category.dto';
 import { UpdateServiceCategoryDto } from './dto/update-service-category.dto';
@@ -49,8 +50,10 @@ export class ServiceCategoryController {
     @Body() dto: CreateServiceCategoryDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.serviceCategoryService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.serviceCategoryService.create(dto, tenantId, actor, locale);
   }
 
   @Put(':id')
@@ -60,13 +63,20 @@ export class ServiceCategoryController {
     @Body() dto: UpdateServiceCategoryDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.serviceCategoryService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.serviceCategoryService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    await this.serviceCategoryService.remove(id, tenantId);
+  async remove(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    await this.serviceCategoryService.remove(id, tenantId, actor);
     return { message: 'Service category deleted successfully', id };
   }
 }

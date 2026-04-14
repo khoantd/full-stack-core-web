@@ -11,6 +11,9 @@ import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { QueryBlogDto } from './dto/query-blog.dto';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 export interface PaginationResult {
   data: Blog[];
@@ -29,6 +32,7 @@ export class BlogService {
   constructor(
     @InjectModel(Blog.name) private readonly blogModel: Model<Blog>,
     @InjectModel(BlogVersion.name) private readonly blogVersionModel: Model<BlogVersion>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async findAll(query: QueryBlogDto, tenantId: string, locale?: string): Promise<PaginationResult> {
@@ -82,7 +86,7 @@ export class BlogService {
     }
   }
 
-  async create(createBlogDto: CreateBlogDto, tenantId: string, locale?: string): Promise<Blog> {
+  async create(createBlogDto: CreateBlogDto, tenantId: string, actor: ActorContext, locale?: string): Promise<Blog> {
     try {
       const data: any = { ...createBlogDto, tenantId };
       if (data.categoryId) data.categoryId = new Types.ObjectId(data.categoryId);
@@ -102,17 +106,30 @@ export class BlogService {
       const newBlog = new this.blogModel(data);
       const saved = await newBlog.save();
       await this.saveVersion(saved);
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'Blog',
+        entityId: String((saved as any)._id),
+        diff: buildCreateDiff(createBlogDto as unknown as Record<string, unknown>),
+        description: `Created blog ${(saved as any)._id}`,
+      });
+
       return saved;
     } catch (error) {
       throw new BadRequestException('Failed to create blog');
     }
   }
 
-  async update(id: string, updateBlogDto: UpdateBlogDto, tenantId: string, locale?: string): Promise<Blog> {
+  async update(id: string, updateBlogDto: UpdateBlogDto, tenantId: string, actor: ActorContext, locale?: string): Promise<Blog> {
     try {
       const blog = await this.blogModel.findOne({ _id: id, tenantId });
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
 
+      const before = (blog as any).toObject() as Record<string, unknown>;
       const hasImageUpdate = Object.prototype.hasOwnProperty.call(updateBlogDto, 'image');
       const { image, ...rest } = updateBlogDto as UpdateBlogDto & { image?: string | null };
       Object.assign(blog, rest);
@@ -156,6 +173,23 @@ export class BlogService {
 
       await blog.save();
       await this.saveVersion(blog);
+
+      const after = (blog as any).toObject() as Record<string, unknown>;
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'Blog',
+        entityId: String(id),
+        diff: buildUpdateDiff({
+          before,
+          after,
+          patch: updateBlogDto as unknown as Record<string, unknown>,
+        }),
+        description: `Updated blog ${id}`,
+      });
+
       return blog;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -164,11 +198,25 @@ export class BlogService {
     }
   }
 
-  async delete(id: string, tenantId: string): Promise<{ message: string; id: string }> {
+  async delete(id: string, tenantId: string, actor: ActorContext): Promise<{ message: string; id: string }> {
     try {
-      const blog = await this.blogModel.findOneAndDelete({ _id: id, tenantId });
+      const blog = await this.blogModel.findOneAndDelete({ _id: id, tenantId }).lean();
       if (!blog) throw new NotFoundException(`Blog with ID "${id}" not found`);
       await this.blogVersionModel.deleteMany({ blogId: id });
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'DELETE',
+        entity: 'Blog',
+        entityId: String(id),
+        diff: buildDeleteDiff(blog as unknown as Record<string, unknown>, {
+          allowlist: ['_id', 'title', 'status', 'categoryId', 'author'],
+        }),
+        description: `Deleted blog ${id}`,
+      });
+
       return { message: 'Blog deleted successfully', id };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

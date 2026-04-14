@@ -7,6 +7,9 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { CategoryProduct, CategoryProductDocument } from '../category-product/schemas/category-product.schema';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 @Injectable()
 export class ProductService {
@@ -15,9 +18,15 @@ export class ProductService {
     private productModel: Model<ProductDocument>,
     @InjectModel(CategoryProduct.name)
     private categoryProductModel: Model<CategoryProductDocument>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
-  async create(createProductDto: CreateProductDto, tenantId: string, locale?: string): Promise<Product> {
+  async create(
+    createProductDto: CreateProductDto,
+    tenantId: string,
+    actor: ActorContext,
+    locale?: string,
+  ): Promise<Product> {
     const categoryExists = await this.categoryProductModel
       .findOne({ _id: createProductDto.category, tenantId })
       .exec();
@@ -34,7 +43,20 @@ export class ProductService {
     }
 
     const createdProduct = new this.productModel(data);
-    return await createdProduct.save();
+    const saved = await createdProduct.save();
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'CREATE',
+      entity: 'Product',
+      entityId: String(saved._id),
+      diff: buildCreateDiff(createProductDto as unknown as Record<string, unknown>),
+      description: `Created product ${saved._id}`,
+    });
+
+    return saved;
   }
 
   async findAll(queryDto: QueryProductDto, tenantId: string, locale?: string) {
@@ -74,7 +96,13 @@ export class ProductService {
     return overlayTranslatedFields(product as any, (product as any).translations, locale);
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto, tenantId: string, locale?: string): Promise<Product> {
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+    tenantId: string,
+    actor: ActorContext,
+    locale?: string,
+  ): Promise<Product> {
     if (updateProductDto.category) {
       const categoryExists = await this.categoryProductModel
         .findOne({ _id: updateProductDto.category, tenantId })
@@ -90,6 +118,7 @@ export class ProductService {
     const product = await this.productModel.findOne({ _id: id, tenantId }).exec();
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
 
+    const before = product.toObject() as unknown as Record<string, unknown>;
     Object.assign(product, updateData);
 
     if (locale) {
@@ -105,18 +134,48 @@ export class ProductService {
     }
 
     await product.save();
+    const after = product.toObject() as unknown as Record<string, unknown>;
 
     const reloaded = await this.productModel
       .findOne({ _id: id, tenantId })
       .populate('category')
       .exec();
     if (!reloaded) throw new NotFoundException(`Product with ID ${id} not found`);
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'UPDATE',
+      entity: 'Product',
+      entityId: String(id),
+      diff: buildUpdateDiff({
+        before,
+        after,
+        patch: updateProductDto as unknown as Record<string, unknown>,
+      }),
+      description: `Updated product ${id}`,
+    });
+
     return reloaded;
   }
 
-  async remove(id: string, tenantId: string): Promise<void> {
-    const product = await this.productModel.findOneAndDelete({ _id: id, tenantId }).exec();
+  async remove(id: string, tenantId: string, actor: ActorContext): Promise<void> {
+    const product = await this.productModel.findOneAndDelete({ _id: id, tenantId }).lean().exec();
     if (!product) throw new NotFoundException(`Product with ID ${id} not found`);
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'DELETE',
+      entity: 'Product',
+      entityId: String(id),
+      diff: buildDeleteDiff(product as unknown as Record<string, unknown>, {
+        allowlist: ['_id', 'name', 'category', 'stock'],
+      }),
+      description: `Deleted product ${id}`,
+    });
   }
 
   async getLowStockProducts(tenantId: string) {
@@ -133,7 +192,8 @@ export class ProductService {
 
     for (let i = 0; i < products.length; i++) {
       try {
-        await this.create(products[i], tenantId);
+        const actor: ActorContext = { tenantId, userId: 'system', userEmail: 'system' };
+        await this.create(products[i], tenantId, actor);
         success++;
       } catch (err: any) {
         errors.push({ row: i + 1, message: err.message || 'Unknown error' });

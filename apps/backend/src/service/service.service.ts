@@ -6,6 +6,9 @@ import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { QueryServiceDto } from './dto/query-service.dto';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 export interface PaginationResult {
   data: Service[];
@@ -23,6 +26,7 @@ export interface PaginationResult {
 export class ServiceService {
   constructor(
     @InjectModel(Service.name) private readonly serviceModel: Model<Service>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   private static readonly DEFAULT_LOCALE = 'en';
@@ -116,7 +120,7 @@ export class ServiceService {
     }
   }
 
-  async create(dto: CreateServiceDto, tenantId: string, locale?: string): Promise<Service> {
+  async create(dto: CreateServiceDto, tenantId: string, actor: ActorContext, locale?: string): Promise<Service> {
     try {
       const { basePatch, translationPatch } = this.splitBaseAndTranslationPayload(dto as any, locale);
       const payload: Record<string, any> = { ...basePatch, tenantId };
@@ -134,16 +138,30 @@ export class ServiceService {
       }
 
       const newService = new this.serviceModel(payload as any);
-      return await newService.save();
+      const saved = await newService.save();
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'Service',
+        entityId: String((saved as any)._id),
+        diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+        description: `Created service ${(saved as any)._id}`,
+      });
+
+      return saved;
     } catch {
       throw new BadRequestException('Failed to create service');
     }
   }
 
-  async update(id: string, dto: UpdateServiceDto, tenantId: string, locale?: string): Promise<Service> {
+  async update(id: string, dto: UpdateServiceDto, tenantId: string, actor: ActorContext, locale?: string): Promise<Service> {
     try {
       const service = await this.serviceModel.findOne({ _id: id, tenantId });
       if (!service) throw new NotFoundException(`Service with ID "${id}" not found`);
+      const before = (service as any).toObject() as Record<string, unknown>;
       const { basePatch, translationPatch } = this.splitBaseAndTranslationPayload(dto as any, locale);
       const payload: Record<string, any> = { ...basePatch };
       if (dto.categoryIds) {
@@ -164,7 +182,21 @@ export class ServiceService {
           patch,
         ) as any;
       }
-      return await service.save();
+      const saved = await service.save();
+      const after = (saved as any).toObject() as Record<string, unknown>;
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'Service',
+        entityId: String(id),
+        diff: buildUpdateDiff({ before, after, patch: dto as unknown as Record<string, unknown> }),
+        description: `Updated service ${id}`,
+      });
+
+      return saved;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       if (error.name === 'CastError') throw new BadRequestException(`Invalid service ID format: "${id}"`);
@@ -172,10 +204,24 @@ export class ServiceService {
     }
   }
 
-  async delete(id: string, tenantId: string): Promise<{ message: string; id: string }> {
+  async delete(id: string, tenantId: string, actor: ActorContext): Promise<{ message: string; id: string }> {
     try {
-      const service = await this.serviceModel.findOneAndDelete({ _id: id, tenantId });
+      const service = await this.serviceModel.findOneAndDelete({ _id: id, tenantId }).lean();
       if (!service) throw new NotFoundException(`Service with ID "${id}" not found`);
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'DELETE',
+        entity: 'Service',
+        entityId: String(id),
+        diff: buildDeleteDiff(service as unknown as Record<string, unknown>, {
+          allowlist: ['_id', 'title', 'status', 'category', 'categoryIds'],
+        }),
+        description: `Deleted service ${id}`,
+      });
+
       return { message: 'Service deleted successfully', id };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;

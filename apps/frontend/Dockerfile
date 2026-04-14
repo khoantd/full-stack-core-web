@@ -41,6 +41,15 @@ COPY --from=build /app/public ./public
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/.next/standalone ./
 
+# Patch the start script so `npm start` also works (standalone doesn't ship the `next` binary)
+RUN node -e "\
+  const fs = require('fs'); \
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); \
+  pkg.scripts = pkg.scripts || {}; \
+  pkg.scripts.start = 'node server.js'; \
+  fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2)); \
+"
+
 EXPOSE 3000
 
 USER nextjs

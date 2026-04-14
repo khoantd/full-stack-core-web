@@ -5,6 +5,7 @@ import {
 import { AuthGuard } from 'src/guards/auth.guard';
 import { TenantGuard } from 'src/guards/tenant.guard';
 import { CurrentTenant } from 'src/guards/tenant.decorator';
+import { CurrentUser, RequestUser } from 'src/guards/current-user.decorator';
 import { ServiceService, PaginationResult } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -40,8 +41,10 @@ export class ServiceController {
     @Body() dto: CreateServiceDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.serviceService.create(dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.serviceService.create(dto, tenantId, actor, locale);
   }
 
   @Put(':id')
@@ -51,12 +54,19 @@ export class ServiceController {
     @Body() dto: UpdateServiceDto,
     @Query('locale') locale: string | undefined,
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
   ) {
-    return this.serviceService.update(id, dto, tenantId, locale);
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.serviceService.update(id, dto, tenantId, actor, locale);
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string, @CurrentTenant() tenantId: string) {
-    return this.serviceService.delete(id, tenantId);
+  async delete(
+    @Param('id') id: string,
+    @CurrentTenant() tenantId: string,
+    @CurrentUser() user: RequestUser | undefined,
+  ) {
+    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    return this.serviceService.delete(id, tenantId, actor);
   }
 }

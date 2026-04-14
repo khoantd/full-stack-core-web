@@ -10,6 +10,9 @@ import {
   type ServiceCategoryTranslatableFields,
 } from './schemas/service-category.schema';
 import { overlayTranslatedFields, upsertTranslation } from '../common/i18n/translations';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import { buildCreateDiff, buildDeleteDiff, buildUpdateDiff } from '../audit-log/audit-log.diff';
+import { ActorContext } from '../audit-log/audit-log.types';
 
 export interface PaginationResult<T> {
   data: T[];
@@ -28,11 +31,13 @@ export class ServiceCategoryService {
   constructor(
     @InjectModel(ServiceCategory.name)
     private readonly serviceCategoryModel: Model<ServiceCategoryDocument>,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(
     dto: CreateServiceCategoryDto,
     tenantId: string,
+    actor: ActorContext,
     locale?: string,
   ): Promise<ServiceCategory> {
     try {
@@ -47,7 +52,20 @@ export class ServiceCategoryService {
         );
       }
       const created = new this.serviceCategoryModel(payload);
-      return await created.save();
+      const saved = await created.save();
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'CREATE',
+        entity: 'ServiceCategory',
+        entityId: String((saved as any)._id),
+        diff: buildCreateDiff(dto as unknown as Record<string, unknown>),
+        description: `Created service category ${(saved as any)._id}`,
+      });
+
+      return saved;
     } catch (error: any) {
       if (error?.code === 11000) {
         throw new BadRequestException('Category with this slug already exists');
@@ -122,12 +140,14 @@ export class ServiceCategoryService {
     id: string,
     dto: UpdateServiceCategoryDto,
     tenantId: string,
+    actor: ActorContext,
     locale?: string,
   ): Promise<ServiceCategory> {
     try {
       const category = await this.serviceCategoryModel.findOne({ _id: id, tenantId }).exec();
       if (!category) throw new NotFoundException(`ServiceCategory with ID ${id} not found`);
 
+      const before = (category as any).toObject() as Record<string, unknown>;
       if (dto.name !== undefined) category.name = dto.name;
       if (dto.slug !== undefined) category.slug = dto.slug;
       if (dto.status !== undefined) category.status = dto.status;
@@ -144,6 +164,19 @@ export class ServiceCategoryService {
       }
 
       await category.save();
+      const after = (category as any).toObject() as Record<string, unknown>;
+
+      await this.auditLogService.create({
+        tenantId,
+        userId: actor.userId,
+        userEmail: actor.userEmail,
+        action: 'UPDATE',
+        entity: 'ServiceCategory',
+        entityId: String(id),
+        diff: buildUpdateDiff({ before, after, patch: dto as unknown as Record<string, unknown> }),
+        description: `Updated service category ${id}`,
+      });
+
       const lean = await this.serviceCategoryModel.findById(category._id).lean().exec();
       return overlayTranslatedFields(lean as any, (lean as any)?.translations, locale) as ServiceCategory;
     } catch (error: any) {
@@ -153,7 +186,7 @@ export class ServiceCategoryService {
     }
   }
 
-  async remove(id: string, tenantId: string): Promise<void> {
+  async remove(id: string, tenantId: string, actor: ActorContext): Promise<void> {
     const category = await this.serviceCategoryModel.findOne({ _id: id, tenantId }).exec();
     if (!category) throw new NotFoundException(`ServiceCategory with ID ${id} not found`);
 
@@ -166,5 +199,18 @@ export class ServiceCategoryService {
 
     await this.serviceCategoryModel.updateMany({ parent: id }, { parent: null }).exec();
     await this.serviceCategoryModel.findByIdAndDelete(id).exec();
+
+    await this.auditLogService.create({
+      tenantId,
+      userId: actor.userId,
+      userEmail: actor.userEmail,
+      action: 'DELETE',
+      entity: 'ServiceCategory',
+      entityId: String(id),
+      diff: buildDeleteDiff((category as any).toObject() as Record<string, unknown>, {
+        allowlist: ['_id', 'name', 'slug', 'status', 'sortOrder', 'parent'],
+      }),
+      description: `Deleted service category ${id}`,
+    });
   }
 }

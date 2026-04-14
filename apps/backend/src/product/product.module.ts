@@ -6,12 +6,14 @@ import { Product, ProductSchema } from './schemas/product.schema';
 import { CategoryProductModule } from '../category-product/category-product.module';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Product.name, schema: ProductSchema }]),
     CategoryProductModule,
     TenantModule,
+    AuditLogModule,
   ],
   controllers: [ProductController],
   providers: [ProductService, TenantGuard],

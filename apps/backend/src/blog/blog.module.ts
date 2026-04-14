@@ -6,6 +6,7 @@ import { Blog, BlogSchema } from './schemas/blog.schema';
 import { BlogVersion, BlogVersionSchema } from './schemas/blog-version.schema';
 import { TenantModule } from '../tenant/tenant.module';
 import { TenantGuard } from '../guards/tenant.guard';
+import { AuditLogModule } from '../audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TenantGuard } from '../guards/tenant.guard';
       { name: BlogVersion.name, schema: BlogVersionSchema },
     ]),
     TenantModule,
+    AuditLogModule,
   ],
   controllers: [BlogController],
   providers: [BlogService, TenantGuard],
