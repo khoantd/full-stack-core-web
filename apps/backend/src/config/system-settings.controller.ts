@@ -25,7 +25,11 @@ export class SystemSettingsController {
     @CurrentUser() user: RequestUser | undefined,
   ) {
     const tenantId = String(user?.tenantId ?? 'global');
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.settingsService.update(key, body.value, actor);
   }
 
@@ -35,7 +39,11 @@ export class SystemSettingsController {
     @CurrentUser() user: RequestUser | undefined,
   ) {
     const tenantId = String(user?.tenantId ?? 'global');
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.settingsService.updateBulk(body.settings, actor);
   }
 }

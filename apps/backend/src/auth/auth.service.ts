@@ -29,6 +29,16 @@ export class AuthService {
     return doc?.slug ?? undefined;
   }
 
+  /**
+   * Ensure we always put a stable user identifier in JWTs.
+   * `User.uid` is optional (e.g. form signup), so fall back to Mongo `_id`.
+   */
+  private resolveJwtUid(user: { uid?: string; _id?: unknown }): string {
+    const uid = typeof user?.uid === 'string' ? user.uid : undefined;
+    if (uid && uid.trim()) return uid.trim();
+    return String(user?._id ?? '');
+  }
+
   async login(email: string, password: string) {
     try {
       const user = await this.userModel.findOne({ email }).populate('role', 'name');
@@ -99,7 +109,7 @@ export class AuthService {
         });
       }
 
-      const payload = { uid: user.uid, email: user.email, role: roleName, tenantId, tenantSlug };
+      const payload = { uid: this.resolveJwtUid(user as any), email: user.email, role: roleName, tenantId, tenantSlug };
       const tokens = await this.generateUserTokens(payload);
       
       user.refreshToken = tokens.refreshToken;
@@ -171,7 +181,7 @@ export class AuthService {
     // Issue tokens so the frontend can auto-login after registration
     const roleName = role?.name ?? 'admin';
     const payload = {
-      uid: savedUser.uid,
+      uid: this.resolveJwtUid(savedUser as any),
       email: savedUser.email,
       role: roleName,
       tenantId: tenant._id.toString(),
@@ -209,7 +219,7 @@ export class AuthService {
       user.role && (user.role as any).name ? (user.role as any).name : String((user as any).role ?? 'user');
 
     const payload = {
-      uid: user.uid,
+      uid: this.resolveJwtUid(user as any),
       email: user.email,
       role: roleName,
       tenantId: (tenant._id as Types.ObjectId).toString(),
@@ -253,7 +263,7 @@ export class AuthService {
       }
       const tid = (user as any).tenantId?.toString();
       const tenantSlug = await this.resolvePayloadTenantSlug(tid);
-      const freshPayload = { uid: user.uid, email: user.email, role: roleName, tenantId: tid, tenantSlug };
+      const freshPayload = { uid: this.resolveJwtUid(user as any), email: user.email, role: roleName, tenantId: tid, tenantSlug };
       const tokens = await this.generateUserTokens(freshPayload);
       user.refreshToken = tokens.refreshToken;
       await user.save();
@@ -361,7 +371,7 @@ export class AuthService {
 
     const tid = (user as any).tenantId?.toString();
     const tenantSlug = await this.resolvePayloadTenantSlug(tid);
-    const payload = { uid: user.uid, email: user.email, role: roleName, tenantId: tid, tenantSlug };
+    const payload = { uid: this.resolveJwtUid(user as any), email: user.email, role: roleName, tenantId: tid, tenantSlug };
     const tokens = await this.generateUserTokens(payload);
     user.refreshToken = tokens.refreshToken;
     await user.save();

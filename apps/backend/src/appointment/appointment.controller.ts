@@ -33,7 +33,11 @@ export class AppointmentController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.appointmentService.create(dto, tenantId, actor, AppointmentSource.DASHBOARD);
   }
 
@@ -56,7 +60,11 @@ export class AppointmentController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.appointmentService.update(id, dto, tenantId, actor);
   }
 
@@ -66,7 +74,11 @@ export class AppointmentController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.appointmentService.remove(id, tenantId, actor);
   }
 }

@@ -194,6 +194,12 @@ export class BlogService {
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       if (error.name === 'CastError') throw new BadRequestException(`Invalid blog ID format: "${id}"`);
+      if (error?.name === 'ValidationError') {
+        throw new BadRequestException(error.message);
+      }
+      if (error?.name === 'MongoServerError' && typeof (error as any).code === 'number') {
+        throw new BadRequestException((error as any).message ?? 'Database error');
+      }
       throw new BadRequestException('Failed to update blog');
     }
   }

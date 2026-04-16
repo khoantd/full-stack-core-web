@@ -36,7 +36,11 @@ export class MediaController {
   ) {
     const provider = this.mediaService.parseProvider(queryProvider || bodyProvider, 'minio');
     const tenantId = String(user?.tenantId ?? 'global');
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.mediaService.upload(provider, file, actor);
   }
 
@@ -60,7 +64,11 @@ export class MediaController {
   ) {
     const provider = this.mediaService.parseProvider(providerRaw, 'minio');
     const tenantId = String(user?.tenantId ?? 'global');
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     await this.mediaService.deleteFile(provider, decodeURIComponent(key), actor);
     return { message: 'File deleted successfully' };
   }

@@ -60,7 +60,11 @@ export class UserController {
       dashboardAlerts?: boolean;
     },
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.updatePreferences(req.email, body, actor);
   }
 
@@ -76,7 +80,11 @@ export class UserController {
     @CurrentUser() user: RequestUser | undefined,
     @Body() body: { securityConfirmed: boolean },
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.updateSecurityConfirm(req.email, body, actor);
   }
 
@@ -106,7 +114,11 @@ export class UserController {
       securityConfirmed?: boolean;
     },
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.create({ ...body, tenantId }, actor);
   }
 
@@ -125,7 +137,11 @@ export class UserController {
       securityConfirmed?: boolean;
     },
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.update(id, body, tenantId, actor);
   }
 
@@ -135,7 +151,11 @@ export class UserController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.delete(id, tenantId, actor);
   }
 
@@ -145,7 +165,11 @@ export class UserController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.deactivate(id, tenantId, actor);
   }
 
@@ -155,7 +179,11 @@ export class UserController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.userService.activate(id, tenantId, actor);
   }
 }

@@ -52,7 +52,11 @@ export class FaqSectionController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.faqSectionService.create(dto, tenantId, actor, locale);
   }
 
@@ -65,7 +69,11 @@ export class FaqSectionController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.faqSectionService.update(id, dto, tenantId, actor, locale);
   }
 
@@ -75,7 +83,11 @@ export class FaqSectionController {
     @CurrentTenant() tenantId: string,
     @CurrentUser() user: RequestUser | undefined,
   ) {
-    const actor = { tenantId, userId: String(user?._id ?? user?.id ?? ''), userEmail: String(user?.email ?? '') };
+    const actor = {
+      tenantId,
+      userId: String(user?.uid ?? user?._id ?? user?.id ?? ''),
+      userEmail: String(user?.email ?? ''),
+    };
     return this.faqSectionService.delete(id, tenantId, actor);
   }
 }
