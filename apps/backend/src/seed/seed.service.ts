@@ -80,7 +80,7 @@ const SEED_DEFAULT_LANDING_SECTIONS: LandingSection[] = [
   {
     id: 'footer',
     type: 'footer',
-    heading: 'Get in touch',
+    tagline: 'Get in touch',
     columns: [
       {
         heading: 'Company',

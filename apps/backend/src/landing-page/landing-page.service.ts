@@ -37,30 +37,69 @@ function normalizeSlug(raw: string): string {
     .replace(/[^a-z0-9-_]/g, '');
 }
 
-function overlayLandingPage(
-  doc: Record<string, unknown>,
-  locale: string | undefined,
-): Record<string, unknown> {
-  if (!locale) return doc;
-  const translations = doc.translations as
-    | Record<string, Partial<LandingPageTranslatableFields>>
-    | undefined;
-  const patch = translations?.[locale];
-  if (!patch) return doc;
-  const out: Record<string, unknown> = { ...doc };
-  if (patch.title != null) out.title = patch.title;
-  if (patch.seoTitle !== undefined) out.seoTitle = patch.seoTitle;
-  if (patch.seoDescription !== undefined) out.seoDescription = patch.seoDescription;
-  if (patch.sections != null) out.sections = patch.sections;
-  return out;
-}
-
 function isNonEmptyString(v: unknown): v is string {
   return typeof v === 'string' && v.trim().length > 0;
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v != null && typeof v === 'object' && !Array.isArray(v);
+}
+
+/** Footer section-level legacy `heading` → `tagline` for API consumers (GET). */
+function mapSectionsForResponse(sections: unknown): unknown {
+  if (!Array.isArray(sections)) return sections;
+  return sections.map((raw) => {
+    if (!isRecord(raw) || raw.type !== 'footer') return raw;
+    const s = raw as Record<string, unknown>;
+    let tagline: string | undefined;
+    if (isNonEmptyString(s.tagline)) {
+      tagline = String(s.tagline).trim();
+    } else if (isNonEmptyString(s.heading)) {
+      tagline = String(s.heading).trim();
+    }
+    const { heading: _legacyHeading, ...rest } = s;
+    const out: Record<string, unknown> = { ...rest };
+    if (tagline) {
+      out.tagline = tagline;
+    } else {
+      delete out.tagline;
+    }
+    return out;
+  });
+}
+
+function overlayLandingPage(
+  doc: Record<string, unknown>,
+  locale: string | undefined,
+): Record<string, unknown> {
+  const applyFooterTagline = (d: Record<string, unknown>): Record<string, unknown> => {
+    const out = { ...d };
+    if (out.sections != null) {
+      out.sections = mapSectionsForResponse(out.sections);
+    }
+    return out;
+  };
+
+  if (!locale) {
+    return applyFooterTagline(doc);
+  }
+  const translations = doc.translations as
+    | Record<string, Partial<LandingPageTranslatableFields>>
+    | undefined;
+  const patch = translations?.[locale];
+  if (!patch) {
+    return applyFooterTagline(doc);
+  }
+  const out: Record<string, unknown> = { ...doc };
+  if (patch.title != null) out.title = patch.title;
+  if (patch.seoTitle !== undefined) out.seoTitle = patch.seoTitle;
+  if (patch.seoDescription !== undefined) out.seoDescription = patch.seoDescription;
+  if (patch.sections != null) {
+    out.sections = mapSectionsForResponse(patch.sections);
+  } else if (out.sections != null) {
+    out.sections = mapSectionsForResponse(out.sections);
+  }
+  return out;
 }
 
 @Injectable()
@@ -247,10 +286,17 @@ export class LandingPageService {
           });
         }
 
+        let tagline: string | undefined;
+        if (isNonEmptyString(s.tagline)) {
+          tagline = String(s.tagline).trim();
+        } else if (isNonEmptyString(s.heading)) {
+          tagline = String(s.heading).trim();
+        }
+
         out.push({
           id,
           type: 'footer',
-          heading: s.heading != null ? String(s.heading) : undefined,
+          ...(tagline ? { tagline } : {}),
           columns,
           bottomText: s.bottomText != null ? String(s.bottomText) : undefined,
         });

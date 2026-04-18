@@ -44,7 +44,7 @@ export type LandingSection =
   | {
       id: string;
       type: 'footer';
-      heading?: string;
+      tagline?: string;
       columns: {
         heading?: string;
         links: { label: string; href: string }[];

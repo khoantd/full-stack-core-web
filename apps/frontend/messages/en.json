@@ -326,7 +326,7 @@
         "body": "Text"
       },
       "footer": {
-        "heading": "Heading",
+        "tagline": "Tagline",
         "columns": "Columns",
         "addColumn": "Add column",
         "column": "Column",

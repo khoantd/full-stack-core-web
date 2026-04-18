@@ -71,7 +71,7 @@ const paragraphSchema = z.object({
 const footerSchema = z.object({
   id: z.string(),
   type: z.literal('footer'),
-  heading: z.string().optional(),
+  tagline: z.string().optional(),
   columns: z
     .array(
       z.object({
@@ -140,7 +140,7 @@ export function createEmptySection(
       return {
         id,
         type: 'footer',
-        heading: '',
+        tagline: '',
         columns: [{ heading: '', links: [{ label: '', href: '' }] }],
         bottomText: '',
       };

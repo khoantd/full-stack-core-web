@@ -53,8 +53,8 @@ export type LandingSection =
   | {
       id: string;
       type: 'footer';
-      /** Optional short text displayed above columns. */
-      heading?: string;
+      /** Optional short line above columns (e.g. brand tagline). Legacy `heading` is accepted on write. */
+      tagline?: string;
       columns: {
         heading?: string;
         links: { label: string; href: string }[];

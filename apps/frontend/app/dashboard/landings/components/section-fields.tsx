@@ -508,10 +508,10 @@ function FooterFields({
     <div className="space-y-3">
       <FormField
         control={form.control}
-        name={`${base}.heading`}
+        name={`${base}.tagline`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("heading")}</FormLabel>
+            <FormLabel>{t("tagline")}</FormLabel>
             <FormControl>
               <Input {...field} value={field.value ?? ""} />
             </FormControl>
